@@ -1087,20 +1087,6 @@ public class Element extends Node implements Iterable<Element> {
 
      @param ownerDoc the document that owns this element, if there is one
      */
-    private String uniqueIdSelector(@Nullable Document ownerDoc) {
-        String id = id();
-        if (!id.isEmpty()) { // check if the ID is unique and matches this
-            String idSel = "#" + escapeCssIdentifier(id);
-            if (ownerDoc != null) {
-                Elements els = ownerDoc.select(idSel);
-                if (els.size() == 1 && els.get(0) == this) return idSel;
-            } else {
-                return idSel;
-            }
-        }
-        return EmptyString;
-    }
-
     /**
      Get a CSS selector that will uniquely select this element.
      <p>
@@ -1111,43 +1097,7 @@ public class Element extends Node implements Iterable<Element> {
      @return the CSS Path that can be used to retrieve the element in a selector.
      */
     public String cssSelector() {
-        Document ownerDoc = ownerDocument();
-        String idSel = uniqueIdSelector(ownerDoc);
-        if (!idSel.isEmpty()) return idSel;
-
-        // No unique ID, work up the parent stack and find either a unique ID to hang from, or just a GP > Parent > Child chain
-        StringBuilder selector = StringUtil.borrowBuilder();
-        Element el = this;
-        while (el != null && !(el instanceof Document)) {
-            idSel = el.uniqueIdSelector(ownerDoc);
-            if (!idSel.isEmpty()) {
-                selector.insert(0, idSel);
-                break; // found a unique ID to use as ancestor; stop
-            }
-            selector.insert(0, el.cssSelectorComponent());
-            el = el.parent();
-        }
-        return StringUtil.releaseBuilder(selector);
-    }
-
-    private String cssSelectorComponent() {
-        // Escape tagname, and translate HTML namespace ns:tag to CSS namespace syntax ns|tag
-        String tagName = escapeCssIdentifier(tagName()).replace("\\:", "|");
-        StringBuilder selector = StringUtil.borrowBuilder().append(tagName);
-        String classes = classNames().stream().map(TokenQueue::escapeCssIdentifier)
-                .collect(StringUtil.joining("."));
-        if (!classes.isEmpty())
-            selector.append('.').append(classes);
-
-        if (parent() == null || parent() instanceof Document) // don't add Document to selector, as will always have a html node
-            return StringUtil.releaseBuilder(selector);
-
-        selector.insert(0, " > ");
-        if (parent().select(selector.toString()).size() > 1)
-            selector.append(String.format(
-                ":nth-child(%d)", elementSiblingIndex() + 1));
-
-        return StringUtil.releaseBuilder(selector);
+        return ElementCssSelector.cssSelector(this);
     }
 
     /**
@@ -1549,66 +1499,7 @@ public class Element extends Node implements Iterable<Element> {
      @see #textNodes()
      */
     public String text() {
-        final StringBuilder accum = StringUtil.borrowBuilder();
-        new TextAccumulator(accum).traverse(this);
-        return StringUtil.releaseBuilder(accum).trim();
-    }
-
-    private static class TextAccumulator implements NodeVisitor {
-        private final StringBuilder accum;
-
-        public TextAccumulator(StringBuilder accum) {
-            this.accum = accum;
-        }
-
-        @Override public void head(Node node, int depth) {
-            if (node instanceof TextNode) {
-                TextNode textNode = (TextNode) node;
-                appendNormalisedText(accum, textNode);
-            } else if (node instanceof Element) {
-                Element element = (Element) node;
-                // add a synthetic space before leading blocks and readable boundaries when text would otherwise run together
-                if (accum.length() > 0 && needsLeadingTextSeparator(element) && !lastCharIsWhitespace(accum))
-                    accum.append(' ');
-            }
-        }
-
-        @Override public void tail(Node node, int depth) {
-            // make sure there is a space between block or readable-boundary tags and immediately following text nodes or inline elements.
-            if (node instanceof Element) {
-                Element element = (Element) node;
-                Node next = node.nextSibling();
-                if (needsTrailingTextSeparator(element) &&
-                    (next instanceof TextNode || next instanceof Element && ((Element) next).tag.isInline()) &&
-                    !lastCharIsWhitespace(accum))
-                    accum.append(' ');
-            }
-
-        }
-
-        /** check if an element should separate preceding text during text() */
-        private static boolean needsLeadingTextSeparator(Element element) {
-            return element.isBlock()
-                || element.nameIs("br")
-                || element.tag.is(Tag.TextBoundary) && element.childNodeSize() > 0 && element.hasText();
-        }
-
-        /** check if an element should separate following text during text() */
-        private static boolean needsTrailingTextSeparator(Element element) {
-            return element.tag.is(Tag.TextBoundary)
-                || !element.tag.isInline()
-                || hasBlockChild(element);
-        }
-
-        /** check if an inline wrapper contains direct block children and should close with a separator */
-        private static boolean hasBlockChild(Element element) {
-            for (int i = 0; i < element.childNodeSize(); i++) {
-                Node child = element.childNode(i);
-                if (child instanceof Element && ((Element) child).isBlock())
-                    return true;
-            }
-            return false;
-        }
+        return ElementText.text(this);
     }
 
     /**
@@ -1620,7 +1511,7 @@ public class Element extends Node implements Iterable<Element> {
      @see #wholeOwnText()
      */
     public String wholeText() {
-        return wholeTextOf(nodeStream());
+        return ElementText.wholeText(this);
     }
 
     /**
@@ -1631,13 +1522,6 @@ public class Element extends Node implements Iterable<Element> {
         return wholeOwnText();
     }
 
-    private static String wholeTextOf(Stream<Node> stream) {
-        return stream.map(node -> {
-            if (node instanceof TextNode) return ((TextNode) node).getWholeText();
-            if (node.nameIs("br")) return "\n";
-            return "";
-        }).collect(StringUtil.joining(""));
-    }
 
     /**
      Get the non-normalized, decoded text of this element, <b>not including</b> any child elements, including any
@@ -1649,7 +1533,7 @@ public class Element extends Node implements Iterable<Element> {
      @since 1.15.1
      */
     public String wholeOwnText() {
-        return wholeTextOf(childNodes.stream());
+        return ElementText.wholeOwnText(this);
     }
 
     /**
@@ -1664,44 +1548,7 @@ public class Element extends Node implements Iterable<Element> {
      * @see #textNodes()
      */
     public String ownText() {
-        StringBuilder sb = StringUtil.borrowBuilder();
-        ownText(sb);
-        return StringUtil.releaseBuilder(sb).trim();
-    }
-
-    private void ownText(StringBuilder accum) {
-        for (int i = 0; i < childNodeSize(); i++) {
-            Node child = childNodes.get(i);
-            if (child instanceof TextNode) {
-                TextNode textNode = (TextNode) child;
-                appendNormalisedText(accum, textNode);
-            } else if (child.nameIs("br") && !lastCharIsWhitespace(accum)) {
-                accum.append(" ");
-            }
-        }
-    }
-
-    private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {
-        String text = textNode.getWholeText();
-        if (preserveWhitespace(textNode.parentNode) || textNode instanceof CDataNode)
-            accum.append(text);
-        else
-            StringUtil.appendNormalisedWhitespace(accum, text, lastCharIsWhitespace(accum));
-    }
-
-    static boolean preserveWhitespace(@Nullable Node node) {
-        // looks only at this element and five levels up, to prevent recursion & needless stack searches
-        if (node instanceof Element) {
-            Element el = (Element) node;
-            int i = 0;
-            do {
-                if (el.tag.preserveWhitespace())
-                    return true;
-                el = el.parent();
-                i++;
-            } while (i < 6 && el != null);
-        }
-        return false;
+        return ElementText.ownText(this);
     }
 
     /**
@@ -1728,18 +1575,7 @@ public class Element extends Node implements Iterable<Element> {
      @return {@code true} if the element has non-blank text content, {@code false} otherwise.
      */
     public boolean hasText() {
-        AtomicBoolean hasText = new AtomicBoolean(false);
-        filter((node, depth) -> {
-            if (node instanceof TextNode) {
-                TextNode textNode = (TextNode) node;
-                if (!textNode.isBlank()) {
-                    hasText.set(true);
-                    return NodeFilter.FilterResult.STOP;
-                }
-            }
-            return NodeFilter.FilterResult.CONTINUE;
-        });
-        return hasText.get();
+        return ElementText.hasText(this);
     }
 
     /**
@@ -1751,22 +1587,7 @@ public class Element extends Node implements Iterable<Element> {
      @see #dataNodes()
      */
     public String data() {
-        StringBuilder sb = StringUtil.borrowBuilder();
-        traverse((childNode, depth) -> {
-            if (childNode instanceof DataNode) {
-                DataNode data = (DataNode) childNode;
-                sb.append(data.getWholeData());
-            } else if (childNode instanceof Comment) {
-                Comment comment = (Comment) childNode;
-                sb.append(comment.getData());
-            } else if (childNode instanceof CDataNode) {
-                // this shouldn't really happen because the html parser won't see the cdata as anything special when parsing script.
-                // but in case another type gets through.
-                CDataNode cDataNode = (CDataNode) childNode;
-                sb.append(cDataNode.getWholeText());
-            }
-        });
-        return StringUtil.releaseBuilder(sb);
+        return ElementText.data(this);
     }
 
     /**
@@ -1775,7 +1596,7 @@ public class Element extends Node implements Iterable<Element> {
      * @return The literal class attribute, or <b>empty string</b> if no class attribute set.
      */
     public String className() {
-        return attr("class").trim();
+        return ElementClasses.className(this);
     }
 
     /**
@@ -1791,20 +1612,7 @@ public class Element extends Node implements Iterable<Element> {
      @see #classList()
      */
     public Set<String> classNames() {
-        Set<String> classNames = new LinkedHashSet<>(4);
-        if (attributes == null) return classNames;
-
-        String classAttr = attributes.getIgnoreCase("class");
-        int len = classAttr.length();
-        for (int i = 0; i < len; ) {
-            int start = nextClassStart(classAttr, i, len);
-            if (start == len) break;
-
-            int end = nextClassEnd(classAttr, start, len);
-            classNames.add(classToken(classAttr, start, end));
-            i = end;
-        }
-        return classNames;
+        return ElementClasses.classNames(this);
     }
 
     /**
@@ -1820,50 +1628,9 @@ public class Element extends Node implements Iterable<Element> {
      @since 1.23.1
      */
     public List<String> classList() {
-        if (attributes == null) return Collections.emptyList();
-
-        String attr = attributes.getIgnoreCase("class");
-        int len = attr.length();
-        int start = nextClassStart(attr, 0, len);
-        if (start == len) return Collections.emptyList();
-
-        int end = nextClassEnd(attr, start, len);
-        String first = classToken(attr, start, end);
-        start = nextClassStart(attr, end, len);
-        if (start == len) return Collections.singletonList(first);
-
-        List<String> classes = new ArrayList<>(4);
-        classes.add(first);
-        do {
-            end = nextClassEnd(attr, start, len);
-            classes.add(classToken(attr, start, end));
-            start = nextClassStart(attr, end, len);
-        } while (start < len);
-        return Collections.unmodifiableList(classes);
+        return ElementClasses.classList(this);
     }
 
-    /**
-     Find the next class token start.
-     */
-    private static int nextClassStart(String classAttr, int offset, int len) {
-        while (offset < len && StringUtil.isWhitespace(classAttr.charAt(offset))) offset++;
-        return offset;
-    }
-
-    /**
-     Find the next class token end.
-     */
-    private static int nextClassEnd(String classAttr, int offset, int len) {
-        while (offset < len && !StringUtil.isWhitespace(classAttr.charAt(offset))) offset++;
-        return offset;
-    }
-
-    /**
-     Returns the class token while preserving the original string for a single unpadded class.
-     */
-    private static String classToken(String classAttr, int start, int end) {
-        return start == 0 && end == classAttr.length() ? classAttr : classAttr.substring(start, end);
-    }
 
     /**
      Set the element's {@code class} attribute to the supplied class names.
@@ -1871,12 +1638,7 @@ public class Element extends Node implements Iterable<Element> {
      @return this element, for chaining
      */
     public Element classNames(Set<String> classNames) {
-        Validate.notNull(classNames);
-        if (classNames.isEmpty()) {
-            attributes().remove("class");
-        } else {
-            attributes().put("class", StringUtil.join(classNames, " "));
-        }
+        ElementClasses.classNames(this, classNames);
         return this;
     }
 
@@ -1887,28 +1649,7 @@ public class Element extends Node implements Iterable<Element> {
      */
     // performance sensitive
     public boolean hasClass(String className) {
-        if (attributes == null) return false;
-
-        final String classAttr = attributes.getIgnoreCase("class");
-        final int len = classAttr.length();
-        final int wantLen = className.length();
-
-        if (len == 0 || len < wantLen) return false;
-
-        // if both lengths are equal, only need to compare the className with the attribute
-        if (len == wantLen) return className.equalsIgnoreCase(classAttr);
-
-        // otherwise, scan for whitespace and compare regions (with no string or list allocations)
-        for (int i = 0; i < len; ) {
-            int start = nextClassStart(classAttr, i, len);
-            if (start == len) return false;
-
-            int end = nextClassEnd(classAttr, start, len);
-            if (end - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) return true;
-            i = end;
-        }
-
-        return false;
+        return ElementClasses.hasClass(this, className);
     }
 
     /**
@@ -1917,12 +1658,7 @@ public class Element extends Node implements Iterable<Element> {
      @return this element
      */
     public Element addClass(String className) {
-        Validate.notNull(className);
-
-        Set<String> classes = classNames();
-        classes.add(className);
-        classNames(classes);
-
+        ElementClasses.addClass(this, className);
         return this;
     }
 
@@ -1932,12 +1668,7 @@ public class Element extends Node implements Iterable<Element> {
      @return this element
      */
     public Element removeClass(String className) {
-        Validate.notNull(className);
-
-        Set<String> classes = classNames();
-        classes.remove(className);
-        classNames(classes);
-
+        ElementClasses.removeClass(this, className);
         return this;
     }
 
@@ -1947,15 +1678,7 @@ public class Element extends Node implements Iterable<Element> {
      @return this element
      */
     public Element toggleClass(String className) {
-        Validate.notNull(className);
-
-        Set<String> classes = classNames();
-        if (classes.contains(className))
-            classes.remove(className);
-        else
-            classes.add(className);
-        classNames(classes);
-
+        ElementClasses.toggleClass(this, className);
         return this;
     }
 

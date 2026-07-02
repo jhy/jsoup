@@ -15,13 +15,11 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.UncheckedIOException;
 import java.net.CookieManager;
 import java.net.CookieStore;
@@ -29,12 +27,10 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -71,7 +67,7 @@ public class HttpConnection implements Connection {
     public static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
     static final String DefaultUploadType = "application/octet-stream";
-    private static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+
 
     private HttpConnection.Request req;
     private Connection.@Nullable Response res;
@@ -118,7 +114,7 @@ public class HttpConnection implements Connection {
     }
 
     static String encodeMimeName(String val) {
-        return val.replace("\"", "%22");
+        return HttpConnectionPost.encodeMimeName(val);
     }
 
     @Override
@@ -618,7 +614,7 @@ public class HttpConnection implements Connection {
         private int maxBodySizeBytes;
         private boolean followRedirects;
         private final Collection<Connection.KeyVal> data;
-        private @Nullable Object body = null; // String or InputStream
+        @Nullable Object body = null; // String or InputStream
         @Nullable String mimeBoundary;
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
@@ -883,9 +879,9 @@ public class HttpConnection implements Connection {
 
             // set up the request for execution
             if (!req.data().isEmpty() && (!supportsBody || hasBody))
-                serialiseRequestUrl(req);
+                HttpConnectionPost.serialiseRequestUrl(req);
             else if (supportsBody)
-                setOutputContentType(req);
+                HttpConnectionPost.setOutputContentType(req);
 
             long startTime = System.nanoTime();
             RequestExecutor executor = RequestDispatch.get(req, prevRes);
@@ -938,7 +934,7 @@ public class HttpConnection implements Connection {
                         stream = new InflaterInputStream(stream, new Inflater(true));
                     
                     res.bodyStream = ControllableInputStream.wrap(
-                        stream, DefaultBufferSize, req.maxBodySize())
+                        stream, req.maxBodySize())
                         .timeout(startTime, req.timeout());
 
                     if (req.responseProgress != null) // set response progress listener
@@ -1172,174 +1168,16 @@ public class HttpConnection implements Connection {
             }
         }
 
-        /**
-         Servers may encode response headers in UTF-8 instead of RFC defined 8859. The JVM decodes the headers (before we see them) as 8859, which can lead to mojibake data.
-         <p>This method attempts to detect that and re-decode the string as UTF-8.</p>
-         <p>However on Android, the headers will be decoded as UTF8, so we can detect and pass those directly.</p>
-         * @param val a header value string that may have been incorrectly decoded as 8859.
-         * @return a potentially re-decoded string.
-         */
         @Nullable
         static String fixHeaderEncoding(@Nullable String val) {
-            if (val == null) return val;
-            // If we can't encode the string as 8859, then it couldn't have been decoded as 8859
-            if (!StandardCharsets.ISO_8859_1.newEncoder().canEncode(val))
-                return val;
-            byte[] bytes = val.getBytes(ISO_8859_1);
-            if (looksLikeUtf8(bytes))
-                return new String(bytes, UTF_8);
-            else
-                return val;
+            return HttpHeaderEncoding.fixHeaderEncoding(val);
         }
 
-        private static boolean looksLikeUtf8(byte[] input) {
-            int i = 0;
-            // BOM:
-            if (input.length >= 3
-                && (input[0] & 0xFF) == 0xEF
-                && (input[1] & 0xFF) == 0xBB
-                && (input[2] & 0xFF) == 0xBF) {
-                i = 3;
-            }
-
-            int end;
-            boolean foundNonAscii = false;
-            for (int j = input.length; i < j; ++i) {
-                int o = input[i];
-                if ((o & 0x80) == 0) {
-                    continue; // ASCII
-                }
-                foundNonAscii = true;
-
-                // UTF-8 leading:
-                if ((o & 0xE0) == 0xC0) {
-                    end = i + 1;
-                } else if ((o & 0xF0) == 0xE0) {
-                    end = i + 2;
-                } else if ((o & 0xF8) == 0xF0) {
-                    end = i + 3;
-                } else {
-                    return false;
-                }
-
-                if (end >= input.length)
-                    return false;
-
-                while (i < end) {
-                    i++;
-                    o = input[i];
-                    if ((o & 0xC0) != 0x80) {
-                        return false;
-                    }
-                }
-            }
-            return foundNonAscii;
-        }
-
-        private static void setOutputContentType(final HttpConnection.Request req) {
-            final String contentType = req.header(CONTENT_TYPE);
-            String bound = null;
-            if (contentType != null) {
-                // no-op; don't add content type as already set (e.g. for requestBody())
-                // todo - if content type already set, we could add charset
-
-                // if user has set content type to multipart/form-data, auto add boundary.
-                if(contentType.contains(MULTIPART_FORM_DATA) && !contentType.contains("boundary")) {
-                    bound = DataUtil.mimeBoundary();
-                    req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound);
-                }
-
-            }
-            else if (needsMultipart(req)) {
-                bound = DataUtil.mimeBoundary();
-                req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound);
-            } else {
-                req.header(CONTENT_TYPE, FORM_URL_ENCODED + "; charset=" + req.postDataCharset());
-            }
-            req.mimeBoundary = bound;
-        }
 
         static void writePost(final HttpConnection.Request req, final OutputStream outputStream) throws IOException {
-            try (OutputStreamWriter osw = new OutputStreamWriter(outputStream, req.postDataCharset());
-                 BufferedWriter w = new BufferedWriter(osw)) {
-                implWritePost(req, w, outputStream);
-            }
+            HttpConnectionPost.writePost(req, outputStream);
         }
 
-        private static void implWritePost(final HttpConnection.Request req, final BufferedWriter w, final OutputStream outputStream) throws IOException {
-            final Collection<Connection.KeyVal> data = req.data();
-            final String boundary = req.mimeBoundary;
-
-            if (boundary != null) { // a multipart post
-                for (Connection.KeyVal keyVal : data) {
-                    w.write("--");
-                    w.write(boundary);
-                    w.write("\r\n");
-                    w.write("Content-Disposition: form-data; name=\"");
-                    w.write(encodeMimeName(keyVal.key())); // encodes " to %22
-                    w.write("\"");
-                    final InputStream input = keyVal.inputStream();
-                    if (input != null) {
-                        w.write("; filename=\"");
-                        w.write(encodeMimeName(keyVal.value()));
-                        w.write("\"\r\nContent-Type: ");
-                        String contentType = keyVal.contentType();
-                        w.write(contentType != null ? contentType : DefaultUploadType);
-                        w.write("\r\n\r\n");
-                        w.flush();
-                        DataUtil.crossStreams(input, outputStream);
-                        outputStream.flush();
-                    } else {
-                        w.write("\r\n\r\n");
-                        w.write(keyVal.value());
-                    }
-                    w.write("\r\n");
-                }
-                w.write("--");
-                w.write(boundary);
-                w.write("--");
-            } else if (req.body != null) { // a single body (bytes or plain text);  data will be in query string
-                if (req.body instanceof String) {
-                    w.write((String) req.body);
-                } else if (req.body instanceof InputStream) {
-                    DataUtil.crossStreams((InputStream) req.body, outputStream);
-                    outputStream.flush();
-                } else {
-                    throw new IllegalStateException();
-                }
-            } else { // regular form data (application/x-www-form-urlencoded)
-                boolean first = true;
-                for (Connection.KeyVal keyVal : data) {
-                    if (!first) w.append('&');
-                    else first = false;
-
-                    w.write(URLEncoder.encode(keyVal.key(), req.postDataCharset()));
-                    w.write('=');
-                    w.write(URLEncoder.encode(keyVal.value(), req.postDataCharset()));
-                }
-            }
-        }
-
-        // for get url reqs, serialise the data map into the url
-        private static void serialiseRequestUrl(Connection.Request req) throws IOException {
-            UrlBuilder in = new UrlBuilder(req.url());
-
-            for (Connection.KeyVal keyVal : req.data()) {
-                Validate.isFalse(keyVal.hasInputStream(), "InputStream data not supported in URL query string.");
-                in.appendKeyVal(keyVal);
-            }
-            req.url(in.build());
-            req.data().clear(); // moved into url as get params
-        }
-    }
-
-    private static boolean needsMultipart(Connection.Request req) {
-        // multipart mode, for files. add the header if we see something with an inputstream, and return a non-null boundary
-        for (Connection.KeyVal keyVal : req.data()) {
-            if (keyVal.hasInputStream())
-                return true;
-        }
-        return false;
     }
 
     public static class KeyVal implements Connection.KeyVal {
