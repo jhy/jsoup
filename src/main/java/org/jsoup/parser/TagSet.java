@@ -137,7 +137,7 @@ public class TagSet {
     Tag valueOf(String tagName, @Nullable String normalName, String namespace, boolean preserveTagCase) {
         Validate.notNull(tagName);
         Validate.notNull(namespace);
-        tagName = tagName.trim();
+        if (normalName == null) tagName = tagName.trim(); // public API input; tokenizer names are already delimited
         Validate.notEmpty(tagName);
         Tag tag = get(tagName, namespace);
         if (tag != null) return tag;

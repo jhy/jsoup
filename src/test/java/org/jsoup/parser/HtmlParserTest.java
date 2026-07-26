@@ -1884,16 +1884,13 @@ public class HtmlParserTest {
             TextUtil.stripNewlines(doc.head().html()));
     }
 
-    @Test void trimNormalizeElementNamesInBuilder() {
+    @Test void doesNotTrimControlCharactersFromTagNames() {
         // https://github.com/jhy/jsoup/issues/1637 | https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=38983
-        // This is interesting - in TB state, the element name was "template\u001E", so no name checks matched. Then,
-        // when the Element is created, the name got normalized to "template" and so looked like there should be a
-        // template on the stack during resetInsertionMode for the select.
-        // The issue was that the normalization in Tag.valueOf did a trim which the Token.Tag did not
+        // The source tag is not a template, so its control character must survive tree building.
         Document doc = Jsoup.parse("<template\u001E><select><input>");
-        assertNotNull(doc);
-        assertEquals("<template><select></select><input></template>",
-            TextUtil.stripNewlines(doc.head().html()));
+        assertEquals("<template\u001E><select></select><input></template\u001E>",
+            TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("template\u001E", doc.body().child(0).normalName());
     }
 
     @Test void templateInLi() {
