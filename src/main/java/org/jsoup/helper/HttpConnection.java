@@ -69,7 +69,6 @@ public class HttpConnection implements Connection {
     public static final String CONTENT_TYPE = "Content-Type";
     public static final String MULTIPART_FORM_DATA = "multipart/form-data";
     public static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
-    private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
     static final String DefaultUploadType = "application/octet-stream";
     private static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
 
@@ -834,6 +833,9 @@ public class HttpConnection implements Connection {
     public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
         private static final int MAX_REDIRECTS = 20;
         private static final String LOCATION = "Location";
+        private static final String[] REDIRECT_CONTENT_HEADERS = {
+            CONTENT_ENCODING, "Content-Language", "Content-Location", CONTENT_TYPE, "Content-Length", "Digest", "Last-Modified"
+        };
         int statusCode;
         String statusMessage = "";
         private @Nullable ByteBuffer byteData;
@@ -868,6 +870,25 @@ public class HttpConnection implements Connection {
             return execute(req, null);
         }
 
+        /**
+         Determines the request method for an automatic redirect, or null if the status is not automatically redirected.
+         See <a href="https://www.rfc-editor.org/rfc/rfc9110.html#section-15.4">RFC 9110, Section 15.4</a>.
+         */
+        static @Nullable Method redirectMethod(int statusCode, Method method) {
+            switch (statusCode) {
+                case 301: // Moved Permanently
+                case 302: // Found
+                    return method == Method.POST ? Method.GET : method;
+                case 303: // See Other
+                    return method == Method.HEAD ? Method.HEAD : Method.GET;
+                case 307: // Temporary Redirect
+                case 308: // Permanent Redirect
+                    return method;
+                default:
+                    return null;
+            }
+        }
+
         static Response execute(HttpConnection.Request req, @Nullable Response prevRes) throws IOException {
             Validate.isTrue(req.executing.tryLock(), "Multiple threads were detected trying to execute the same request concurrently. Make sure to use Connection#newRequest() and do not share an executing request between threads.");
             Validate.notNullParam(req, "req");
@@ -893,13 +914,17 @@ public class HttpConnection implements Connection {
             try {
                 res = executor.execute();
 
-                // redirect if there's a location header (from 3xx, or 201 etc)
-                if (res.hasHeader(LOCATION) && req.followRedirects()) {
-                    if (res.statusCode != HTTP_TEMP_REDIR) {
-                        req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
+                Method nextMethod = redirectMethod(res.statusCode, req.method());
+                if (nextMethod != null && res.hasHeader(LOCATION) && req.followRedirects()) {
+                    if (nextMethod == req.method() && (req.body instanceof InputStream || needsMultipart(req)))
+                        throw new IOException("Cannot follow redirect with a streamed request body; disable followRedirects and resend with a fresh stream");
+
+                    if (nextMethod != req.method()) {
+                        req.method(nextMethod);
                         req.data().clear();
                         req.requestBody(null);
-                        req.removeHeader(CONTENT_TYPE);
+                        for (String header : REDIRECT_CONTENT_HEADERS)
+                            req.removeHeader(header);
                     }
 
                     String location = res.header(LOCATION);
@@ -1238,7 +1263,7 @@ public class HttpConnection implements Connection {
 
         private static void setOutputContentType(final HttpConnection.Request req) {
             final String contentType = req.header(CONTENT_TYPE);
-            String bound = null;
+            String bound = contentType != null && contentType.contains(MULTIPART_FORM_DATA) ? req.mimeBoundary : null;
             if (contentType != null) {
                 // no-op; don't add content type as already set (e.g. for requestBody())
                 // todo - if content type already set, we could add charset
