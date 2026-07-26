@@ -889,6 +889,18 @@ public class HttpConnection implements Connection {
             }
         }
 
+        /**
+         Tests if two URLs share an HTTP origin, as defined by scheme, host, and effective port.
+         See <a href="https://www.rfc-editor.org/rfc/rfc9110.html#section-4.3.1">RFC 9110, Section 4.3.1</a>.
+         */
+        static boolean sameOrigin(URL first, URL second) {
+            int firstPort = first.getPort() != -1 ? first.getPort() : first.getDefaultPort();
+            int secondPort = second.getPort() != -1 ? second.getPort() : second.getDefaultPort();
+            return first.getProtocol().equalsIgnoreCase(second.getProtocol())
+                && first.getHost().equalsIgnoreCase(second.getHost())
+                && firstPort == secondPort;
+        }
+
         static Response execute(HttpConnection.Request req, @Nullable Response prevRes) throws IOException {
             Validate.isTrue(req.executing.tryLock(), "Multiple threads were detected trying to execute the same request concurrently. Make sure to use Connection#newRequest() and do not share an executing request between threads.");
             Validate.notNullParam(req, "req");
@@ -932,6 +944,13 @@ public class HttpConnection implements Connection {
                     if (location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
                         location = location.substring(6);
                     URL redir = StringUtil.resolve(req.url(), location);
+                    if (!sameOrigin(req.url(), redir)) {
+                        // remove sensitive headers; defense-in-depth against open redirects
+                        req.removeHeader("Authorization");
+                        req.removeHeader("Cookie");
+                        req.removeHeader("Cookie2");
+                        req.cookies().clear();
+                    }
                     req.url(redir);
 
                     return execute(req, res);

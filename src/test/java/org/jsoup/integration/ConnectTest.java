@@ -35,7 +35,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Authenticator;
+import java.net.HttpCookie;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -214,6 +216,53 @@ public class ConnectTest {
         assertEquals("hello", ihVal("Random-Header-name", doc));
         assertEquals("cross-site", ihVal("Sec-Fetch-Site", doc));
         assertEquals("cors", ihVal("Sec-Fetch-Mode", doc));
+    }
+
+    @Test
+    public void credentialsSurviveSameOriginRedirect() throws IOException {
+        // Explicit credentials remain available while the redirect stays within the same origin.
+        Document doc = Jsoup.connect(origin().redirect.url())
+            .data(RedirectRoute.LocationParam, echoUrl)
+            .header("Authorization", "Bearer same-origin")
+            .header("Cookie", "HeaderCookie=yes")
+            .cookie("RequestCookie", "yes")
+            .get();
+
+        assertEquals("Bearer same-origin", ihVal("Authorization", doc));
+        assertEquals("yes", ihVal("Cookie: HeaderCookie", doc));
+        assertEquals("yes", ihVal("Cookie: RequestCookie", doc));
+    }
+
+    @Test
+    public void credentialsDoNotCrossRedirectOrigins() throws IOException {
+        // Explicit credentials are dropped, while the cookie store can apply cookies scoped to the target.
+        String targetUrl = echoUrl.replace("localhost", "127.0.0.1");
+        Connection connection = Jsoup.connect(origin().redirect.url())
+            .data(RedirectRoute.LocationParam, targetUrl)
+            .header("Authorization", "Bearer original-origin")
+            .header("Cookie", "HeaderCookie=yes")
+            .header("Cookie2", "LegacyCookie=yes")
+            .cookie("RequestCookie", "yes")
+            .header("Random-Header-name", "hello");
+
+        HttpCookie targetCookie = new HttpCookie("StoredCookie", "yes");
+        targetCookie.setPath("/");
+        targetCookie.setVersion(0);
+        connection.cookieStore().add(URI.create(targetUrl), targetCookie);
+
+        Document doc = connection.get();
+        assertEquals(targetUrl, doc.location());
+        assertNull(ihVal("Authorization", doc));
+        assertNull(ihVal("Cookie2", doc));
+        assertNull(ihVal("Cookie: HeaderCookie", doc));
+        assertNull(ihVal("Cookie: RequestCookie", doc));
+        assertEquals("yes", ihVal("Cookie: StoredCookie", doc));
+        assertEquals("hello", ihVal("Random-Header-name", doc));
+
+        assertFalse(connection.request().hasHeader("Authorization"));
+        assertFalse(connection.request().hasHeader("Cookie"));
+        assertFalse(connection.request().hasHeader("Cookie2"));
+        assertTrue(connection.request().cookies().isEmpty());
     }
 
     @Test
