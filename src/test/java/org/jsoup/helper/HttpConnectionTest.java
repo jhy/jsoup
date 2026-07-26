@@ -24,10 +24,36 @@ import java.util.Locale;
 import java.util.Map;
 
 import static org.jsoup.helper.HttpConnection.Response.fixHeaderEncoding;
+import static org.jsoup.helper.HttpConnection.Response.redirectMethod;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HttpConnectionTest {
     /* most actual network http connection tests are in integration */
+
+    @Test void redirectMethodsFollowHttpSemantics() {
+        // 301 and 302 historically change POST to GET, but preserve every other method.
+        for (Connection.Method method : Connection.Method.values()) {
+            Connection.Method expected = method == Connection.Method.POST ? Connection.Method.GET : method;
+            assertEquals(expected, redirectMethod(301, method));
+            assertEquals(expected, redirectMethod(302, method));
+        }
+
+        // 303 retrieves the redirect target, while HEAD remains HEAD.
+        for (Connection.Method method : Connection.Method.values()) {
+            Connection.Method expected = method == Connection.Method.HEAD ? Connection.Method.HEAD : Connection.Method.GET;
+            assertEquals(expected, redirectMethod(303, method));
+        }
+
+        // 307 and 308 explicitly preserve the request method.
+        for (Connection.Method method : Connection.Method.values()) {
+            assertEquals(method, redirectMethod(307, method));
+            assertEquals(method, redirectMethod(308, method));
+        }
+
+        assertNull(redirectMethod(201, Connection.Method.GET));
+        assertNull(redirectMethod(300, Connection.Method.GET));
+        assertNull(redirectMethod(304, Connection.Method.GET));
+    }
 
     @Test public void canCreateEmptyConnection() {
         HttpConnection con = new HttpConnection();
