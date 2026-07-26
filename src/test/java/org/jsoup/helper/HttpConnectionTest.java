@@ -25,6 +25,7 @@ import java.util.Map;
 
 import static org.jsoup.helper.HttpConnection.Response.fixHeaderEncoding;
 import static org.jsoup.helper.HttpConnection.Response.redirectMethod;
+import static org.jsoup.helper.HttpConnection.Response.sameOrigin;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HttpConnectionTest {
@@ -53,6 +54,25 @@ public class HttpConnectionTest {
         assertNull(redirectMethod(201, Connection.Method.GET));
         assertNull(redirectMethod(300, Connection.Method.GET));
         assertNull(redirectMethod(304, Connection.Method.GET));
+    }
+
+    @Test void sameOriginUsesSchemeHostAndEffectivePort() throws MalformedURLException {
+        assertTrue(sameOrigin(
+            new URL("http://example.com/path"),
+            new URL("http://EXAMPLE.com:80/other")));
+        assertTrue(sameOrigin(
+            new URL("https://example.com/"),
+            new URL("https://example.com:443/")));
+
+        assertFalse(sameOrigin(
+            new URL("http://example.com/"),
+            new URL("https://example.com/")));
+        assertFalse(sameOrigin(
+            new URL("http://example.com/"),
+            new URL("http://www.example.com/")));
+        assertFalse(sameOrigin(
+            new URL("http://example.com/"),
+            new URL("http://example.com:8080/")));
     }
 
     @Test public void canCreateEmptyConnection() {

@@ -9,6 +9,7 @@
 * Simplified the HTML tree builder's scope, implied-end-tag, and special-element checks by caching parser-only options on Tag. That improves HTML parser throughput by about 10% on small inputs and up to about 30% on larger inputs in the benchmark fixtures. [#2502](https://github.com/jhy/jsoup/issues/2502)
 * Improved HTML parser throughput stability by making hot tokeniser scan paths compile more predictably. [#2507](https://github.com/jhy/jsoup/pull/2507)
 * `<noscript>` fallback markup is now parsed into an inspectable DOM subtree in both the document head and body. The fallback acts as a contained parsing island, so malformed markup cannot disrupt the surrounding document structure, while normal HTML tokenization still applies within it. This also improves round-trip serialization. [#2537](https://github.com/jhy/jsoup/pull/2537)
+* Improved redirect credential handling as a defense-in-depth measure: explicit authorization headers and request cookies are no longer forwarded across origins, reducing exposure through open redirects and aligning with HTTP guidance. Cookies managed by a `CookieStore` continue to follow their configured scop
 
 ### Bug Fixes
 * Fixed HTML parsing of mixed-case RCDATA end tags after tag-shaped text. For example, `<title><p>Foo</TiTLE>` and `<textarea><img src=x></TeXtArEa>` now keep the tag-shaped content as text instead of promoting it to markup. [#2503](https://github.com/jhy/jsoup/issues/2503)
