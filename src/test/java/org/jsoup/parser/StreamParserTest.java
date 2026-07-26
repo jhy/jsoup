@@ -484,4 +484,17 @@ class StreamParserTest {
         }
     }
 
+    @Test
+    void emitsNoscriptFallbackElements() {
+        String html = "<body><noscript><p>one</p><p>two</p></noscript><p>after</p>";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            StringBuilder seen = new StringBuilder();
+            parser.stream().forEachOrdered(el -> {
+                if (el.normalName().equals("p"))
+                    trackSeen(el, seen);
+            });
+            assertEquals("p[one]+;p[two];p[after];", seen.toString());
+        }
+    }
+
 }

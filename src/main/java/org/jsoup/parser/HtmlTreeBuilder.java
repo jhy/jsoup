@@ -47,6 +47,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private @Nullable Element contextElement; // fragment parse root; name only copy of context. could be null even if fragment parsing
     ArrayList<Element> formattingElements; // active (open) formatting elements
     private ArrayList<HtmlTreeBuilderState> tmplInsertMode; // stack of Template Insertion modes
+    private @Nullable NoscriptState noscriptState; // active noscript island state
     private List<Token.Character> pendingTableCharacters; // chars in table to be shifted out
     private Token.EndTag emptyEnd; // reused empty end tag
 
@@ -76,6 +77,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         contextElement = null;
         formattingElements = new ArrayList<>();
         tmplInsertMode = new ArrayList<>();
+        noscriptState = null;
         pendingTableCharacters = new ArrayList<>();
         emptyEnd = new Token.EndTag(this);
         framesetOk = true;
@@ -128,6 +130,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 }
                 formSearch = formSearch.parent();
             }
+
+            if (contextName.equals("noscript")) enterNoscript(contextElement);
         }
     }
 
@@ -146,8 +150,84 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     @Override
     protected boolean process(Token token) {
+        if (noscriptState != null && state != HtmlTreeBuilderState.Text)
+            return processNoscriptToken(token);
         HtmlTreeBuilderState dispatch = useCurrentOrForeignInsert(token) ? this.state : ForeignContent;
         return dispatch.process(token, this);
+    }
+
+    /**
+     Handles tokens in a noscript island as plain contained markup. This diverges from the spec intentionally so that
+     content is available in the DOM and round-trip serializable, but errant content won't change the parser's context
+     (e.g. an `a` won't kick out of InHead).
+     */
+    private boolean processNoscriptToken(Token token) {
+        switch (token.type) {
+            case StartTag:
+                return insertNoscriptStartTag(token.asStartTag());
+            case EndTag:
+                return closeNoscriptEndTag(token.asEndTag());
+            case Comment:
+                insertCommentNode(token.asComment());
+                return true;
+            case Character:
+                Token.Character character = token.asCharacter();
+                insertCharacterNode(character);
+                if (!StringUtil.isBlank(character.getData()))
+                    framesetOk(false);
+                return true;
+            case Doctype:
+                error(state);
+                return false;
+            case EOF:
+                error(state);
+                endNoscript();
+                return process(token);
+            default:
+                Validate.wtf("Unexpected state: " + token.type); // XmlDecl only in XmlTreeBuilder
+                return false;
+        }
+    }
+
+    /**
+     Inserts a start tag inside a noscript island as plain markup.
+     */
+    private boolean insertNoscriptStartTag(Token.StartTag start) {
+        TokeniserState textState = tagFor(start).textState();
+        Element el = insertElementFor(start);
+        if (textState != null) { // plaintext is intentionally not TagSet-driven and remains plain fallback markup.
+            if (start.isSelfClosing()) {
+                if (currentElement() == el)
+                    pop();
+            } else {
+                tokeniser.transition(textState);
+                markInsertionMode();
+                transition(HtmlTreeBuilderState.Text);
+            }
+        }
+
+        framesetOk(false);
+        return true;
+    }
+
+    /**
+     Closes an island element if it matches above the current noscript boundary.
+     */
+    private boolean closeNoscriptEndTag(Token.EndTag end) {
+        String name = end.normalName();
+        NoscriptState island = Validate.expectNotNull(noscriptState, "Bug: noscript end tag processed with no island state");
+        if (name.equals("noscript") && island.boundary != contextElement) {
+            endNoscript();
+            return true;
+        }
+        if (!inNoscriptScope(name)) {
+            error(state);
+            return false;
+        }
+        if (!currentElementIs(name))
+            error(state);
+        popStackToClose(name);
+        return true;
     }
 
     boolean useCurrentOrForeignInsert(Token token) {
@@ -488,6 +568,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
             if (templateModeSize() > 0)
                 popTemplateMode();
             resetInsertionMode();
+        } else if (noscriptState != null && element == noscriptState.boundary) {
+            restoreNoscriptState();
         }
     }
 
@@ -771,8 +853,81 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return formElement;
     }
 
-    void setFormElement(FormElement formElement) {
+    void setFormElement(@Nullable FormElement formElement) {
         this.formElement = formElement;
+    }
+
+    private static final class NoscriptState {
+        final Element boundary;
+        final @Nullable FormElement savedFormElement;
+
+        /**
+         Captures parser state isolated by the active noscript island.
+        */
+        NoscriptState(Element boundary, @Nullable FormElement formElement) {
+            this.boundary = boundary;
+            this.savedFormElement = formElement;
+        }
+    }
+
+    /** Starts a noscript island, preserving parser-global state for restoration on close. */
+    void startNoscript(Token.StartTag startTag) {
+        Element boundary = insertElementFor(startTag);
+        enterNoscript(boundary);
+    }
+
+    /** Enters a noscript island around the provided boundary element. */
+    private void enterNoscript(Element boundary) {
+        noscriptState = new NoscriptState(boundary, formElement);
+        // Fallback form elements should not leak through the parser form pointer.
+        setFormElement(null);
+    }
+
+    /** Tests if the named element is above the current noscript boundary. */
+    private boolean inNoscriptScope(String name) {
+        NoscriptState state = noscriptState;
+        if (state == null)
+            return false;
+        for (int pos = stack.size() - 1; pos >= 0; pos--) {
+            Element el = stack.get(pos);
+            if (el == state.boundary)
+                return false;
+            if (el.nameIs(name))
+                return true;
+        }
+        return false;
+    }
+
+    /** Closes the active noscript subtree and restores isolated parser state. */
+    private void endNoscript() {
+        NoscriptState state = Validate.expectNotNull(noscriptState, "Bug: noscript fallback closed with no island state");
+        int boundary = noscriptBoundaryIndex(state);
+        if (boundary == -1) {
+            error(this.state);
+            restoreNoscriptState();
+            return;
+        }
+        if (stack.get(stack.size() - 1) != state.boundary)
+            error(this.state);
+        while (stack.size() > boundary)
+            pop();
+        restoreNoscriptState();
+    }
+
+    /** Finds the active noscript boundary on the stack by identity. */
+    private int noscriptBoundaryIndex(NoscriptState state) {
+        for (int pos = stack.size() - 1; pos >= 0; pos--) {
+            if (stack.get(pos) == state.boundary)
+                return pos;
+        }
+        return -1;
+    }
+
+    /** Restores parser-global state from the active noscript island. */
+    private void restoreNoscriptState() {
+        NoscriptState state = Validate.expectNotNull(noscriptState, "Bug: no noscript island state to restore");
+        noscriptState = null;
+        setFormElement(state.savedFormElement);
     }
 
     void resetPendingTableCharacters() {
