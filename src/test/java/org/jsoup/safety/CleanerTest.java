@@ -428,6 +428,20 @@ public class CleanerTest {
         assertEquals(0, cleanDoc.body().childNodeSize());
     }
 
+    @Test public void dropsScriptInsideNoscriptFallback() {
+        String[] inputs = {
+            "<noscript><script alert='xss'></noscript>",
+            "<noscript><script>alert(1)</script></noscript>",
+            "<noscript><script><p>x</p></script></noscript>"
+        };
+
+        for (String dirty : inputs) {
+            assertEquals("", Jsoup.clean(dirty, Safelist.basic()));
+            assertEquals("", Jsoup.clean(dirty, Safelist.relaxed()));
+            assertFalse(Jsoup.isValid(dirty, Safelist.relaxed()));
+        }
+    }
+
     @Test public void cleansInternationalText() {
         assertEquals("привет", Jsoup.clean("привет", Safelist.none()));
     }

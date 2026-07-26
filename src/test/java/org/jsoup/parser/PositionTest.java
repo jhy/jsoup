@@ -338,6 +338,22 @@ class PositionTest {
         assertEquals("2,9:15-4,8:33", data.sourceRange().toString());
     }
 
+    @Test void tracksNoscriptFallbackContent() {
+        String html = "<head>\n<noscript><p a=1>One\nTwo</p></noscript>\n</head>";
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+
+        Element noscript = doc.expectFirst("noscript");
+        Element p = noscript.expectFirst("p");
+        TextNode text = (TextNode) p.firstChild();
+
+        assertEquals("2,1:7-2,11:17", noscript.sourceRange().toString());
+        assertTrue(noscript.endSourceRange().isTracked());
+        assertEquals("2,11:17-2,18:24", p.sourceRange().toString());
+        assertEquals("3,4:31-3,8:35", p.endSourceRange().toString());
+        assertEquals("2,14:20-2,15:21=2,16:22-2,17:23", p.attributes().sourceRange("a").toString());
+        assertEquals("2,18:24-3,4:31", text.sourceRange().toString());
+    }
+
     @Test void tracksExplicitAndImplicitBodyHtml() {
         // Tests that </body></html> tokens are tracked when present
         String htmlSans = "<body><a>Link</a>";

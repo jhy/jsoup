@@ -137,9 +137,7 @@ enum HtmlTreeBuilderState {
                     } else if (inSorted(name, InHeadRaw)) {
                         HandleTextState(start, tb, tb.tagFor(start).textState());
                     } else if (name.equals("noscript")) {
-                        // else if noscript && scripting flag = true: rawtext (jsoup doesn't run script, to handle as noscript)
-                        tb.insertElementFor(start);
-                        tb.transition(InHeadNoscript);
+                        tb.startNoscript(start);
                     } else if (name.equals("script")) {
                         // skips some script rules as won't execute them
                         tb.tokeniser.transition(TokeniserState.ScriptData);
@@ -193,38 +191,6 @@ enum HtmlTreeBuilderState {
         private boolean anythingElse(Token t, TreeBuilder tb) {
             tb.processEndTag("head");
             return tb.process(t);
-        }
-    },
-    InHeadNoscript {
-        @Override boolean process(Token t, HtmlTreeBuilder tb) {
-            if (t.isDoctype()) {
-                tb.error(this);
-            } else if (t.isStartTag() && t.asStartTag().normalName().equals("html")) {
-                return tb.process(t, InBody);
-            } else if (t.isEndTag() && t.asEndTag().normalName().equals("noscript")) {
-                tb.pop();
-                tb.transition(InHead);
-            } else if (isWhitespace(t) || t.isComment() || (t.isStartTag() && inSorted(t.asStartTag().normalName(),
-                    InHeadNoScriptHead))) {
-                return tb.process(t, InHead);
-            } else if (t.isEndTag() && t.asEndTag().normalName().equals("br")) {
-                return anythingElse(t, tb);
-            } else if ((t.isStartTag() && inSorted(t.asStartTag().normalName(), InHeadNoscriptIgnore)) || t.isEndTag()) {
-                tb.error(this);
-                return false;
-            } else {
-                return anythingElse(t, tb);
-            }
-            return true;
-        }
-
-        private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
-            // note that this deviates from spec, which is to pop out of noscript and reprocess in head:
-            // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inheadnoscript
-            // allows content to be inserted as data
-            tb.error(this);
-            tb.insertCharacterNode(new Token.Character().data(t.toString()));
-            return true;
         }
     },
     AfterHead {
@@ -492,8 +458,11 @@ enum HtmlTreeBuilderState {
                     HandleTextState(startTag, tb, tb.tagFor(startTag).textState());
                     break;
                 case "noembed":
-                    // also handle noscript if script enabled
                     HandleTextState(startTag, tb, tb.tagFor(startTag).textState());
+                    break;
+                case "noscript":
+                    tb.reconstructFormattingElements();
+                    tb.startNoscript(startTag);
                     break;
                 case "select":
                     tb.reconstructFormattingElements();
@@ -1056,6 +1025,8 @@ enum HtmlTreeBuilderState {
                     }
                 } else if (inSorted(name, InTableToHead)) {
                     return tb.process(t, InHead);
+                } else if (name.equals("noscript")) {
+                    tb.startNoscript(startTag);
                 } else if (name.equals("input")) {
                     if (!(startTag.hasAttributes() && startTag.attributes.get("type").equalsIgnoreCase("hidden"))) {
                         return anythingElse(t, tb);
@@ -1484,6 +1455,8 @@ enum HtmlTreeBuilderState {
                         return tb.process(start);
                     } else if (name.equals("script") || name.equals("template")) {
                         return tb.process(t, InHead);
+                    } else if (name.equals("noscript")) {
+                        tb.startNoscript(start);
                     } else {
                         return anythingElse(t, tb);
                     }
@@ -1902,7 +1875,6 @@ enum HtmlTreeBuilderState {
         static final String[] InHeadEnd = new String[]{"body", "br", "html"};
         static final String[] AfterHeadBody = new String[]{"body", "br", "html"};
         static final String[] BeforeHtmlToHead = new String[]{"body", "br", "head", "html", };
-        static final String[] InHeadNoScriptHead = new String[]{"basefont", "bgsound", "link", "meta", "noframes", "style"};
         static final String[] InBodyStartToHead = new String[]{"base", "basefont", "bgsound", "command", "link", "meta", "noframes", "script", "style", "template", "title"};
         static final String[] InBodyStartPClosers = new String[]{"address", "article", "aside", "blockquote", "center", "details", "dir", "div", "dl",
             "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "menu", "nav", "ol",
@@ -1935,7 +1907,6 @@ enum HtmlTreeBuilderState {
         static final String[] InSelectEnd = new String[]{"input", "keygen", "textarea"};
         static final String[] InSelectTableEnd = new String[]{"caption", "table", "tbody", "td", "tfoot", "th", "thead", "tr"};
         static final String[] InTableEndIgnore = new String[]{"tbody", "tfoot", "thead"};
-        static final String[] InHeadNoscriptIgnore = new String[]{"head", "noscript"};
         static final String[] InCaptionIgnore = new String[]{"body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"};
         static final String[] InTemplateToHead = new String[] {"base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title"};
         static final String[] InTemplateToTable = new String[] {"caption", "colgroup", "tbody", "tfoot", "thead"};

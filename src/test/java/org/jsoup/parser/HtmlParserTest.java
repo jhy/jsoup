@@ -658,10 +658,200 @@ public class HtmlParserTest {
         assertEquals("<span>Hello <div>there</div> <span>now</span></span>", TextUtil.stripNewlines(doc.body().html()));
     }
 
-    @Test public void testNoImagesInNoScriptInHead() {
-        // jsoup used to allow, but against spec if parsing with noscript
+    @Test public void parsesImageInNoscriptFallbackInHead() {
         Document doc = Jsoup.parse("<html><head><noscript><img src='foo'></noscript></head><body><p>Hello</p></body></html>");
-        assertEquals("<html><head><noscript>&lt;img src=\"foo\"&gt;</noscript></head><body><p>Hello</p></body></html>", TextUtil.stripNewlines(doc.html()));
+        assertEquals("<html><head><noscript><img src=\"foo\"></noscript></head><body><p>Hello</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void parsesNoscriptFallbackAsContainedDomInHead() {
+        Document doc = Jsoup.parse("<head><noscript><p>head</p><img src=x><title>N</title></noscript><title>After</title></head><body>B</body>");
+        assertEquals("<html><head><noscript><p>head</p><img src=\"x\"><title>N</title></noscript><title>After</title></head><body>B</body></html>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void noscriptFallbackDoesNotCloseOuterHead() {
+        Document doc = Jsoup.parse("<head><noscript></head><p>x</p></noscript><title>T</title></head><body>B</body>");
+        assertEquals("<html><head><noscript><p>x</p></noscript><title>T</title></head><body>B</body></html>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void parsesNoscriptFallbackAsPlainMarkupIsland() {
+        Document doc = Jsoup.parse("<body><noscript><p>one<p>two<ul><li>a<li>b</ul></noscript>B</body>");
+        assertEquals("<html><head></head><body><noscript><p>one<p>two<ul><li>a<li>b</li></li></ul></p></p></noscript>B</body></html>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void encodedNoscriptFallbackRemainsText() {
+        Document doc = Jsoup.parse("<body><noscript>&lt;p&gt;x&lt;/p&gt;</noscript></body>");
+        assertEquals("<html><head></head><body><noscript>&lt;p&gt;x&lt;/p&gt;</noscript></body></html>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void noscriptFallbackUsesTextTokenization() {
+        Document doc = Jsoup.parse("<noscript><script><p>x</p></script><title><i>t</i></title><title /></noscript><p>after</p>");
+        Element script = doc.expectFirst("noscript script");
+        Elements titles = doc.select("noscript title");
+
+        assertEquals("<p>x</p>", script.data());
+        assertNull(script.selectFirst("p"));
+        assertEquals("&lt;i&gt;t&lt;/i&gt;", titles.get(0).html());
+        assertEquals("", titles.get(1).html());
+        assertEquals("after", doc.expectFirst("body > p").text());
+
+        Parser parser = Parser.htmlParser();
+        parser.tagSet().valueOf("x-data", Parser.NamespaceHtml).set(Tag.Data);
+        Document custom = Jsoup.parse("<noscript><x-data><p>x</p></x-data></noscript>", "", parser);
+        Element data = custom.expectFirst("x-data");
+        assertEquals("<p>x</p>", data.data());
+        assertNull(data.selectFirst("p"));
+    }
+
+    @Test public void unclosedTextElementUsesHtmlTokenizationInsideNoscript() {
+        // script-data tokenization owns the apparent noscript end tag through EOF (effectively same as spec; unclosed rcdata will eat remaining content)
+        Document doc = Jsoup.parse("<body><noscript><script>bad</noscript><p>after</p>");
+        Element script = doc.expectFirst("noscript > script");
+
+        assertEquals("bad</noscript><p>after</p>", script.data());
+        assertNull(doc.selectFirst("p"));
+    }
+
+    @Test public void noscriptFallbackDoesNotEnterPlaintextMode() {
+        Document doc = Jsoup.parse("<noscript><plaintext><p>x</p></noscript><p>after</p>");
+        assertEquals("<html><head><noscript><plaintext><p>x</p></plaintext></noscript></head><body><p>after</p></body></html>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void noscriptFallbackHonoursTagSetVoids() {
+        Parser parser = Parser.htmlParser();
+        parser.tagSet().valueOf("fallback", Parser.NamespaceHtml).set(Tag.Void);
+
+        Document doc = Jsoup.parse("<noscript><fallback><p>x</p></noscript>", "", parser);
+        assertEquals("<html><head><noscript><fallback><p>x</p></noscript></head><body></body></html>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void doesNotEnterTableOrSelectModesInsideNoscript() {
+        Document table = Jsoup.parse("<table><noscript><tr><td>x</td></tr></noscript></table>");
+        assertEquals("<html><head></head><body><table><noscript><tr><td>x</td></tr></noscript></table></body></html>",
+            TextUtil.stripNewlines(table.html()));
+
+        Document select = Jsoup.parse("<select><noscript><option>x</option></noscript></select>");
+        assertEquals("<html><head></head><body><select><noscript><option>x</option></noscript></select></body></html>",
+            TextUtil.stripNewlines(select.html()));
+    }
+
+    @Test public void noscriptFragmentContextUsesIslandParsing() {
+        Document doc = Jsoup.parse("<noscript></noscript>");
+        Element noscript = doc.expectFirst("noscript");
+        noscript.html("<table><tr><td>x</td></tr></table>");
+
+        assertEquals("<table><tr><td>x</td></tr></table>", TextUtil.stripNewlines(noscript.html()));
+    }
+
+    @Test public void noscriptFragmentContextCannotBeClosedByInput() {
+        // a synthetic fragment context is not part of the input, so its end tag cannot close the island:
+        Document doc = Jsoup.parse("<noscript></noscript>");
+        Element noscript = doc.expectFirst("noscript");
+        noscript.html("<p>one</noscript><table><tr><td>x</td></tr></table>");
+
+        assertEquals("<p>one<table><tr><td>x</td></tr></table></p>", TextUtil.stripNewlines(noscript.html()));
+    }
+
+    @Test public void nestedNoscriptCanCloseWithinFragmentContext() {
+        // input-created noscript still closes normally above the synthetic context boundary:
+        Document doc = Jsoup.parse("<noscript></noscript>");
+        Element noscript = doc.expectFirst("noscript");
+        noscript.html("<noscript><b>x</b></noscript><table><tr><td>y</td></tr></table>");
+
+        assertEquals("<noscript><b>x</b></noscript><table><tr><td>y</td></tr></table>",
+            TextUtil.stripNewlines(noscript.html()));
+    }
+
+    @Test public void treatsForeignContentAsPlainHtmlInsideNoscript() {
+        Document doc = Jsoup.parse("<body><noscript><svg><path d='M0 0'></path><foreignObject><p>x</p></foreignObject></svg><p>y</p></noscript></body>");
+        assertEquals("<html><head></head><body><noscript><svg><path d=\"M0 0\"></path><foreignobject><p>x</p></foreignobject></svg><p>y</p></noscript></body></html>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void noscriptFallbackEndTagInsideCommentIsNotAClose() {
+        Document doc = Jsoup.parse("<noscript><!-- </noscript> --><p>x</p></noscript>");
+        assertEquals("<html><head><noscript><!-- </noscript> --><p>x</p></noscript></head><body></body></html>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void noscriptFallbackEndTagInsideAttributeIsNotAClose() {
+        Document doc = Jsoup.parse("<noscript><div data='</noscript>'>x</div></noscript>");
+        assertEquals("<html><head><noscript><div data=\"&lt;/noscript&gt;\">x</div></noscript></head><body></body></html>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void noscriptReconstructsFormattingElementsInBody() {
+        Document doc = Jsoup.parse("<p><b>one</p><noscript>two</noscript>");
+        assertEquals("<p><b>one</b></p><b><noscript>two</noscript></b>",
+            TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test public void noscriptFallbackContentBlocksFrameset() {
+        Document doc = Jsoup.parse("<head></head><noscript><p>x</p></noscript><frameset><frame src=x></frameset>");
+        assertEquals("<html><head></head><body><noscript><p>x</p></noscript></body></html>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void emptyNoscriptFallbackDoesNotBlockFrameset() {
+        Document doc = Jsoup.parse("<head></head><noscript><!--x--></noscript><frameset><frame src=x></frameset>");
+        assertEquals("<html><head></head><frameset><frame src=\"x\"></frameset></html>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void noscriptFallbackDoesNotMutateOuterFormattingElement() {
+        Document doc = Jsoup.parse("<a href=1><noscript><a href=2>x</a></noscript>y</a>");
+        assertEquals("<a href=\"1\"><noscript><a href=\"2\">x</a></noscript>y</a>",
+            TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test public void noscriptFallbackTemplateDoesNotTrapParser() {
+        Document doc = Jsoup.parse("<body><noscript><template><b>x</noscript><p>after</p>");
+        assertEquals("<noscript><template><b>x</b></template></noscript><p>after</p>",
+            TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test public void nestedNoscriptStartDoesNotCreateNestedIsland() {
+        Document doc = Jsoup.parse("<noscript><noscript></noscript><p>body</p>");
+        assertEquals("<html><head><noscript><noscript></noscript></noscript></head><body><p>body</p></body></html>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void noscriptFallbackDoesNotResetToOuterInsertionMode() {
+        Document doc = Jsoup.parse("<head><noscript><select></select><p>x</p></noscript><title>T</title></head>");
+        assertEquals("<html><head><noscript><select></select><p>x</p></noscript><title>T</title></head><body></body></html>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void noscriptFallbackDoesNotLeakFormPointer() {
+        Document doc = Jsoup.parse("<head><noscript><form id=a><p>x</p></noscript></head><body><form id=b><input name=y></form></body>");
+        assertNotNull(doc.selectFirst("noscript form#a"));
+        assertNotNull(doc.selectFirst("body form#b"));
+    }
+
+    @Test public void nestedNoscriptFallbackDoesNotReparseRecursively() {
+        StringBuilder html = new StringBuilder("<noscript>");
+        for (int i = 0; i < 2000; i++)
+            html.append("<noscript>");
+        html.append("</noscript>");
+
+        Parser parser = Parser.htmlParser().setMaxDepth(32);
+        Document doc = assertDoesNotThrow(() -> Jsoup.parse(html.toString(), "", parser));
+        assertEquals(2001, doc.select("noscript").size());
+    }
+
+    @Test public void noscriptFallbackUsesOuterParserBookkeeping() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = Jsoup.parse("<body>\n<noscript><x-noscript a=1 a=2>One</x-noscript></noscript>", "", parser);
+
+        assertNotNull(doc.selectFirst("x-noscript"));
+        assertNotNull(parser.tagSet().get("x-noscript", Parser.NamespaceHtml));
+        assertEquals(1, parser.getErrors().size());
+        assertErrorsContain("<2:31>: Dropped duplicate attribute(s) in tag [x-noscript]", parser.getErrors());
     }
 
     @Test public void testUnclosedNoscriptInHead() {
