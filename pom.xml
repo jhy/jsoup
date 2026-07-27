@@ -326,7 +326,12 @@
             <onlyModified>false</onlyModified>
             <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
             <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
-            <excludes />
+            <excludes>
+              <!-- outerHtml(Appendable) was an undocumented protected helper; making it a public, chaining API changes
+                   its return type and generic signature. No downstream overrides were found in a GitHub code search,
+                   so we accept this narrow compatibility break. Remove after oldVersion advances to 1.23.1. -->
+              <exclude>org.jsoup.nodes.Node#outerHtml(java.lang.Appendable)</exclude>
+            </excludes>
             <overrideCompatibilityChangeParameters>
               <!-- allows new default and move to default methods. compatible as long as existing binaries aren't making calls via reflection. if so, they need to catch errors anyway. -->
               <overrideCompatibilityChangeParameter>

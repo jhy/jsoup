@@ -197,6 +197,24 @@ public class DocumentTest {
     	assertEquals(htmlContent, document.html(new StringWriter()).toString());
     }
 
+    @Test void outerHtmlAppendableMatchesString() {
+        Document doc = Jsoup.parse("<title>One</title><p>Two</p>");
+        String expected = "<html>\n" +
+            " <head>\n" +
+            "  <title>One</title>\n" +
+            " </head>\n" +
+            " <body>\n" +
+            "  <p>Two</p>\n" +
+            " </body>\n" +
+            "</html>";
+
+        assertEquals(expected, doc.outerHtml());
+
+        StringBuilder accum = new StringBuilder("Before ");
+        assertSame(accum, doc.outerHtml(accum));
+        assertEquals("Before " + expected, accum.toString());
+    }
+
     @Test public void testOverflowClone() {
         StringBuilder sb = new StringBuilder();
         sb.append("<head><base href='https://jsoup.org/'>");

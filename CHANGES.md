@@ -10,6 +10,7 @@
 * Improved HTML parser throughput stability by making hot tokeniser scan paths compile more predictably. [#2507](https://github.com/jhy/jsoup/pull/2507)
 * `<noscript>` fallback markup is now parsed into an inspectable DOM subtree in both the document head and body. The fallback acts as a contained parsing island, so malformed markup cannot disrupt the surrounding document structure, while normal HTML tokenization still applies within it. This also improves round-trip serialization. [#2537](https://github.com/jhy/jsoup/pull/2537)
 * Improved redirect credential handling as a defense-in-depth measure: explicit authorization headers and request cookies are no longer forwarded across origins, reducing exposure through open redirects and aligning with HTTP guidance. Cookies managed by a `CookieStore` continue to follow their configured scope. [#2540](https://github.com/jhy/jsoup/pull/2540)
+* Elements can now append their outer HTML, including their own tags, directly to an `Appendable` with `Node#outerHtml(Appendable)`, without first creating a `String`. This complements `Element#html(Appendable)`, which appends inner HTML only. [#2532](https://github.com/jhy/jsoup/issues/2532)
 
 ### Bug Fixes
 * Fixed HTML parsing of mixed-case RCDATA end tags after tag-shaped text. For example, `<title><p>Foo</TiTLE>` and `<textarea><img src=x></TeXtArEa>` now keep the tag-shaped content as text instead of promoting it to markup. [#2503](https://github.com/jhy/jsoup/issues/2503)

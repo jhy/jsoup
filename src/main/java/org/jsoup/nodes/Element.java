@@ -2029,11 +2029,12 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     /**
-     * Retrieves the element's inner HTML. E.g. on a {@code <div>} with one empty {@code <p>}, would return
-     * {@code <p></p>}. (Whereas {@link #outerHtml()} would return {@code <div><p></p></div>}.)
-     *
-     * @return String of HTML.
-     * @see #outerHtml()
+     Get the inner HTML of this element. For example, on a {@code <div>} with one empty {@code <p>}, this returns
+     {@code <p></p>}, whereas {@link #outerHtml()} returns {@code <div><p></p></div>}.
+
+     @return the inner HTML of this element
+     @see #html(Appendable)
+     @see #outerHtml()
      */
     public String html() {
         StringBuilder sb = StringUtil.borrowBuilder();
@@ -2042,17 +2043,32 @@ public class Element extends Node implements Iterable<Element> {
         return NodeUtils.outputSettings(this).prettyPrint() ? html.trim() : html;
     }
 
+    /**
+     Append the inner HTML of this element to the supplied {@link Appendable}.
+
+     @param appendable the {@link Appendable} that will receive the HTML
+     @return the supplied {@link Appendable}, for chaining
+     @throws org.jsoup.SerializationException if the appendable throws an IOException
+     @see #html()
+     @see #outerHtml(Appendable)
+     @see #outerHtml()
+     */
     @Override
-    public <T extends Appendable> T html(T accum) {
+    public <T extends Appendable> T html(T appendable) {
+        html(QuietAppendable.wrap(appendable));
+        return appendable;
+    }
+
+    /** Append the inner HTML of this element to the supplied {@link QuietAppendable}. */
+    void html(QuietAppendable accum) {
         Node child = firstChild();
         if (child != null) {
-            Printer printer = Printer.printerFor(child, QuietAppendable.wrap(accum));
+            Printer printer = Printer.printerFor(child, accum);
             while (child != null) {
                 printer.traverse(child);
                 child = child.nextSibling();
             }
         }
-        return accum;
     }
 
     /**

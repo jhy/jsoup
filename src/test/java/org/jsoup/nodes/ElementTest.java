@@ -515,6 +515,19 @@ public class ElementTest {
         assertEquals("<p>Hello</p>", doc.getElementsByTag("div").get(0).html());
     }
 
+    @Test void htmlAppendableWritesInnerAndOuterHtml() {
+        Element span = new Element("span");
+        span.appendElement("b").text("One");
+
+        StringBuilder inner = new StringBuilder("Before ");
+        assertSame(inner, span.html(inner));
+        assertEquals("Before <b>One</b>", inner.toString());
+
+        StringBuilder outer = new StringBuilder("Before ");
+        assertSame(outer, span.outerHtml(outer));
+        assertEquals("Before <span><b>One</b></span>", outer.toString());
+    }
+
     @Test void formatNoTrailingSpace() {
         // https://github.com/jhy/jsoup/issues/2215
         String html = "<html>\n <head></head>\n <body>\n  a\n  <div>\n  </div>\n </body>\n</html>";

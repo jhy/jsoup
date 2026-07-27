@@ -835,9 +835,10 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Get the outer HTML of this node. For example, on a {@code p} element, may return {@code <p>Para</p>}.
-     @return outer HTML
+     Get the outer HTML of this node. For example, on a {@code p} element, this may return {@code <p>Para</p>}.
+     @return the outer HTML of this node
      @see Element#html()
+     @see #outerHtml(Appendable)
      @see Element#text()
      */
     public String outerHtml() {
@@ -846,31 +847,52 @@ public abstract class Node implements Cloneable {
         return StringUtil.releaseBuilder(sb);
     }
 
-    protected void outerHtml(Appendable accum) {
-        outerHtml(QuietAppendable.wrap(accum));
+    /**
+     Append the outer HTML of this node to the supplied {@link Appendable}. This includes the node itself; for example,
+     on a {@code p} element this appends {@code <p>Para</p>}. To append only an Element's contents, use
+     {@link Element#html(Appendable)}.
+
+     @param appendable the {@link Appendable} that will receive the HTML.
+     @return the supplied {@link Appendable}, for chaining.
+     @throws org.jsoup.SerializationException if the appendable throws an IOException.
+     @see #outerHtml()
+     @see Element#html(Appendable)
+     @since 1.23.1
+     */
+    public <T extends Appendable> T outerHtml(T appendable) {
+        outerHtml(QuietAppendable.wrap(appendable));
+        return appendable;
     }
 
+    /** Append the outer HTML of this node to the internal output. */
     protected void outerHtml(QuietAppendable accum) {
         Printer printer = Printer.printerFor(this, accum);
         printer.traverse(this);
     }
 
     /**
-     Get the outer HTML of this node.
-
-     @param accum accumulator to place HTML into
-     @param out
+     Append this node's opening or complete HTML to the internal output.
+     @param accum the internal output
+     @param out the output settings
      */
     abstract void outerHtmlHead(final QuietAppendable accum, final Document.OutputSettings out);
 
+    /**
+     Append this node's closing HTML, if any, to the internal output.
+     @param accum the internal output
+     @param out the output settings
+     */
     abstract void outerHtmlTail(final QuietAppendable accum, final Document.OutputSettings out);
 
     /**
-     Write this node and its children to the given {@link Appendable}.
+     Append the HTML of this node to the supplied {@link Appendable}. For an {@link Element}, this appends the element's
+     inner HTML, consistent with {@link Element#html()}. For other node types, this appends the node's outer HTML.
 
-     @param appendable the {@link Appendable} to write to.
+     @param appendable the {@link Appendable} that will receive the HTML.
      @return the supplied {@link Appendable}, for chaining.
      @throws org.jsoup.SerializationException if the appendable throws an IOException.
+     @see Element#html(Appendable)
+     @see #outerHtml(Appendable)
      */
     public <T extends Appendable> T html(T appendable) {
         outerHtml(appendable);

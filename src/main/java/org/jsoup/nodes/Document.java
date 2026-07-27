@@ -4,6 +4,7 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.QuietAppendable;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
@@ -226,9 +227,10 @@ public class Document extends Element {
         );
     }
 
+    /** Append the HTML of this Document to the supplied {@link QuietAppendable}. */
     @Override
-    public String outerHtml() {
-        return super.html(); // no outer wrapper tag
+    protected void outerHtml(QuietAppendable accum) {
+        html(accum);
     }
 
     /**
