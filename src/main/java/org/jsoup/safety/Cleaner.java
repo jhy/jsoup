@@ -14,6 +14,8 @@ import org.jsoup.parser.ParseErrorList;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.NodeVisitor;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 import static org.jsoup.internal.SharedConstants.DummyUri;
@@ -208,14 +210,18 @@ public class Cleaner {
                 numDiscarded++;
         }
 
-
         Attributes enforcedAttrs = safelist.getEnforcedAttributes(sourceTag);
         // special case for <a href rel=nofollow>, only apply to external links:
         if (sourceEl.nameIs("a") && enforcedAttrs.get("rel").equals("nofollow")) {
             String href = sourceEl.absUrl("href");
-            String sourceBase = sourceEl.baseUri();
-            if (!href.isEmpty() && !sourceBase.isEmpty() && href.startsWith(sourceBase)) { // same site, so don't set the nofollow
-                enforcedAttrs.remove("rel");
+            if (!href.isEmpty()) {
+                try {
+                    URL baseUrl = new URL(sourceEl.baseUri());
+                    URL linkUrl = new URL(href);
+                    String baseHost = baseUrl.getHost();
+                    if (!baseHost.isEmpty() && baseHost.equalsIgnoreCase(linkUrl.getHost())) // same site, so don't set the nofollow
+                        enforcedAttrs.remove("rel");
+                } catch (MalformedURLException ignored) {}
             }
         }
 

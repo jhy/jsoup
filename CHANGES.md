@@ -16,6 +16,7 @@
 * Fixed `W3CDom` XML conversion so plain XML elements don't serialize with the reserved XML namespace as the default namespace. Explicit XML namespaces and `xml:*` attributes are still preserved. [#2504](https://github.com/jhy/jsoup/issues/2504)
 * Preserve control characters in parsed tag names [#2358](https://github.com/jhy/jsoup/issues/2538)
 * Updated HTTP redirects to follow the specification: 307 and 308 preserve the request method and content, 301 and 302 only change POST to GET, and `Location` is followed only for 301, 302, 303, 307, and 308 responses. Streamed request bodies are not buffered; if an automatic redirect would require replaying one, execution fails so the caller can resend with a fresh stream. [#2540](https://github.com/jhy/jsoup/pull/2540)
+* Corrected the Cleaner's same-site link detection to compare hostnames rather than URL prefixes when applying `rel=nofollow`. [2543](https://github.com/jhy/jsoup/issues/2543)
 
 ### Build Changes
 * Cleaned up the Maven build for the multi-release JAR so Java 8 and Java 11+ sources compile as separate source sets. This avoids spurious Java 8 compiler warnings from newer-language overlay sources, keeps long-running parser checks behind an explicit profile, and preserves the same published artifacts and runtime behavior.

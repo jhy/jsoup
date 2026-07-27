@@ -593,6 +593,18 @@ public class CleanerTest {
         assertEquals("<a href=\"http://external.com/\" rel=\"nofollow\">One</a> <a href=\"/relative/\">Two</a> <a href=\"../other/\">Three</a> <a href=\"http://example.com/bar\" rel=\"nofollow\">Four</a>", clean4);
     }
 
+    @Test void nofollowComparesLinkHosts() {
+        Safelist basic = Safelist.basic();
+
+        // A hostname that extends the base hostname is still external
+        String external = Jsoup.clean("<a href='https://example.com.test/path'>Link</a>", "https://example.com", basic);
+        assertEquals("<a href=\"https://example.com.test/path\" rel=\"nofollow\">Link</a>", external);
+
+        // The base URI path, scheme, and port do not make another URL on the same host external
+        String internal = Jsoup.clean("<a href='http://example.com:8080/other'>Link</a>", "https://example.com:8443/path/page", basic);
+        assertEquals("<a href=\"http://example.com:8080/other\">Link</a>", internal);
+    }
+
     @Test void canonicalizesEnforcedAttributes() {
         Document customDirty = Jsoup.parse("<a REL='external'>One</a>", "",
             Parser.htmlParser().settings(ParseSettings.preserveCase));
