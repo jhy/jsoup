@@ -945,11 +945,15 @@ enum TokeniserState {
             } else if (r.matchConsumeIgnoreCase("DOCTYPE")) {
                 t.transition(Doctype);
             } else if (r.matchConsume("[CDATA[")) {
-                // todo: should actually check current namespace, and only non-html allows cdata. until namespace
-                // is implemented properly, keep handling as cdata
-                //} else if (!t.currentNodeInHtmlNS() && r.matchConsume("[CDATA[")) {
-                t.createTempBuffer();
-                t.transition(CdataSection);
+                if (t.isCdataAllowed()) {
+                    t.createTempBuffer();
+                    t.transition(CdataSection);
+                } else {
+                    t.error(this);
+                    t.createBogusCommentPending();
+                    t.commentPending.append("[CDATA[");
+                    t.transition(BogusComment);
+                }
             } else {
                 if (t.syntax == xml && r.matchesAsciiAlpha()) {
                     t.createXmlDeclPending(true);

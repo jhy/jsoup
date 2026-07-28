@@ -119,15 +119,11 @@ public class TokeniserTest {
             sb.append("Quite a lot of CDATA <><><><>");
         } while (sb.length() < BufferSize);
         String cdata = sb.toString();
-        String html = "<p><![CDATA[" + cdata + "]]></p>";
+        String xml = "<p><![CDATA[" + cdata + "]]></p>";
 
-        Document doc = Jsoup.parse(html);
-        Elements els = doc.select("p");
-        assertEquals(1, els.size());
-        Element el = els.first();
-
-        assertNotNull(el);
-        TextNode child = (TextNode) el.childNode(0);
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+        Element el = doc.expectFirst("p");
+        CDataNode child = assertInstanceOf(CDataNode.class, el.childNode(0));
         assertEquals(cdata, el.text());
         assertEquals(cdata, child.getWholeText());
     }
@@ -201,13 +197,12 @@ public class TokeniserTest {
         Arrays.fill(cdataContentsArray, 'x');
         String cdataContents = new String(cdataContentsArray);
         String testMarkup = cdataStart + cdataContents + cdataEnd;
-        Parser parser = new Parser(new HtmlTreeBuilder());
+        Parser parser = Parser.xmlParser();
 
         Document doc = parser.parseInput(testMarkup, "");
 
-        Node cdataNode = doc.body().childNode(0);
-        assertTrue(cdataNode instanceof CDataNode, "Expected CDATA node");
-        assertEquals(cdataContents, ((CDataNode)cdataNode).text());
+        CDataNode cdataNode = assertInstanceOf(CDataNode.class, doc.childNode(0));
+        assertEquals(cdataContents, cdataNode.text());
     }
 
     @Test void tokenDataToString() {

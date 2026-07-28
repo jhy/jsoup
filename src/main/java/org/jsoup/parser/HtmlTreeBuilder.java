@@ -44,7 +44,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private boolean baseUriSetFromDoc;
     private @Nullable Element headElement; // the current head element
     private @Nullable FormElement formElement; // the current form element
-    private @Nullable Element contextElement; // fragment parse root; name only copy of context. could be null even if fragment parsing
+    private @Nullable Element contextElement; // fragment parse root; shallow copy of context, may be null during fragment parsing
     ArrayList<Element> formattingElements; // active (open) formatting elements
     private ArrayList<HtmlTreeBuilderState> tmplInsertMode; // stack of Template Insertion modes
     private @Nullable NoscriptState noscriptState; // active noscript island state
@@ -92,30 +92,37 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
         if (context != null) {
             final String contextName = context.normalName();
-            contextElement = new Element(tagFor(contextName, contextName, defaultNamespace(), settings), baseUri);
+            contextElement = new Element(context.tag(), baseUri);
+            contextElement.attributes().addAll(context.attributes());
             if (context.ownerDocument() != null) // quirks setup:
                 doc.quirksMode(context.ownerDocument().quirksMode());
 
-            // initialise the tokeniser state:
+            // initialise the tokeniser state
+            Tag contextTag = contextElement.tag();
+            boolean htmlContext = NamespaceHtml.equals(contextTag.namespace());
+            TokeniserState contextState = contextTag.textState(); // style, xmp, title, textarea, etc; or custom
+            if (contextState == null) contextState = TokeniserState.Data;
+
             switch (contextName) {
                 case "script":
-                    tokeniser.transition(TokeniserState.ScriptData);
+                    if (htmlContext) {
+                        contextState = TokeniserState.ScriptData;
+                    } else if (NamespaceSvg.equals(contextTag.namespace())) {
+                        // svg script enters script data during document parsing, but fragments start in data so markup creates svg children
+                        contextState = TokeniserState.Data;
+                    }
                     break;
                 case "plaintext":
-                    tokeniser.transition(TokeniserState.PLAINTEXT);
+                    if (htmlContext) contextState = TokeniserState.PLAINTEXT;
                     break;
                 case "template":
-                    tokeniser.transition(TokeniserState.Data);
-                    pushTemplateMode(HtmlTreeBuilderState.InTemplate);
+                    if (htmlContext) {
+                        contextState = TokeniserState.Data;
+                        pushTemplateMode(HtmlTreeBuilderState.InTemplate);
+                    }
                     break;
-                default:
-                    Tag tag = contextElement.tag();
-                    TokeniserState textState = tag.textState();
-                    if (textState != null)
-                        tokeniser.transition(textState); // style, xmp, title, textarea, etc; or custom
-                    else
-                        tokeniser.transition(TokeniserState.Data);
             }
+            tokeniser.transition(contextState);
             doc.appendChild(contextElement);
             push(contextElement);
             resetInsertionMode();
@@ -131,7 +138,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 formSearch = formSearch.parent();
             }
 
-            if (contextName.equals("noscript")) enterNoscript(contextElement);
+            if (htmlContext && contextName.equals("noscript")) enterNoscript(contextElement);
         }
     }
 
@@ -693,9 +700,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 if (fragmentParsing)
                     node = contextElement;
             }
-            String name = node != null ? node.normalName() : "";
-            if (!NamespaceHtml.equals(node.tag().namespace()))
-                continue; // only looking for HTML elements here
+            String name = node != null && NamespaceHtml.equals(node.tag().namespace()) ? node.normalName() : "";
 
             switch (name) {
                 case "select":

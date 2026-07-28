@@ -5,7 +5,6 @@ import org.jsoup.TextUtil;
 import org.jsoup.integration.TestServer;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
-import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
@@ -321,9 +320,13 @@ class PositionTest {
         assertEquals("3,1:16-3,8:23", title.sourceRange().toString());
         assertEquals("3,8:23-4,5:40", titleText.sourceRange().toString());
 
-        CDataNode cdata = (CDataNode) doc.body().childNode(1);
-        assertEquals("\n<jsoup>\n", cdata.text());
-        assertEquals("5,1:55-7,4:76", cdata.sourceRange().toString());
+        Comment comment = (Comment) doc.body().childNode(1);
+        assertEquals("[CDATA[\n<jsoup", comment.getData());
+        assertEquals("5,1:55-6,8:72", comment.sourceRange().toString());
+
+        TextNode commentTail = (TextNode) doc.body().childNode(2);
+        assertEquals("\n]]>", commentTail.getWholeText());
+        assertEquals("6,8:72-7,4:76", commentTail.sourceRange().toString());
     }
 
     @Test void tracksDataNodes() {

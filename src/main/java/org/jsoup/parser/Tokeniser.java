@@ -33,6 +33,7 @@ final class Tokeniser {
 
     private final CharacterReader reader; // html input
     private final ParseErrorList errors; // errors found while tokenising
+    private final TreeBuilder treeBuilder; // current tree state for contextual tokenisation
 
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
     @Nullable private Token emitPending = null; // the token we are about to emit on next read
@@ -53,6 +54,7 @@ final class Tokeniser {
     private int markupStartPos, charStartPos = 0; // reader pos at the start of markup / characters. markup updated on state transition, char on token emit.
 
     Tokeniser(TreeBuilder treeBuilder) {
+        this.treeBuilder = treeBuilder;
         syntax = treeBuilder instanceof XmlTreeBuilder ? Document.OutputSettings.Syntax.xml : Document.OutputSettings.Syntax.html;
         tagPending = startPending  = new Token.StartTag(treeBuilder);
         endPending = new Token.EndTag(treeBuilder);
@@ -258,6 +260,12 @@ final class Tokeniser {
 
     void createTempBuffer() {
         dataBuffer.reset();
+    }
+
+    /** Test if CDATA sections are allowed at the adjusted current node */
+    boolean isCdataAllowed() {
+        return syntax == Document.OutputSettings.Syntax.xml
+            || !Parser.NamespaceHtml.equals(treeBuilder.currentElement().tag().namespace());
     }
 
     boolean isAppropriateEndTagToken() {

@@ -3132,8 +3132,8 @@ public class ElementTest {
         el.appendChild(cdata);
         assertEquals("Some CData", el.data());
 
-        Document parse = Jsoup.parse("One <![CDATA[Hello]]>");
-        assertEquals("Hello", parse.data());
+        Document xml = Jsoup.parse("One <![CDATA[Hello]]>", "", Parser.xmlParser());
+        assertEquals("Hello", xml.data());
     }
 
     @Test void datanodesOutputCdataInXhtml() {

@@ -344,27 +344,167 @@ public class HtmlParserTest {
         assertEquals("https://example.net/img.jpg", el.absUrl("src"));
     }
 
-    @Test public void handlesCdata() {
-        // todo: as this is html namespace, should actually treat as bogus comment, not cdata. keep as cdata for now
-        String h = "<div id=1><![CDATA[<html>\n <foo><&amp;]]></div>"; // the &amp; in there should remain literal
-        Document doc = Jsoup.parse(h);
-        Element div = doc.getElementById("1");
-        assertEquals("<html>\n <foo><&amp;", div.text());
-        assertEquals(0, div.children().size());
-        assertEquals(1, div.childNodeSize()); // no elements, one text node
+    @Test public void handlesCdataAsBogusCommentInHtml() {
+        String h = "<div id=1><![CDATA[<html>\n <foo><&amp;]]></div>";
+        Parser parser = Parser.htmlParser().setTrackErrors(1);
+        Document doc = Jsoup.parse(h, "", parser);
+        Element div = doc.expectFirst("#1");
+
+        Comment comment = assertInstanceOf(Comment.class, div.childNode(0));
+        assertEquals("[CDATA[<html", comment.getData()); // closes at the first '>'
+        Element foo = div.expectFirst("foo"); // remaining source continues as HTML
+        assertEquals("<&]]>", foo.text());
+
+        // reports after the recognized CDATA opener
+        assertEquals(1, parser.getErrors().size());
+        ParseError error = parser.getErrors().get(0);
+        assertEquals(h.indexOf("<html>"), error.getPosition());
+        assertEquals("1:20", error.getCursorPos());
+    }
+
+    @Test void cdataParsingDependsOnNamespaceAndParser() {
+        String htmlInput =
+            "<div id=html><![CDATA[Html > tail]]></div>" +
+            "<svg><![CDATA[Svg > data]]><foreignObject><![CDATA[Integrated SVG > data]]>" +
+            "<p><![CDATA[Foreign HTML > tail]]></p></foreignObject>" +
+            "<g><![CDATA[Nested SVG > data]]></g></svg>" +
+            "<math><![CDATA[Math > data]]></math>";
+        Document html = Jsoup.parse(htmlInput);
+
+        // in the HTML namespace this is a bogus comment, which closes at the first '>'
+        Element div = html.expectFirst("#html");
+        Comment comment = assertInstanceOf(Comment.class, div.childNode(0));
+        assertEquals("[CDATA[Html ", comment.getData());
+        assertEquals(" tail]]>", assertInstanceOf(TextNode.class, div.childNode(1)).getWholeText());
+
+        // foreign content recognizes CDATA, including after returning from an HTML integration point
+        Element svg = html.expectFirst("svg");
+        assertEquals("Svg > data", assertInstanceOf(CDataNode.class, svg.childNode(0)).getWholeText());
+        Element nestedSvg = svg.expectFirst("g");
+        assertEquals(Parser.NamespaceSvg, nestedSvg.tag().namespace());
+        assertEquals("Nested SVG > data",
+            assertInstanceOf(CDataNode.class, nestedSvg.childNode(0)).getWholeText());
+        Element math = html.expectFirst("math");
+        assertEquals(Parser.NamespaceMathml, math.tag().namespace());
+        assertEquals("Math > data", assertInstanceOf(CDataNode.class, math.childNode(0)).getWholeText());
+
+        // direct content uses the SVG namespace, while HTML children return to bogus comment parsing
+        Element foreignObject = svg.expectFirst("foreignObject");
+        assertEquals("Integrated SVG > data",
+            assertInstanceOf(CDataNode.class, foreignObject.childNode(0)).getWholeText());
+        Element foreignHtml = foreignObject.expectFirst("p");
+        assertEquals(Parser.NamespaceHtml, foreignHtml.tag().namespace());
+        Comment foreignComment = assertInstanceOf(Comment.class, foreignHtml.childNode(0));
+        assertEquals("[CDATA[Foreign HTML ", foreignComment.getData());
+        assertEquals(" tail]]>",
+            assertInstanceOf(TextNode.class, foreignHtml.childNode(1)).getWholeText());
+
+        // the XML parser recognizes CDATA even when the element is in the HTML namespace
+        String xmlInput = String.format(
+            "<p xmlns='%s'><![CDATA[Nine > Ten]]></p>", Parser.NamespaceHtml);
+        Document xml = Jsoup.parse(xmlInput, "", Parser.xmlParser());
+        assertEquals(Parser.NamespaceHtml, xml.expectFirst("p").tag().namespace());
+        assertEquals("Nine > Ten",
+            assertInstanceOf(CDataNode.class, xml.expectFirst("p").childNode(0)).getWholeText());
+    }
+
+    @Test void fragmentParsingUsesContextNamespace() {
+        String fragment = "<![CDATA[One > Two]]><child />";
+
+        Element html = Jsoup.parse("<div></div>").expectFirst("div");
+        html.html(fragment);
+        Comment comment = assertInstanceOf(Comment.class, html.childNode(0));
+        assertEquals("[CDATA[One ", comment.getData());
+        assertEquals(" Two]]>", assertInstanceOf(TextNode.class, html.childNode(1)).getWholeText());
+        assertEquals(Parser.NamespaceHtml, html.expectFirst("child").tag().namespace());
+        assertEquals(3, html.childNodeSize());
+
+        Element svg = Jsoup.parse("<svg></svg>").expectFirst("svg");
+        svg.html(fragment);
+        assertEquals("One > Two",
+            assertInstanceOf(CDataNode.class, svg.childNode(0)).getWholeText());
+        assertEquals(Parser.NamespaceSvg, svg.expectFirst("child").tag().namespace());
+        assertEquals(2, svg.childNodeSize());
+
+        Element math = Jsoup.parse("<math></math>").expectFirst("math");
+        math.html(fragment);
+        assertEquals("One > Two",
+            assertInstanceOf(CDataNode.class, math.childNode(0)).getWholeText());
+        assertEquals(Parser.NamespaceMathml, math.expectFirst("child").tag().namespace());
+        assertEquals(2, math.childNodeSize());
+
+        Document xmlDoc = Jsoup.parse("<root />", "", Parser.xmlParser());
+        Element xml = xmlDoc.expectFirst("root");
+        xml.html(fragment);
+        assertEquals("One > Two",
+            assertInstanceOf(CDataNode.class, xml.childNode(0)).getWholeText());
+        assertEquals(Parser.NamespaceXml, xml.expectFirst("child").tag().namespace());
+        assertEquals(2, xml.childNodeSize());
+    }
+
+    @Test void fragmentParsingPreservesHtmlIntegrationPoints() {
+        Document doc = Jsoup.parse(
+            "<svg><foreignObject></foreignObject></svg>" +
+            "<math><annotation-xml encoding=text/html></annotation-xml></math>");
+
+        Element foreignObject = doc.expectFirst("foreignObject");
+        foreignObject.html("<section />");
+        assertEquals(1, foreignObject.childNodeSize());
+        assertEquals(Parser.NamespaceHtml, foreignObject.expectFirst("section").tag().namespace());
+
+        Element annotation = doc.expectFirst("annotation-xml");
+        annotation.html("<section />");
+        assertEquals(1, annotation.childNodeSize());
+        assertEquals(Parser.NamespaceHtml, annotation.expectFirst("section").tag().namespace());
+    }
+
+    @Test void fragmentTokeniserStateUsesContextNamespace() {
+        Document doc = Jsoup.parse(
+            "<svg><noscript id=n></noscript><plaintext id=p></plaintext><script id=ss></script></svg>" +
+            "<math><script id=s></script></math>");
+
+        Element svgNoscript = doc.expectFirst("#n");
+        svgNoscript.html("<child></child>");
+        Element noscriptChild = assertInstanceOf(Element.class, svgNoscript.childNode(0));
+        assertEquals(Parser.NamespaceSvg, noscriptChild.tag().namespace());
+        assertEquals(1, svgNoscript.childNodeSize());
+
+        Element svgPlaintext = doc.expectFirst("#p");
+        svgPlaintext.html("<child></child>");
+        Element plaintextChild = assertInstanceOf(Element.class, svgPlaintext.childNode(0));
+        assertEquals(Parser.NamespaceSvg, plaintextChild.tag().namespace());
+        assertEquals(1, svgPlaintext.childNodeSize());
+
+        Element svgScript = doc.expectFirst("#ss");
+        svgScript.html("<child></child>");
+        Element svgScriptChild = assertInstanceOf(Element.class, svgScript.childNode(0));
+        assertEquals(Parser.NamespaceSvg, svgScriptChild.tag().namespace());
+        assertEquals(1, svgScript.childNodeSize());
+
+        Element mathScript = doc.expectFirst("#s");
+        mathScript.html("<child></child>");
+        Element scriptChild = assertInstanceOf(Element.class, mathScript.childNode(0));
+        assertEquals(Parser.NamespaceMathml, scriptChild.tag().namespace());
+        assertEquals(1, mathScript.childNodeSize());
+
+        Element htmlScript = Jsoup.parse("<script></script>").expectFirst("script");
+        htmlScript.html("<child></child>");
+        DataNode scriptData = assertInstanceOf(DataNode.class, htmlScript.childNode(0));
+        assertEquals("<child></child>", scriptData.getWholeData());
+        assertEquals(1, htmlScript.childNodeSize());
     }
 
     @Test public void roundTripsCdata() {
-        String h = "<div id=1><![CDATA[\n<html>\n <foo><&amp;]]></div>";
+        String h = "<svg id=1><![CDATA[\n<html>\n <foo><&amp;]]></svg>";
         Document doc = Jsoup.parse(h);
-        Element div = doc.getElementById("1");
-        assertEquals("<html>\n <foo><&amp;", div.text());
-        assertEquals(0, div.children().size());
-        assertEquals(1, div.childNodeSize()); // no elements, one text node
+        Element svg = doc.expectFirst("#1");
+        assertEquals("<html>\n <foo><&amp;", svg.text());
+        assertEquals(0, svg.children().size());
+        assertEquals(1, svg.childNodeSize()); // no elements, one text node
 
-        assertEquals("<div id=\"1\"><![CDATA[\n<html>\n <foo><&amp;]]></div>", div.outerHtml());
+        assertEquals("<svg id=\"1\"><![CDATA[\n<html>\n <foo><&amp;]]></svg>", svg.outerHtml());
 
-        CDataNode cdata = (CDataNode) div.textNodes().get(0);
+        CDataNode cdata = assertInstanceOf(CDataNode.class, svg.textNodes().get(0));
         assertEquals("\n<html>\n <foo><&amp;", cdata.text());
     }
 
@@ -374,11 +514,11 @@ public class HtmlParserTest {
             sb.append("A suitable amount of CData.\n");
         }
         String cdata = sb.toString();
-        String h = "<div><![CDATA[" + cdata + "]]></div>";
+        String h = "<svg><![CDATA[" + cdata + "]]></svg>";
         Document doc = Jsoup.parse(h);
-        Element div = doc.selectFirst("div");
+        Element svg = doc.expectFirst("svg");
 
-        CDataNode node = (CDataNode) div.textNodes().get(0);
+        CDataNode node = assertInstanceOf(CDataNode.class, svg.childNode(0));
         assertEquals(cdata, node.text());
     }
 
@@ -397,33 +537,34 @@ public class HtmlParserTest {
         // see - not a cdata node, because in script. contrast with XmlTreeBuilder - will be cdata.
     }
 
-    @Test public void handlesUnclosedCdataAtEOF() {
+    @Test public void handlesUnclosedBogusCommentAtEOF() {
         // https://github.com/jhy/jsoup/issues/349 would crash, as character reader would try to seek past EOF
         String h = "<![CDATA[]]";
         Document doc = Jsoup.parse(h);
-        assertEquals(1, doc.body().childNodeSize());
+        Comment comment = assertInstanceOf(Comment.class, doc.childNode(0));
+        assertEquals("[CDATA[]]", comment.getData());
     }
 
     @Test public void handleCDataInText() {
-        String h = "<p>One <![CDATA[Two <&]]> Three</p>";
+        String h = "<svg><text>One <![CDATA[Two <&]]> Three</text></svg>";
         Document doc = Jsoup.parse(h);
-        Element p = doc.selectFirst("p");
+        Element text = doc.expectFirst("text");
 
-        List<Node> nodes = p.childNodes();
+        List<Node> nodes = text.childNodes();
         assertEquals("One ", ((TextNode) nodes.get(0)).getWholeText());
         assertEquals("Two <&", ((TextNode) nodes.get(1)).getWholeText());
         assertEquals("Two <&", ((CDataNode) nodes.get(1)).getWholeText());
         assertEquals(" Three", ((TextNode) nodes.get(2)).getWholeText());
 
-        assertEquals(h, p.outerHtml());
+        assertEquals("<text>One <![CDATA[Two <&]]> Three</text>", text.outerHtml());
     }
 
     @Test public void cdataNodesAreTextNodes() {
-        String h = "<p>One <![CDATA[ Two <& ]]> Three</p>";
+        String h = "<svg><text>One <![CDATA[ Two <& ]]> Three</text></svg>";
         Document doc = Jsoup.parse(h);
-        Element p = doc.selectFirst("p");
+        Element text = doc.expectFirst("text");
 
-        List<TextNode> nodes = p.textNodes();
+        List<TextNode> nodes = text.textNodes();
         assertEquals("One ", nodes.get(0).text());
         assertEquals(" Two <& ", nodes.get(1).text());
         assertEquals(" Three", nodes.get(2).text());
@@ -2361,13 +2502,19 @@ public class HtmlParserTest {
         Tag dataTag = new Tag("data", Parser.NamespaceSvg);
         dataTag.set(Tag.Data);
         TagSet tagSet = TagSet.HtmlTagSet.add(dataTag);
-        String html = "<svg><data>a < b</data></svg>";
+        String html = "<svg><data>a < b</data><data id=fragment></data></svg>";
         Document doc = Jsoup.parse(html, Parser.htmlParser().tagSet(tagSet));
         Element data = doc.expectFirst("data");
         assertEquals(Parser.NamespaceSvg, data.tag().namespace);
         assertEquals("", data.text());
         assertEquals("a < b", data.data());
         assertEquals("<data>a < b</data>", data.outerHtml());
+
+        // custom foreign data tags retain their configured fragment state
+        Element fragment = doc.expectFirst("#fragment");
+        fragment.html("<child></child>");
+        assertEquals("<child></child>", fragment.data());
+        assertInstanceOf(DataNode.class, fragment.childNode(0));
     }
 
     @Test void dropsNullsFromBody() {
