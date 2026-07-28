@@ -119,10 +119,11 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         return NotFound;
     }
 
-    // we track boolean attributes as null in values - they're just keys. so returns empty for consumers
-    // casts to String, so only for non-internal attributes
+    /**
+     Boolean attributes have null values, and internal attributes may hold arbitrary objects; return empty for either.
+     */
     static String checkNotNull(@Nullable Object val) {
-        return val == null ? EmptyString : (String) val;
+        return val instanceof String ? (String) val : EmptyString;
     }
 
     /**

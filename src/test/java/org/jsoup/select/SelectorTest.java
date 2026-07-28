@@ -156,6 +156,13 @@ public class SelectorTest {
         assertEquals("SLIM", contains.last().attr("title"));
     }
 
+    @Test void attributeSelectorHandlesInternalData() {
+        Document doc = Jsoup.parse("<a>");
+        doc.expectFirst("a").attributes().userData("key", "value");
+
+        assertTrue(doc.select("[/jsoup.userdata=foo]").isEmpty());
+    }
+
     @Test public void testNamespacedTag() {
         Document doc = Jsoup.parse("<div><abc:def id=1>Hello</abc:def></div> <abc:def class=bold id=2>There</abc:def>");
         Elements byTag = doc.select("abc|def");
