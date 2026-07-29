@@ -291,6 +291,8 @@ public class HttpConnectionTest {
         assertEquals("file", kv.key());
         assertEquals("thumb.jpg", kv.value());
         assertTrue(kv.hasInputStream());
+        assertThrows(ValidationException.class, () ->
+            HttpConnection.KeyVal.create("file", "thumb.jpg").inputStream(null));
 
         kv = HttpConnection.KeyVal.create("one", "two");
         assertEquals("one", kv.key());

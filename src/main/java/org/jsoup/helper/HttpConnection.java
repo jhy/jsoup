@@ -1434,7 +1434,7 @@ public class HttpConnection implements Connection {
 
         @Override
         public KeyVal inputStream(InputStream inputStream) {
-            Validate.notNullParam(value, "inputStream");
+            Validate.notNullParam(inputStream, "inputStream");
             this.stream = inputStream;
             return this;
         }
