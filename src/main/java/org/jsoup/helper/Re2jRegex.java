@@ -5,6 +5,7 @@ package org.jsoup.helper;
  */
 final class Re2jRegex extends Regex {
     private static final java.util.regex.Pattern unused = java.util.regex.Pattern.compile("");
+    private static final String PatternComplexityError = "Pattern complexity error";
 
     private final com.google.re2j.Pattern re2jPattern;
 
@@ -19,7 +20,7 @@ final class Re2jRegex extends Regex {
         } catch (RuntimeException e) {
             throw new ValidationException("Pattern syntax error: " + e.getMessage());
         } catch (OutOfMemoryError | StackOverflowError e) { // defensive check on regex to normalize exception
-            throw new ValidationException("Pattern complexity error: " + e.getMessage());
+            throw new ValidationException(PatternComplexityError);
         }
     }
 
@@ -42,7 +43,11 @@ final class Re2jRegex extends Regex {
 
         @Override
         public boolean find() {
-            return delegate.find();
+            try {
+                return delegate.find();
+            } catch (StackOverflowError e) { // re2j may recurse deeply when evaluating complex patterns
+                throw new ValidationException(PatternComplexityError);
+            }
         }
     }
 }
