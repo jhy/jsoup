@@ -2,6 +2,7 @@ package org.jsoup.helper;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.select.Evaluator;
 import org.jsoup.select.QueryParser;
 import org.jsoup.select.Selector;
 import org.junit.jupiter.api.AfterEach;
@@ -65,8 +66,8 @@ public class RegexTest {
         assertTrue(Regex.usingRe2j());
 
         Document doc = Jsoup.parse("<p data-key>");
-        String query = "[data-key~=(a|){824}]"; // empty alternative and repeat create deep recursion in RE2J
-        ValidationException exception = assertThrows(ValidationException.class, () -> doc.select(query));
+        Evaluator evaluator = Selector.evaluatorOf("[data-key~=((a|)){1000}]"); // max repeat and empty alternatives create deep recursion in RE2J
+        ValidationException exception = assertThrows(ValidationException.class, () -> doc.select(evaluator));
         assertEquals("Pattern complexity error", exception.getMessage());
     }
 
