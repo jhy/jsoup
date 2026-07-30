@@ -1,6 +1,6 @@
 # jsoup Changelog
 
-## 1.23.1 (pending)
+## 1.23.1 (2026-Jul-30)
 
 ### Improvements
 * Reduced retained memory when parsing with source position tracking enabled (`Parser#setTrackPosition(true)`). Source ranges are now stored in compact parser-owned span records instead of node and attribute user data, and `Position` objects are created lazily when source ranges are read. This cuts tracked DOM retained size by about 50-60% on representative benchmark documents, while keeping `Node#sourceRange()`, `Element#endSourceRange()`, and `Attribute#sourceRange()` behavior intact. [#2498](https://github.com/jhy/jsoup/pull/2498)
