@@ -1,5 +1,10 @@
 # jsoup Changelog
 
+## 1.23.2 (pending)
+
+### Bug Fixes
+* Fixed the JDK `HttpClient` implementation to accept responses without a `Content-Type` header, matching the `HttpURLConnection` implementation. [#2549](https://github.com/jhy/jsoup/pull/2549)
+
 ## 1.23.1 (2026-Jul-30)
 
 ### Improvements

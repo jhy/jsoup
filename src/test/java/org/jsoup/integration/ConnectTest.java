@@ -1292,4 +1292,14 @@ public class ConnectTest {
         // check the document works
         assertEquals(LargeDocTextLen, document.text().length());
     }
+
+    @Test public void handlesMissingContentType() throws IOException {
+        // test that responses without a Content-Type header parse and preserve the absent response metadata
+        // we were giving an empty string back in httpclient which then would throw an invalid response
+        Connection con = Jsoup.connect(origin().noContentType.url());
+        Document doc = con.get();
+
+        assertEquals("No type", doc.title());
+        assertNull(con.response().contentType());
+    }
 }
