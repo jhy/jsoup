@@ -798,15 +798,40 @@ public class ConnectTest {
         Connection con = Jsoup.connect(origin().file.url("/htmltests/thumb.jpg"));
         con.data(FileRoute.ContentTypeParam, "image/jpeg");
 
-        boolean threw = false;
-        try {
-            con.execute();
-            Document doc = con.response().parse();
-        } catch (UnsupportedMimeTypeException e) {
-            threw = true;
-            assertEquals("Unhandled content type. Must be text/*, */xml, or */*+xml", e.getMessage());
-        }
-        assertTrue(threw);
+        UnsupportedMimeTypeException exception = assertThrows(UnsupportedMimeTypeException.class, con::execute);
+        assertEquals("Unhandled content type. Must be a text or XML media type", exception.getMessage());
+    }
+
+    @Test public void textContentTypesAreMatchedCaseInsensitively() throws IOException {
+        String contentType = "Text/HTML; charset=UTF-8";
+        Connection con = Jsoup.connect(origin().file.url("/htmltests/medium.html"))
+            .data(FileRoute.ContentTypeParam, contentType);
+
+        Document doc = con.get();
+
+        assertEquals("Medium HTML", doc.title());
+        assertEquals(contentType, con.response().contentType());
+    }
+
+    @Test public void xmlSuffixAllowsRegisteredSubtypeCharacters() throws IOException {
+        String contentType = "Application/Vnd.Example+XML; charset=UTF-8";
+        Connection con = Jsoup.connect(origin().file.url("/htmltests/xml-test.xml"))
+            .data(FileRoute.ContentTypeParam, contentType);
+
+        Document doc = con.get();
+
+        assertInstanceOf(XmlTreeBuilder.class, doc.parser().getTreeBuilder());
+        assertEquals(contentType, con.response().contentType());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"application/notxml", "application/xmlish", "application/foo+xmlish"})
+    public void rejectsXmlLikeContentTypes(String contentType) {
+        Connection con = Jsoup.connect(origin().file.url("/htmltests/xml-test.xml"))
+            .data(FileRoute.ContentTypeParam, contentType);
+
+        UnsupportedMimeTypeException exception = assertThrows(UnsupportedMimeTypeException.class, con::execute);
+        assertEquals("Unhandled content type. Must be a text or XML media type", exception.getMessage());
     }
 
     @Test public void testParseRss() throws IOException {
@@ -934,7 +959,16 @@ public class ConnectTest {
 
     @Test
     public void fetchHandlesXml() throws IOException {
-        String[] types = {"text/xml", "application/xml", "application/rss+xml", "application/xhtml+xml"};
+        String[] types = {
+            "text/xml",
+            "application/xml",
+            "image/xml",
+            "application/xml-external-parsed-entity",
+            "text/xml-external-parsed-entity",
+            "application/xml-dtd",
+            "application/rss+xml",
+            "application/xhtml+xml"
+        };
         for (String type : types) {
             fetchHandlesXml(type);
         }

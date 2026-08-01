@@ -849,10 +849,9 @@ public class HttpConnection implements Connection {
         private int numRedirects = 0;
         private final HttpConnection.Request req;
 
-        /*
-         * Matches XML content types (like text/xml, image/svg+xml, application/xhtml+xml;charset=UTF8, etc)
-         */
-        private static final Pattern xmlContentTypeRxp = Pattern.compile("(\\w+)/\\w*\\+?xml.*");
+        // matches XML content types: */xml, */xml-*, and */*+xml
+        private static final Pattern xmlContentTypeRxp = Pattern.compile(
+            "^[^/;]+/(?:xml(?:-[^/;]+)?|[^/;]+\\+xml)(?:\\s*;.*)?$", Pattern.CASE_INSENSITIVE);
 
         /**
          <b>Internal only! </b>Creates a dummy HttpConnection.Response, useful for testing. All actual responses
@@ -960,16 +959,19 @@ public class HttpConnection implements Connection {
 
                 // check that we can handle the returned content type; if not, abort before fetching it
                 String contentType = res.contentType();
+                boolean isText = contentType != null && contentType.regionMatches(true, 0, "text/", 0, 5);
+                boolean isXml = contentType != null && xmlContentTypeRxp.matcher(contentType).matches();
+
                 if (contentType != null
                         && !req.ignoreContentType()
-                        && !contentType.startsWith("text/")
-                        && !xmlContentTypeRxp.matcher(contentType).matches()
+                        && !isText
+                        && !isXml
                         )
-                    throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, */xml, or */*+xml",
+                    throw new UnsupportedMimeTypeException("Unhandled content type. Must be a text or XML media type",
                             contentType, req.url().toString());
 
                 // switch to the XML parser if content type is xml and not parser not explicitly set
-                if (contentType != null && xmlContentTypeRxp.matcher(contentType).matches()) {
+                if (isXml) {
                     if (!req.parserDefined) req.parser(Parser.xmlParser());
                 }
 
