@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 * Fixed the JDK `HttpClient` implementation to accept responses without a `Content-Type` header, matching the `HttpURLConnection` implementation. [#2549](https://github.com/jhy/jsoup/pull/2549)
+* Fixed HTTP response content-type matching to handle media types case-insensitively and recognize structured `+xml` suffixes, including vendor-specific media types. [#2550](https://github.com/jhy/jsoup/pull/2550)
 
 ## 1.23.1 (2026-Jul-30)
 
