@@ -76,6 +76,8 @@ public class TestServer {
      */
     public static final class Origin {
         public final Endpoint hello = new Endpoint("/Hello", HelloRoute::handle);
+        public final Endpoint noContentType = new Endpoint("/NoContentType",
+                (request, response) -> response.write("<title>No type</title><p>ok</p>"));
         public final Endpoint echo = new Endpoint("/Echo", EchoRoute::handle);
         public final Endpoint file = new Endpoint("/File", FileRoute::handle);
         public final Endpoint redirect = new Endpoint("/Redirect", RedirectRoute::handle);
@@ -84,7 +86,7 @@ public class TestServer {
         public final Endpoint interrupted = new Endpoint("/Interrupted", InterruptedRoute::handle);
         public final Endpoint slowRider = new Endpoint("/SlowRider", SlowRider::handle);
         private final List<Endpoint> endpoints = Collections.unmodifiableList(Arrays.asList(
-            hello, echo, file, redirect, cookie, deflate, interrupted, slowRider));
+                hello, noContentType, echo, file, redirect, cookie, deflate, interrupted, slowRider));
 
         private Origin() {
         }

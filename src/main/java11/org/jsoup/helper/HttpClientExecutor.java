@@ -97,7 +97,7 @@ class HttpClientExecutor extends RequestExecutor {
             res.url = hRes.uri().toURL();
             res.statusCode = hRes.statusCode();
             res.statusMessage = StatusMessage(res.statusCode);
-            res.contentType = headers.firstValue("content-type").orElse("");
+            res.contentType = headers.firstValue("content-type").orElse(null);
             long length = headers.firstValueAsLong("content-length").orElse(-1);
             res.contentLength = length < Integer.MAX_VALUE ? (int) length : -1;
             res.prepareResponse(headers.map(), prevRes);
