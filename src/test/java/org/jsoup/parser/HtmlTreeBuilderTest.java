@@ -6,7 +6,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.jsoup.parser.Parser.NamespaceHtml;
@@ -50,6 +53,33 @@ public class HtmlTreeBuilderTest {
 
         // would need to rework this if/when that annotation moves from the method to the class / package.
         assertTrue(seen);
+    }
+
+    @Test void tracksParseLifecycle() throws IOException {
+        Parser parser = Parser.htmlParser();
+        TreeBuilder treeBuilder = parser.getTreeBuilder();
+        assertFalse(treeBuilder.isComplete());
+
+        try (StreamParser streamParser = new StreamParser(parser).parse("<title>One</title><p id=hit>Full</p>", "")) {
+            streamParser.expectFirst("title");
+            Element open = streamParser.document().expectFirst("#hit");
+            assertTrue(treeBuilder.isOpen(open));
+
+            List<Element> openElements = new ArrayList<>();
+            treeBuilder.copyOpenElementsTo(openElements);
+            assertTrue(openElements.contains(open));
+
+            // closing before EOF releases the open stack without marking the document complete
+            streamParser.close();
+            assertTrue(treeBuilder.stack.isEmpty());
+            assertFalse(treeBuilder.isComplete());
+
+            streamParser.parse("<p>Complete</p>", "");
+            assertFalse(treeBuilder.isComplete());
+            streamParser.complete();
+            assertTrue(treeBuilder.stack.isEmpty());
+            assertTrue(treeBuilder.isComplete());
+        }
     }
 
     @Test void isSpecial() {

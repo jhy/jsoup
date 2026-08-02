@@ -5,10 +5,13 @@ import org.jsoup.Jsoup;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.integration.TestServer;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jsoup.select.Evaluator;
 import org.jsoup.select.Elements;
+import org.jsoup.select.Selector;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -17,11 +20,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -93,7 +98,7 @@ class StreamParserTest {
 
     @Test void canStopAndCompleteAndReuse() throws IOException {
         StreamParser parser = new StreamParser(Parser.htmlParser());
-        String html1 = "<p>One<p>Two";
+        String html1 = "<p id=one>One<p id=two>Two";
         parser.parse(html1, "");
 
         Element p = parser.expectFirst("p");
@@ -106,6 +111,7 @@ class StreamParserTest {
 
         Element p2 = parser.selectNext("p");
         assertNull(p2);
+        assertNull(parser.selectFirst("p + p")); // a stopped parse exposes only complete matches
 
         Document completed = parser.complete();
         Elements ps = completed.select("p");
@@ -113,10 +119,27 @@ class StreamParserTest {
         assertEquals("One", ps.get(0).text());
         assertEquals("Two", ps.get(1).text());
 
+        // complete() makes the whole document selectable, even though stop() still suppresses iterator emission
+        Element completedP2 = parser.selectFirst("#two");
+        assertSame(ps.get(1), completedP2);
+
         // can reuse
         parser.parse("<div>DIV", "");
         Element div = parser.expectFirst("div");
         assertEquals("DIV", div.text());
+    }
+
+    @Test void closeKeepsOpenMatchesUnavailable() throws IOException {
+        String html = "<title>One</title><p id=hit>Full</p>";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            Element title = parser.expectFirst("title");
+            parser.stop();
+            parser.close();
+
+            // completed matches remain selectable while an open match stays unavailable after close
+            assertSame(title, parser.selectFirst("title"));
+            assertNull(parser.selectFirst("#hit"));
+        }
     }
 
     static void trackSeen(Element el, StringBuilder actual) {
@@ -155,8 +178,221 @@ class StreamParserTest {
         Element p2 = parser.expectNext("p");
         assertEquals("P Two", p2.text());
 
+        Element p1Again = parser.selectFirst("#1");
+        assertSame(p1, p1Again); // can reselect an earlier element after later elements were emitted
+
         Element pNone = parser.selectNext("p");
         assertNull(pNone);
+    }
+
+    @Test void selectFirstWaitsForLookaheadElement() throws IOException {
+        String html = "<title>One</title><p id=hit>Full</p><p>After</p>";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            parser.expectFirst("title");
+
+            // the second selection advances the provisional paragraph before returning it
+            Element hit = parser.expectFirst("#hit");
+            assertEquals("Full", hit.text());
+            Element next = hit.nextElementSibling();
+            assertNotNull(next);
+            assertEquals("p", next.normalName());
+        }
+    }
+
+    @Test void selectFirstWaitsForOpenQueuedElement() throws IOException {
+        String html = "<form><em id=hit></form>x</em>";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            // form-stack correction must not expose the formatting element before its later text is parsed
+            Element hit = parser.expectFirst("#hit");
+            assertEquals("x", hit.text());
+        }
+    }
+
+    @Test void selectFirstCompletesDocumentRoot() throws IOException {
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse("<p>Full</p>", "")) {
+            // the document root becomes selectable with the same complete contents as its final iterator emission
+            Element root = parser.expectFirst("*");
+            assertSame(parser.document(), root);
+            assertEquals("Full", root.text());
+        }
+    }
+
+    @Test void selectFirstKeepsDocumentOrderForNestedMatches() throws IOException {
+        String html = "<title>One</title><div id=outer class=hit><div id=inner class=hit>Inner</div>Tail</div><p>After</p>";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            parser.expectFirst("title");
+
+            Element hit = parser.expectFirst(".hit");
+            assertEquals("outer", hit.id());
+            assertEquals("Inner Tail", hit.text());
+        }
+    }
+
+    @Test void selectFirstKeepsDocumentOrderWhenParsingToMatch() throws IOException {
+        String html = "<div id=outer class=hit><div id=inner class=hit>Inner</div></div><p>After</p>";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            // the document-first outer match wins over the child emitted first by the iterator
+            Element hit = parser.expectFirst(".hit");
+            assertEquals("outer", hit.id());
+            assertEquals("Inner", hit.text());
+        }
+    }
+
+    @Test void selectFirstKeepsDocumentOrderAfterTransientMatch() throws IOException {
+        String html = "<title>One</title><p>Full</p><div id=outer class=hit><div id=inner class=hit>Inner</div></div>" +
+            "<p>After</p><aside id=unread>Unread</aside>";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            parser.expectFirst("title");
+
+            // the replacement outer match wins after the provisional empty paragraph stops matching
+            Element hit = parser.expectFirst("p:empty, .hit");
+            assertEquals("outer", hit.id());
+            assertEquals("Inner", hit.text());
+            assertNull(parser.document().selectFirst("#unread")); // later input remains unparsed
+        }
+    }
+
+    @Test void selectFirstRechecksLookaheadMatchAfterEmission() throws IOException {
+        String html = "<title>One</title><p id=filled>Full</p><p id=empty></p><p>After</p>";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            parser.expectFirst("title");
+
+            Element hit = parser.expectFirst("p:empty");
+            assertEquals("empty", hit.id());
+        }
+    }
+
+    @Test void selectFirstDoesNotRescanTransientLookaheads() throws IOException {
+        int paragraphCount = 200;
+        StringBuilder html = new StringBuilder("<title>One</title>");
+        for (int i = 0; i < paragraphCount; i++)
+            html.append("<p>Filled</p>");
+        html.append("<p id=empty></p><div>After</div>");
+
+        Evaluator emptyParagraph = Selector.evaluatorOf("p:empty");
+        AtomicInteger evaluations = new AtomicInteger();
+        Evaluator countingEvaluator = new Evaluator() {
+            @Override public boolean matches(Element root, Element element) {
+                evaluations.incrementAndGet();
+                return emptyParagraph.matches(root, element);
+            }
+        };
+
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html.toString(), "")) {
+            parser.expectFirst("title");
+
+            Element hit = parser.selectFirst(countingEvaluator);
+            assertNotNull(hit);
+            assertEquals("empty", hit.id());
+            // make sure transient p:empty matches are not rescanned quadratically
+            assertTrue(evaluations.get() < paragraphCount * 3, "evaluations: " + evaluations.get());
+        }
+    }
+
+    @Test void selectFirstFindsFosterParentedElementThatIsNotEmitted() throws IOException {
+        String html = "<table><b id=hit>T<div>T";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            parser.expectNext("head");
+            parser.expectNext("div");
+
+            // the completed tree makes the foster-parented match selectable
+            Element hit = parser.expectFirst("#hit");
+            assertEquals("b", hit.normalName());
+            assertEquals("T T", hit.text());
+        }
+    }
+
+    @Test void selectFirstRechecksCompletedDocumentAfterIteratorFallback() throws IOException {
+        String html = "<p id=pre>pre</p><table><b id=hit>T<div>T";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            parser.expectFirst("#pre");
+
+            // the completed document supplies a foster-parented match that was not emitted by the iterator
+            Element hit = parser.expectFirst("#hit");
+            assertEquals("b", hit.normalName());
+            assertEquals("T T", hit.text());
+        }
+    }
+
+    @Test void selectFirstDoesNotConsumeBufferedMatch() throws IOException {
+        String html = "<p>One</p><p>Two</p>";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            Iterator<Element> iterator = parser.iterator();
+            assertTrue(iterator.hasNext());
+
+            // the complete head buffered by hasNext() remains the iterator's next element after selection
+            Element head = parser.expectFirst("head");
+            assertSame(head, iterator.next());
+        }
+    }
+
+    @Test void selectFirstDoesNotConsumeQueuedMatch() throws IOException {
+        String html = "<div><p><span>One</div><aside>After";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            parser.expectNext("head");
+            Iterator<Element> iterator = parser.iterator();
+            assertTrue(iterator.hasNext());
+            Element span = parser.document().selectFirst("span");
+            assertNotNull(span);
+            Element paragraph = parser.document().selectFirst("p");
+            assertNotNull(paragraph);
+
+            // the ready span remains next in iterator order after selecting the queued paragraph
+            Element selected = parser.expectFirst("p");
+            assertSame(paragraph, selected);
+            assertSame(span, iterator.next());
+        }
+    }
+
+    @Test void selectFirstWaitsForVoidElementEmission() throws IOException {
+        String html = "<title>One</title><img id=hit><p>After</p>";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            parser.expectFirst("title");
+
+            Element hit = parser.expectFirst("#hit");
+            Element next = hit.nextElementSibling();
+            assertNotNull(next);
+            assertEquals("p", next.normalName());
+        }
+    }
+
+    @Test void selectFirstWaitsForFragmentLookahead() throws IOException {
+        String html = "<tr id=one><td>One</td><tr id=two><td>Two</td>";
+        Element context = new Element("table");
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parseFragment(html, context, "")) {
+            parser.expectFirst("td");
+
+            Element row = parser.expectFirst("#two");
+            assertEquals("Two", row.text());
+        }
+    }
+
+    @Test void selectFirstUnwrapsReaderExceptionWhileCompletingLookahead() throws IOException {
+        String prefix = "<title>One</title><p id=hit>";
+        // selection preserves its checked IOException contract while advancing the pending match
+        String initialBuffer = prefix + StringUtil.padding(CharacterReader.BufferSize - prefix.length(), -1);
+        IOException expected = new IOException("read failed");
+        Reader reader = new Reader() {
+            boolean firstRead = true;
+
+            @Override public int read(char[] buffer, int offset, int length) throws IOException {
+                if (firstRead) {
+                    firstRead = false;
+                    initialBuffer.getChars(0, initialBuffer.length(), buffer, offset);
+                    return initialBuffer.length();
+                }
+                throw expected;
+            }
+
+            @Override public void close() { }
+        };
+
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(reader, "")) {
+            parser.expectFirst("title");
+
+            IOException actual = assertThrows(IOException.class, () -> parser.selectFirst("#hit"));
+            assertSame(expected, actual);
+        }
     }
 
     @Test void canRemoveFromDom() {
