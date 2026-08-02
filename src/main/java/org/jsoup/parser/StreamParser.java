@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UncheckedIOException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -166,9 +167,11 @@ public class StreamParser implements Closeable {
      Closes the input and releases resources including the underlying parser and reader.
      <p>The parser will also be closed when the input is fully read.</p>
      <p>The parser can be reused with another call to {@link #parse(Reader, String)}.</p>
-     */
+    */
     @Override public void close() {
-        treeBuilder.completeParse(); // closes the reader, frees resources
+        it.deferOpenElements();
+        stopped = true;
+        treeBuilder.closeParse(); // closes the reader, frees resources
     }
 
     /**
@@ -207,7 +210,7 @@ public class StreamParser implements Closeable {
 
     /**
      Finds the first Element that matches the provided query. If the parsed Document does not already have a match, the
-     input will be parsed until the first match is found, or the input is completely read.
+     input will be parsed until the first match is ready for stream emission, or the input is completely read.
      @param query the {@link org.jsoup.select.Selector} query.
      @return the first matching {@link Element}, or {@code null} if there's no match
      @throws IOException if an I/O error occurs
@@ -235,8 +238,8 @@ public class StreamParser implements Closeable {
 
     /**
      Finds the first Element that matches the provided query. If the parsed Document does not already have a match, the
-     input will be parsed until the first match is found, or the input is completely read.
-     <p>By providing a compiled evaluator vs a CSS selector, this method may be more efficient when executing the same
+     input will be parsed until the first match is ready for stream emission, or the input is completely read.
+     <p>By providing a compiled evaluator vs. a CSS selector, this method may be more efficient when executing the same
      query against multiple documents.</p>
      @param eval the {@link org.jsoup.select.Selector} evaluator.
      @return the first matching {@link Element}, or {@code null} if there's no match
@@ -246,11 +249,26 @@ public class StreamParser implements Closeable {
     public @Nullable Element selectFirst(Evaluator eval) throws IOException {
         final Document doc = document();
 
-        // run the query on the existing (partial) doc first, as there may be a hit already parsed
+        // a ready match can be returned without advancing the iterator
         Element first = doc.selectFirst(eval);
-        if (first != null) return first;
+        if (first != null && it.isPending(first)) {
+            if (!it.awaitReady(first)) return null;
+            first = doc.selectFirst(eval);
+        }
+        if (first != null && !it.isPending(first)) return first;
 
-        return selectNext(eval);
+        // use the iterator for linear progress
+        Element emitted = selectNext(eval);
+        if (emitted == null) {
+            if (!treeBuilder.isComplete()) return null;
+            return doc.selectFirst(eval);
+        }
+
+        // reconcile the iterator's child-first emission order with document order
+        while ((first = doc.selectFirst(eval)) != null && it.isPending(first)) {
+            if (!it.awaitReady(first)) return null;
+        }
+        return first != null ? first : emitted;
     }
 
     /**
@@ -305,16 +323,54 @@ public class StreamParser implements Closeable {
     }
 
     final class ElementIterator implements Iterator<Element>, NodeVisitor {
-        // listeners add to a next emit queue, as a single token read step may yield multiple elements
-        final private Queue<Element> emitQueue = new LinkedList<>();
+        final private Queue<Element> emitQueue = new LinkedList<>(); // ready elements waiting for iterator delivery, in emission order
+        final private HashSet<Element> deferredEls = new HashSet<>(); // off-stack elements not yet ready for emission
         private @Nullable Element current;  // most recently emitted
         private @Nullable Element next;     // element waiting to be picked up
         private @Nullable Element tail;     // The last tailed element (</html>), on hold for final pop
 
         void reset() {
             emitQueue.clear();
+            deferredEls.clear();
             current = next = tail = null;
             stopped = false;
+        }
+
+        /** Defers open Elements before an early close releases the tree-builder stack. */
+        void deferOpenElements() {
+            treeBuilder.copyOpenElementsTo(deferredEls);
+        }
+
+        /** Tests whether an Element has reached its iterator emission point. */
+        boolean isReady(Element element) {
+            return current == element || next == element || emitQueue.contains(element);
+        }
+
+        /** Tests whether an Element still needs parser advancement before selection. */
+        boolean isPending(Element element) {
+            // the document is pending until EOF; other pending elements are open or explicitly deferred
+            return !treeBuilder.isComplete() &&
+                (element == treeBuilder.doc || treeBuilder.isOpen(element) || deferredEls.contains(element));
+        }
+
+        /** Advances parsing until an Element is ready; returns false if parsing was stopped. */
+        boolean awaitReady(Element element) throws IOException {
+            try {
+                while (isPending(element) && !stopped) {
+                    if (!hasNext()) break;
+                    if (isPending(element)) next(); // hasNext may have buffered the target itself
+                }
+                return !isPending(element);
+            } catch (UncheckedIOException e) {
+                // preserve the checked I/O contract when iterator advancement reads input
+                throw e.getCause();
+            }
+        }
+
+        /** Marks an Element ready and queues it for iterator emission. */
+        void queueForEmission(Element element) {
+            deferredEls.remove(element);
+            emitQueue.add(element);
         }
 
         // Iterator Interface:
@@ -355,11 +411,11 @@ public class StreamParser implements Closeable {
                     return;
                 }
             }
-            stop();
             close();
 
             // send the final element out:
             if (tail != null) {
+                deferredEls.remove(tail);
                 next = tail;
                 tail = null;
             }
@@ -375,15 +431,20 @@ public class StreamParser implements Closeable {
             if (node instanceof Element) {
                 Element prev = node.previousElementSibling();
                 // We prefer to wait until an element has a next sibling before emitting it; otherwise, get it in tail
-                if (prev != null) emitQueue.add(prev);
+                if (prev != null) {
+                    queueForEmission(prev);
+                    if (tail == prev) tail = null; // queueing marks it ready
+                }
             }
         }
 
         @Override public void tail(Node node, int depth) {
             if (node instanceof Element) {
                 tail = (Element) node; // kept for final hit
+                if (!isReady(tail)) deferredEls.add(tail);
                 Element lastChild = tail.lastElementChild(); // won't get a nextsib, so emit that:
-                if (lastChild != null) emitQueue.add(lastChild);
+                if (lastChild != null) queueForEmission(lastChild);
+                if (tail == treeBuilder.doc) deferredEls.clear(); // completed document makes stale recovery state irrelevant
             }
         }
     }

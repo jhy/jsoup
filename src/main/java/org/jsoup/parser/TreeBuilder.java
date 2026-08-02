@@ -12,6 +12,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static org.jsoup.parser.Parser.NamespaceHtml;
@@ -24,7 +25,7 @@ abstract class TreeBuilder {
     CharacterReader reader;
     Tokeniser tokeniser;
     Document doc; // current doc we are building into
-    ArrayList<Element> stack; // the stack of open elements
+    final ArrayList<Element> stack = new ArrayList<>(); // open elements; reused and trimmed between parses
     String baseUri; // current base uri, for creating new elements
     Token currentToken; // currentToken is used for error and source position tracking. Null at start of fragment parse
     ParseSettings settings;
@@ -37,6 +38,7 @@ abstract class TreeBuilder {
 
     boolean trackSourceRange; // optionally tracks source ranges of nodes and attributes
     @Nullable LineMap lineMap; // shared line map for retained source ranges
+    private boolean parseComplete; // true only after EOF has closed the document
 
     void initialiseParse(Reader input, String baseUri, Parser parser) {
         Validate.notNullParam(input, "input");
@@ -53,7 +55,9 @@ abstract class TreeBuilder {
         lineMap = trackSourceRange ? reader.lineMap() : null;
         if (parser.isTrackErrors()) parser.getErrors().clear();
         tokeniser = new Tokeniser(this);
-        stack = new ArrayList<>(32);
+        stack.clear();
+        stack.ensureCapacity(32);
+        parseComplete = false;
         tagSet = parser.tagSet();
         start = new Token.StartTag(this);
         currentToken = start; // init current token to the virtual start token.
@@ -61,7 +65,8 @@ abstract class TreeBuilder {
         onNodeInserted(doc);
     }
 
-    void completeParse() {
+    /** Closes the current input and releases parse resources without changing whether EOF was reached. */
+    void closeParse() {
         // tidy up - as the Parser and Treebuilder are retained in document for settings / fragments
         if (reader == null) return;
         if (lineMap != null) lineMap.complete();
@@ -69,7 +74,8 @@ abstract class TreeBuilder {
         reader = null;
         lineMap = null;
         tokeniser = null;
-        stack = null;
+        stack.clear();
+        stack.trimToSize();
     }
 
     Document parse(Reader input, String baseUri, Parser parser) {
@@ -104,17 +110,17 @@ abstract class TreeBuilder {
 
     void runParser() {
         do {} while (stepParser()); // run until stepParser sees EOF
-        completeParse();
+        closeParse();
     }
 
     boolean stepParser() {
+        if (parseComplete) return false;
+
         // if we have reached the end already, step by popping off the stack, to hit nodeRemoved callbacks:
         if (currentToken.type == Token.TokenType.EOF) {
-            if (stack == null) {
-                return false;
-            } if (stack.isEmpty()) {
+            if (stack.isEmpty()) {
                 onNodeClosed(doc); // the root doc is not on the stack, so let this final step close it
-                stack = null;
+                parseComplete = true;
                 return true;
             }
             pop();
@@ -125,6 +131,21 @@ abstract class TreeBuilder {
         process(token);
         token.reset();
         return true;
+    }
+
+    /** Return if we have reached EOF and completed the document tree. */
+    boolean isComplete() {
+        return parseComplete;
+    }
+
+    /** Check if the given Element is currently on the stack of open elements. */
+    boolean isOpen(Element element) {
+        return stack.contains(element);
+    }
+
+    /** Copies the currently open elements before a caller-initiated close clears the parser stack. */
+    void copyOpenElementsTo(Collection<? super Element> elements) {
+        elements.addAll(stack);
     }
 
     abstract boolean process(Token token);
