@@ -37,7 +37,31 @@ import static org.jsoup.parser.Parser.NamespaceXml;
 public class XmlTreeBuilder extends TreeBuilder {
     static final String XmlnsKey = "xmlns";
     static final String XmlnsPrefix = "xmlns:";
-    private final ArrayDeque<HashMap<String, String>> namespacesStack = new ArrayDeque<>(); // stack of namespaces, prefix => urn
+    private static final NamespaceChange ScopeMarker = new NamespaceChange("", null);
+    final HashMap<String, String> namespaceBindings = new HashMap<>();
+    final ArrayDeque<NamespaceChange> namespaceChanges = new ArrayDeque<>();
+
+    /**
+     Tracks namespace binding changes within element scopes. Each scope starts with a shared marker, followed by a
+     change record for each namespace declaration. When the scope closes, the change records are applied in reverse to
+     restore the parent bindings.
+     */
+    private static final class NamespaceChange {
+        private final String prefix;
+        private final @Nullable String previousValue;
+
+        /** Creates a namespace change; a null previous value means the prefix was previously unbound. */
+        private NamespaceChange(String prefix, @Nullable String previousValue) {
+            this.prefix = prefix;
+            this.previousValue = previousValue;
+        }
+
+        /** Restores the binding that was active before this change. */
+        private void restore(Map<String, String> namespaceBindings) {
+            if (previousValue == null) namespaceBindings.remove(prefix);
+            else namespaceBindings.put(prefix, previousValue);
+        }
+    }
 
     @Override ParseSettings defaultSettings() {
         return ParseSettings.preserveCase;
@@ -51,11 +75,10 @@ public class XmlTreeBuilder extends TreeBuilder {
             .escapeMode(Entities.EscapeMode.xhtml)
             .prettyPrint(false); // as XML, we don't understand what whitespace is significant or not
 
-        namespacesStack.clear();
-        HashMap<String, String> ns = new HashMap<>();
-        ns.put("xml", NamespaceXml);
-        ns.put("", NamespaceXml);
-        namespacesStack.push(ns);
+        namespaceBindings.clear();
+        namespaceChanges.clear();
+        namespaceBindings.put("xml", NamespaceXml);
+        namespaceBindings.put("", NamespaceXml);
     }
 
     @Override
@@ -67,15 +90,13 @@ public class XmlTreeBuilder extends TreeBuilder {
         TokeniserState textState = context.tag().textState();
         if (textState != null) tokeniser.transition(textState);
 
-        // reconstitute the namespace stack by traversing the element and its parents (top down)
+        // establish the fragment's base namespace scope from the context and its ancestors, top down
         Elements chain = context.parents();
         chain.add(0, context);
         for (int i = chain.size() - 1; i >= 0; i--) {
             Element el = chain.get(i);
-            HashMap<String, String> namespaces = new HashMap<>(namespacesStack.peek());
-            namespacesStack.push(namespaces);
             if (el.attributesSize() > 0) {
-                processNamespaces(el.attributes(), namespaces);
+                applyNamespaceDeclarations(el.attributes());
             }
         }
     }
@@ -144,23 +165,23 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     void insertElementFor(Token.StartTag startTag) {
-        // handle namespace for tag
-        HashMap<String, String> namespaces = new HashMap<>(namespacesStack.peek());
-        namespacesStack.push(namespaces);
-
         Attributes attributes = startTag.attributes;
         if (attributes != null) {
             settings.normalizeAttributes(attributes);
             attributes.deduplicate(settings);
-            processNamespaces(attributes, namespaces);
-            applyNamespacesToAttributes(attributes, namespaces);
-            startTag.finaliseAttributeRanges(settings);
         }
 
         enforceStackDepthLimit();
+        namespaceChanges.push(ScopeMarker);
+
+        if (attributes != null) {
+            applyNamespaceDeclarations(attributes);
+            applyNamespacesToAttributes(attributes);
+            startTag.finaliseAttributeRanges(settings);
+        }
 
         String tagName = startTag.tagName.value();
-        String ns = resolveNamespace(tagName, namespaces);
+        String ns = resolveNamespace(tagName);
         Tag tag = tagFor(tagName, startTag.normalName, ns, settings);
         Element el = new Element(tag, null, attributes);
         currentElement().appendChild(el);
@@ -177,28 +198,34 @@ public class XmlTreeBuilder extends TreeBuilder {
         }
     }
 
-    private static void processNamespaces(Attributes attributes, HashMap<String, String> namespaces) {
-        // process attributes for namespaces (xmlns, xmlns:)
+    /** Applies namespace declarations and records changes within an element scope. */
+    private void applyNamespaceDeclarations(Attributes attributes) {
         for (Attribute attr : attributes) {
             String key = attr.getKey();
             String value = attr.getValue();
+            String prefix;
             if (key.equals(XmlnsKey)) {
-                namespaces.put("", value); // new default for this level
+                prefix = ""; // new default for this level
             } else if (key.startsWith(XmlnsPrefix)) {
-                String nsPrefix = key.substring(XmlnsPrefix.length());
-                namespaces.put(nsPrefix, value);
+                prefix = key.substring(XmlnsPrefix.length());
+            } else {
+                continue;
             }
+
+            String previousValue = namespaceBindings.put(prefix, value);
+            if (!namespaceChanges.isEmpty()) namespaceChanges.push(new NamespaceChange(prefix, previousValue));
         }
     }
 
-    private static void applyNamespacesToAttributes(Attributes attributes, HashMap<String, String> namespaces) {
-        // second pass, apply namespace to attributes. Collects them first then adds (as userData is an attribute)
+    /** Applies resolved namespace URIs to prefixed attributes. */
+    private void applyNamespacesToAttributes(Attributes attributes) {
+        // collect first, then add, as userData is stored as an attribute
         Map<String, String> attrPrefix = new HashMap<>();
         for (Attribute attr: attributes) {
             String prefix = attr.prefix();
             if (!prefix.isEmpty()) {
                 if (prefix.equals(XmlnsKey)) continue;
-                String ns = namespaces.get(prefix);
+                String ns = namespaceBindings.get(prefix);
                 if (ns != null) attrPrefix.put(SharedConstants.XmlnsAttr + prefix, ns);
             }
         }
@@ -206,15 +233,25 @@ public class XmlTreeBuilder extends TreeBuilder {
             attributes.userData(entry.getKey(), entry.getValue());
     }
 
-    private static String resolveNamespace(String tagName, HashMap<String, String> namespaces) {
-        String ns = namespaces.get("");
+    /** Resolves the namespace URI for a qualified tag name. */
+    private String resolveNamespace(String tagName) {
+        String ns = namespaceBindings.get("");
         int pos = tagName.indexOf(':');
         if (pos > 0) {
             String prefix = tagName.substring(0, pos);
-            if (namespaces.containsKey(prefix))
-                ns = namespaces.get(prefix);
+            if (namespaceBindings.containsKey(prefix))
+                ns = namespaceBindings.get(prefix);
         }
         return ns;
+    }
+
+    @Override
+    Element pop() {
+        NamespaceChange change;
+        while ((change = namespaceChanges.pop()) != ScopeMarker) {
+            change.restore(namespaceBindings);
+        }
+        return super.pop();
     }
 
     void insertLeafNode(LeafNode node) {
@@ -248,12 +285,6 @@ public class XmlTreeBuilder extends TreeBuilder {
         XmlDeclaration decl = new XmlDeclaration(token.name(), token.isDeclaration);
         if (token.attributes != null) decl.attributes().addAll(token.attributes);
         insertLeafNode(decl);
-    }
-
-    @Override
-    Element pop() {
-        namespacesStack.pop();
-        return super.pop();
     }
 
     /**

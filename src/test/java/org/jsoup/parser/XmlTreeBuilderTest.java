@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -663,12 +664,21 @@ public class XmlTreeBuilderTest {
         assertEquals("", other.namespace());
     }
 
+    @Test void restoresNamespaceBindingsAfterNestedOverride() {
+        String xml = "<root xmlns:p='/one'><p:a/><inner xmlns:p='/two'><p:b/></inner><p:c/></root>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+
+        assertEquals("/one", doc.expectFirst("p|a").tag().namespace());
+        assertEquals("/two", doc.expectFirst("p|b").tag().namespace());
+        assertEquals("/one", doc.expectFirst("p|c").tag().namespace());
+    }
+
     @Test void elementsViaAppendHtmlAreNamespaced() {
-        // tests that when elements / attributes are added via a fragment parse, they inherit the namespace stack, and can still override
+        // fragment parsing inherits the context namespace scope and may override it locally
         String xml = "<out xmlns='/out'><bk:book xmlns:bk='/books' xmlns:edi='/edi'><bk:title>Test</bk:title><li edi:foo='bar'></bk:book></out>";
         Document doc = Jsoup.parse(xml, Parser.xmlParser());
 
-        // insert some parsed xml, inherit bk and edi, and with an inner node override bk
+        // inherit bk and edi, then override bk within a nested scope
         Element book = doc.expectFirst("bk|book");
         book.append("<bk:content edi:foo=qux>Content</bk:content>");
 
@@ -680,14 +690,17 @@ public class XmlTreeBuilderTest {
         assertEquals("/books", content.tag().namespace());
         assertEquals("/edi", content.attribute("edi:foo").namespace());
 
-        content.append("<data>Data</data><html xmlns='/html' xmlns:bk='/update'><p>Foo</p><bk:news>News</bk:news></html>");
-        // p should be in /html, news in /update
+        content.append("<data>Data</data><html xmlns='/html' xmlns:bk='/update'><p>Foo</p><bk:news>News</bk:news></html><bk:after edi:foo='after'/>");
+        // p uses the local default, news uses the local bk, and after returns to the inherited bk
         Element p = content.expectFirst("p");
         assertEquals("/html", p.tag().namespace());
         Element news = content.expectFirst("bk|news");
         assertEquals("/update", news.tag().namespace());
         Element data = content.expectFirst("data");
         assertEquals("/out", data.tag().namespace());
+        Element after = content.expectFirst("bk|after");
+        assertEquals("/books", after.tag().namespace());
+        assertEquals("/edi", after.attribute("edi:foo").namespace());
     }
 
     @Test void selfClosingOK() {
@@ -717,6 +730,37 @@ public class XmlTreeBuilderTest {
         assertEquals(parser.getMaxDepth(), depth(target));
     }
 
+    @Test void namespaceScopeTracksDepthPruning() {
+        Parser parser = Parser.xmlParser().setMaxDepth(3);
+        Document doc = Jsoup.parse("<a><b><x xmlns:p='/pruned'><p:y/></x></b></a>", "", parser);
+        Element y = doc.expectFirst("p|y");
+
+        assertEquals(NamespaceXml, y.tag().namespace());
+        assertEquals("b", y.parent().normalName());
+
+        doc = Jsoup.parse("<a><b><x><q:y xmlns:q='/incoming'/></x></b></a>", "", parser);
+        y = doc.expectFirst("q|y");
+        assertEquals("/incoming", y.tag().namespace());
+    }
+
+    @Test void namespaceTrackingRetainsLinearState() {
+        int depth = 1_000;
+        XmlTreeBuilder treeBuilder = new XmlTreeBuilder();
+        Parser parser = new Parser(treeBuilder);
+        treeBuilder.initialiseParse(new StringReader(deeplyNamespacedXml(depth)), "", parser);
+
+        try {
+            while (treeBuilder.stack.size() < depth) {
+                assertTrue(treeBuilder.stepParser());
+            }
+
+            assertEquals(depth + 2, treeBuilder.namespaceBindings.size()); // declarations plus the two initial bindings
+            assertEquals(depth * 2, treeBuilder.namespaceChanges.size()); // one marker and binding change per element
+        } finally {
+            treeBuilder.closeParse();
+        }
+    }
+
     private static String deepXml(int depth) {
         StringBuilder xml = new StringBuilder("<root>");
         for (int i = 0; i < depth; i++) {
@@ -727,6 +771,17 @@ public class XmlTreeBuilderTest {
             xml.append("</n>");
         }
         xml.append("</root>");
+        return xml.toString();
+    }
+
+    private static String deeplyNamespacedXml(int depth) {
+        StringBuilder xml = new StringBuilder();
+        for (int i = 0; i < depth; i++) {
+            xml.append("<n xmlns:p").append(i).append("='urn:").append(i).append("'>");
+        }
+        for (int i = 0; i < depth; i++) {
+            xml.append("</n>");
+        }
         return xml.toString();
     }
 
