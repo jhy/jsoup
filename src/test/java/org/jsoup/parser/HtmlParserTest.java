@@ -727,6 +727,19 @@ public class HtmlParserTest {
         // no body, no table. No crash!
     }
 
+    @Test void placesCommentsAfterFrameset() {
+        String html = "<html><head></head><frameset><frame></frameset><!--after frameset--></html><!--after html-->";
+        Document doc = Jsoup.parse(html);
+        doc.outputSettings().prettyPrint(false);
+
+        Element htmlEl = doc.expectFirst("html");
+        Comment afterFrameset = assertInstanceOf(Comment.class, htmlEl.childNode(2));
+        Comment afterHtml = assertInstanceOf(Comment.class, doc.childNode(1));
+        assertSame(htmlEl, afterFrameset.parent());
+        assertSame(doc, afterHtml.parent());
+        assertEquals(html, doc.outerHtml());
+    }
+
     @Test public void handlesJavadocFont() {
         String h = "<TD BGCOLOR=\"#EEEEFF\" CLASS=\"NavBarCell1\">    <A HREF=\"deprecated-list.html\"><FONT CLASS=\"NavBarFont1\"><B>Deprecated</B></FONT></A>&nbsp;</TD>";
         Document doc = Jsoup.parse(h);
@@ -1804,6 +1817,21 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(html);
         doc.outputSettings().prettyPrint(false);
         assertEquals("<html><head></head><body>One<p>Hello!</p><p>There</p></body>  </html> ", doc.outerHtml());
+    }
+
+    @Test void placesCommentsAroundDocumentElement() {
+        String html = "<!--before html--><html><head></head><body>One</body><!--after body--></html><!--after html-->";
+        Document doc = Jsoup.parse(html);
+        doc.outputSettings().prettyPrint(false);
+
+        Comment beforeHtml = assertInstanceOf(Comment.class, doc.childNode(0));
+        Element htmlEl = doc.expectFirst("html");
+        Comment afterBody = assertInstanceOf(Comment.class, htmlEl.childNode(2));
+        Comment afterHtml = assertInstanceOf(Comment.class, doc.childNode(2));
+        assertSame(doc, beforeHtml.parent());
+        assertSame(htmlEl, afterBody.parent());
+        assertSame(doc, afterHtml.parent());
+        assertEquals(html, doc.outerHtml());
     }
 
     @Test public void preservesTabs() {

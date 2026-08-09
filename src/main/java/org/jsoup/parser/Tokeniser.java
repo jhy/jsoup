@@ -265,7 +265,7 @@ final class Tokeniser {
     /** Test if CDATA sections are allowed at the adjusted current node */
     boolean isCdataAllowed() {
         return syntax == Document.OutputSettings.Syntax.xml
-            || !Parser.NamespaceHtml.equals(treeBuilder.currentElement().tag().namespace());
+            || (treeBuilder.hasCurrentElement() && !Parser.NamespaceHtml.equals(treeBuilder.currentElement().tag().namespace()));
     }
 
     boolean isAppropriateEndTagToken() {

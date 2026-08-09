@@ -184,7 +184,7 @@ public class XmlTreeBuilder extends TreeBuilder {
         String ns = resolveNamespace(tagName);
         Tag tag = tagFor(tagName, startTag.normalName, ns, settings);
         Element el = new Element(tag, null, attributes);
-        currentElement().appendChild(el);
+        currentElOrDoc().appendChild(el);
         push(el);
 
         if (startTag.isSelfClosing()) {
@@ -255,7 +255,7 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     void insertLeafNode(LeafNode node) {
-        currentElement().appendChild(node);
+        currentElOrDoc().appendChild(node);
         onNodeInserted(node);
     }
 
@@ -267,9 +267,10 @@ public class XmlTreeBuilder extends TreeBuilder {
     void insertCharacterFor(Token.Character token) {
         final String data = token.getData();
         LeafNode node;
-        if      (token.isCData())                       node = new CDataNode(data);
-        else if (currentElement().tag().is(Tag.Data))   node = new DataNode(data);
-        else                                            node = new TextNode(data);
+        if      (token.isCData()) node = new CDataNode(data);
+        else if (currentElOrDoc().tag().is(Tag.Data))
+            node = new DataNode(data);
+        else node = new TextNode(data);
         insertLeafNode(node);
     }
 
