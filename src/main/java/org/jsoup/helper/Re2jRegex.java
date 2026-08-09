@@ -19,7 +19,7 @@ final class Re2jRegex extends Regex {
             return new Re2jRegex(com.google.re2j.Pattern.compile(regex));
         } catch (RuntimeException e) {
             throw new ValidationException("Pattern syntax error: " + e.getMessage());
-        } catch (OutOfMemoryError | StackOverflowError e) { // defensive check on regex to normalize exception
+        } catch (OutOfMemoryError | StackOverflowError e) { // complex patterns may exhaust VM resources
             throw new ValidationException(PatternComplexityError);
         }
     }
@@ -45,7 +45,7 @@ final class Re2jRegex extends Regex {
         public boolean find() {
             try {
                 return delegate.find();
-            } catch (StackOverflowError e) { // re2j may recurse deeply when evaluating complex patterns
+            } catch (OutOfMemoryError | StackOverflowError e) { // complex patterns may exhaust VM resources
                 throw new ValidationException(PatternComplexityError);
             }
         }
