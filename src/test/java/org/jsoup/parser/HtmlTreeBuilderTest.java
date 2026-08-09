@@ -64,10 +64,12 @@ public class HtmlTreeBuilderTest {
             streamParser.expectFirst("title");
             Element open = streamParser.document().expectFirst("#hit");
             assertTrue(treeBuilder.isOpen(open));
+            assertFalse(treeBuilder.isOpen(treeBuilder.doc));
 
             List<Element> openElements = new ArrayList<>();
             treeBuilder.copyOpenElementsTo(openElements);
             assertTrue(openElements.contains(open));
+            assertFalse(openElements.contains(treeBuilder.doc));
 
             // closing before EOF releases the open stack without marking the document complete
             streamParser.close();

@@ -465,27 +465,35 @@ public class HtmlTreeBuilder extends TreeBuilder {
         if (parser.getErrors().canAddError() && el.hasAttr("xmlns") && !el.attr("xmlns").equals(el.tag().namespace()))
             error("Invalid xmlns attribute [%s] on tag [%s]", el.attr("xmlns"), el.tagName());
 
-        if (isFosterInserts() && StringUtil.inSorted(currentElement().normalName(), InTableFoster))
+        Element target = currentElOrDoc();
+        if (isFosterInserts() && StringUtil.inSorted(target.normalName(), InTableFoster))
             insertInFosterParent(el);
         else
-            currentElement().appendChild(el);
+            target.appendChild(el);
 
         push(el);
     }
 
+    /** Inserts a comment into the current element, or the document when there is none. */
     void insertCommentNode(Token.Comment token) {
+        insertCommentNode(token, currentElOrDoc());
+    }
+
+    /** Inserts a comment into the supplied target. */
+    void insertCommentNode(Token.Comment token, Element target) {
         Comment node = new Comment(token.getData());
-        currentElement().appendChild(node);
+        target.appendChild(node);
         onNodeInserted(node);
     }
 
-    /** Inserts the provided character token into the current element. Any nulls in the data will be removed. */
+    /** Inserts the provided character token into the current element, or the document when there is none. */
     void insertCharacterNode(Token.Character characterToken) {
         insertCharacterNode(characterToken, false);
     }
 
     /**
-     Inserts the provided character token into the current element. The tokenizer will have already raised precise character errors.
+     Inserts the provided character token into the current element, or the document when there is none.
+     The tokenizer will have already raised precise character errors.
 
      @param characterToken the character token to insert
      @param replace if true, replaces any null chars in the data with the replacement char (U+FFFD). If false, removes
@@ -493,7 +501,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
      */
     void insertCharacterNode(Token.Character characterToken, boolean replace) {
         characterToken.normalizeNulls(replace);
-        Element el = currentElement(); // will be doc if no current element; allows for whitespace to be inserted into the doc root object (not on the stack)
+        Element el = currentElOrDoc();
         insertCharacterToElement(characterToken, el);
     }
 
@@ -508,7 +516,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             node = new DataNode(data);
         else
             node = new TextNode(data);
-        el.appendChild(node); // doesn't use insertNode, because we don't foster these; and will always have a stack.
+        el.appendChild(node); // doesn't use insertNode, because we don't foster these
         onNodeInserted(node);
     }
 
@@ -961,7 +969,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
      process, then the UA must perform the above steps as if that element was not in the above list.
      */
     void generateImpliedEndTags(String excludeTag) {
-        while (currentElement().tag().hasParserOption(HtmlTagOptions.ImpliedEnd)) {
+        while (hasCurrentElement() && currentElement().tag().hasParserOption(HtmlTagOptions.ImpliedEnd)) {
             if (excludeTag != null && currentElementIs(excludeTag))
                 break;
             pop();
@@ -979,6 +987,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void generateImpliedEndTags(boolean thorough) {
         final int option = thorough ? HtmlTagOptions.ThoroughImpliedEnd : HtmlTagOptions.ImpliedEnd;
         while (true) {
+            if (!hasCurrentElement()) break;
             Tag tag = currentElement().tag();
             if (!tag.hasParserOption(option))
                 break;
@@ -988,7 +997,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     void closeElement(String name) {
         generateImpliedEndTags(name);
-        if (!name.equals(currentElement().normalName())) error(state());
+        if (!currentElementIs(name)) error(state());
         popStackToClose(name);
     }
 
@@ -1191,7 +1200,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return "TreeBuilder{" +
                 "currentToken=" + currentToken +
                 ", state=" + state +
-                ", currentElement=" + currentElement() +
+                ", currentElement=" + (hasCurrentElement() ? currentElement() : "none") +
                 '}';
     }
 

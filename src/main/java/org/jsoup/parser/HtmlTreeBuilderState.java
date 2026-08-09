@@ -494,7 +494,7 @@ enum HtmlTreeBuilderState {
                     if (tb.inButtonScope("p")) {
                         tb.processEndTag("p");
                     }
-                    if (inSorted(tb.currentElement().normalName(), Constants.Headings)) {
+                    if (tb.hasCurrentElement() && inSorted(tb.currentElement().normalName(), Constants.Headings)) {
                         tb.error(this);
                         tb.pop();
                     }
@@ -803,7 +803,7 @@ enum HtmlTreeBuilderState {
             final String subject = endTag.normalName; // 1. Let subject be token's tag name.
 
             // 2. If the [current node] is an [HTML element] whose tag name is subject, and the [current node] is not in the [list of active formatting elements], then pop the [current node] off the [stack of open elements] and return.
-            if (tb.currentElement().normalName().equals(subject) && !tb.isInActiveFormattingElements(tb.currentElement())) {
+            if (tb.currentElementIs(subject) && !tb.isInActiveFormattingElements(tb.currentElement())) {
                 tb.pop();
                 return true;
             }
@@ -975,7 +975,7 @@ enum HtmlTreeBuilderState {
     },
     InTable {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
-            if (t.isCharacter() && inSorted(tb.currentElement().normalName(), InTableFoster)) {
+            if (t.isCharacter() && tb.hasCurrentElement() && inSorted(tb.currentElement().normalName(), InTableFoster)) {
                 tb.resetPendingTableCharacters();
                 tb.markInsertionMode();
                 tb.transition(InTableText);
@@ -1610,7 +1610,10 @@ enum HtmlTreeBuilderState {
                 else
                     tb.process(t, InBody); // will get into body
             } else if (t.isComment()) {
-                tb.insertCommentNode(t.asComment()); // into html node
+                if (html != null)
+                    tb.insertCommentNode(t.asComment(), html);
+                else
+                    tb.insertCommentNode(t.asComment()); // fragment fallback
             } else if (t.isDoctype()) {
                 tb.error(this);
                 return false;
@@ -1709,7 +1712,7 @@ enum HtmlTreeBuilderState {
     AfterAfterBody {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isComment()) {
-                tb.insertCommentNode(t.asComment());
+                tb.insertCommentNode(t.asComment(), tb.getDocument());
             } else if (t.isDoctype() || (t.isStartTag() && t.asStartTag().normalName().equals("html"))) {
                 return tb.process(t, InBody);
             } else if (isWhitespace(t)) {
@@ -1729,7 +1732,7 @@ enum HtmlTreeBuilderState {
     AfterAfterFrameset {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isComment()) {
-                tb.insertCommentNode(t.asComment());
+                tb.insertCommentNode(t.asComment(), tb.getDocument());
             } else if (t.isDoctype() || isWhitespace(t) || (t.isStartTag() && t.asStartTag().normalName().equals("html"))) {
                 return tb.process(t, InBody);
             } else if (t.isEOF()) {

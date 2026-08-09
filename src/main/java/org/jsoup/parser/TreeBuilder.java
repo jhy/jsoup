@@ -25,7 +25,7 @@ abstract class TreeBuilder {
     CharacterReader reader;
     Tokeniser tokeniser;
     Document doc; // current doc we are building into
-    final ArrayList<Element> stack = new ArrayList<>(); // open elements; reused and trimmed between parses
+    final ArrayList<Element> stack = new ArrayList<>(); // open elements only; the document is never on this stack
     String baseUri; // current base uri, for creating new elements
     Token currentToken; // currentToken is used for error and source position tracking. Null at start of fragment parse
     ParseSettings settings;
@@ -224,13 +224,26 @@ abstract class TreeBuilder {
     }
 
     /**
-     Get the current element (last on the stack). If all items have been removed, returns the document instead
-     (which might not actually be on the stack; use stack.size() == 0 to test if required.
-     @return the last element on the stack, if any; or the root document
+     Gets the current open element for tree-construction decisions.
+     The stack must not be empty; use {@link #hasCurrentElement()} when it may be.
      */
     Element currentElement() {
-        int size = stack.size();
-        return size > 0 ? stack.get(size-1) : doc;
+        return stack.get(stack.size() - 1);
+    }
+
+    /**
+     Tests if there is a current open element.
+     */
+    boolean hasCurrentElement() {
+        return !stack.isEmpty();
+    }
+
+    /**
+     Gets the current open element, or the document when there is none.
+     This fallback is for generic node attachment; state-specific placement and foster parenting use explicit targets.
+     */
+    Element currentElOrDoc() {
+        return hasCurrentElement() ? currentElement() : doc;
     }
 
     /**
@@ -239,11 +252,7 @@ abstract class TreeBuilder {
      @return true if there is a current element on the stack, and its name equals the supplied
      */
     boolean currentElementIs(String normalName) {
-        if (stack.size() == 0)
-            return false;
-        Element current = currentElement();
-        return current != null && current.normalName().equals(normalName)
-            && current.tag().namespace().equals(NamespaceHtml);
+        return currentElementIs(normalName, NamespaceHtml);
     }
 
     /**
@@ -253,10 +262,10 @@ abstract class TreeBuilder {
      @return true if there is a current element on the stack, and its name equals the supplied
      */
     boolean currentElementIs(String normalName, String namespace) {
-        if (stack.size() == 0)
+        if (!hasCurrentElement())
             return false;
         Element current = currentElement();
-        return current != null && current.normalName().equals(normalName)
+        return current.normalName().equals(normalName)
             && current.tag().namespace().equals(namespace);
     }
 
