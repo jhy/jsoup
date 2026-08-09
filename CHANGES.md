@@ -4,6 +4,7 @@
 
 ### Improvements
 * Improved consecutive `StreamParser.selectFirst(...)` calls during progressive parsing, so later matches are returned with their parsed contents when earlier selections have left them as parser lookahead. E.g., given `<title>One</title><p id=hit>Full</p><p>Next</p>`, selecting `title` and then `#hit` now advances the partial lookahead and returns `<p id="hit">Full</p>`, rather than returning an empty `<p id="hit"></p>` before its content is parsed. The updated readiness tracking follows StreamParser's normal emission order across implicit HTML structure and parser recovery. [#2551](https://github.com/jhy/jsoup/pull/2551)
+* Improved XML parser performance and memory use for documents with many nested namespace declarations by recording namespace changes within each element scope. [#2556](https://github.com/jhy/jsoup/pull/2556)
 
 ### Bug Fixes
 * Fixed the JDK `HttpClient` implementation to accept responses without a `Content-Type` header, matching the `HttpURLConnection` implementation. [#2549](https://github.com/jhy/jsoup/pull/2549)
