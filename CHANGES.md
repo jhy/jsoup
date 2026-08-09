@@ -8,6 +8,7 @@
 ### Bug Fixes
 * Fixed the JDK `HttpClient` implementation to accept responses without a `Content-Type` header, matching the `HttpURLConnection` implementation. [#2549](https://github.com/jhy/jsoup/pull/2549)
 * Fixed HTTP response content-type matching to handle media types case-insensitively and recognize structured `+xml` suffixes, including vendor-specific media types. [#2550](https://github.com/jhy/jsoup/pull/2550)
+* Corrected multipart form encoding to percent-escape CR and LF in field names and filenames, matching the HTML form submission specification. Multipart file content-types containing CR or LF are now rejected with a `ValidationException`. [#2555](https://github.com/jhy/jsoup/pull/2555)
 
 ## 1.23.1 (2026-Jul-30)
 

@@ -116,8 +116,16 @@ public class HttpConnection implements Connection {
         req = new Request(copy);
     }
 
+    /** Encodes a multipart field name or filename so it stays within its quoted header value. */
     static String encodeMimeName(String val) {
-        return val.replace("\"", "%22");
+        return val.replace("\"", "%22").replace("\r", "%0D").replace("\n", "%0A");
+    }
+
+    /** Validates that a multipart content-type cannot introduce another header line. */
+    private static void validateMimeContentType(String contentType) {
+        Validate.notEmptyParam(contentType, "contentType");
+        Validate.isFalse(contentType.indexOf('\r') != -1 || contentType.indexOf('\n') != -1,
+            "The 'contentType' parameter must not contain CR or LF.");
     }
 
     @Override
@@ -1330,6 +1338,8 @@ public class HttpConnection implements Connection {
                         w.write(encodeMimeName(keyVal.value()));
                         w.write("\"\r\nContent-Type: ");
                         String contentType = keyVal.contentType();
+                        if (contentType != null)
+                            validateMimeContentType(contentType);
                         w.write(contentType != null ? contentType : DefaultUploadType);
                         w.write("\r\n\r\n");
                         w.flush();
@@ -1453,7 +1463,7 @@ public class HttpConnection implements Connection {
 
         @Override
         public Connection.KeyVal contentType(String contentType) {
-            Validate.notEmpty(contentType);
+            validateMimeContentType(contentType);
             this.contentType = contentType;
             return this;
         }

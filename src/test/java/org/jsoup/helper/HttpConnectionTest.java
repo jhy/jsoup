@@ -475,4 +475,15 @@ public class HttpConnectionTest {
         assertEquals(input, fixHeaderEncoding(input));
         assertEquals(input, fixHeaderEncoding(mojibake(input)));
     }
+
+    @Test void mimeNameEscapesQuotesAndNewlines() {
+        assertEquals("field%22name%0D%0Afile", HttpConnection.encodeMimeName("field\"name\r\nfile"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"text/plain\rX-Test: yes", "text/plain\nX-Test: yes"})
+    void mimeContentTypeRejectsNewlines(String contentType) {
+        assertThrows(ValidationException.class, () ->
+                HttpConnection.KeyVal.create("file", "file.txt").contentType(contentType));
+    }
 }
