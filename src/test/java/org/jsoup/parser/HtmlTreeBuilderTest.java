@@ -134,6 +134,23 @@ public class HtmlTreeBuilderTest {
         assertFalse(svgOption.hasParserOption(HtmlTagOptions.SelectScopeMember));
     }
 
+    @Test void impliedEndTagsOnlyPopHtmlElements() {
+        // same-named foreign elements do not participate in HTML's implied end tag rules
+        HtmlTreeBuilder treeBuilder = new HtmlTreeBuilder();
+        for (String namespace : new String[]{Parser.NamespaceSvg, Parser.NamespaceMathml}) {
+            Element foreignOption = new Element(new Tag("option", namespace), "");
+            Element htmlOption = new Element(new Tag("option", NamespaceHtml), "");
+            treeBuilder.stack.add(foreignOption);
+            treeBuilder.stack.add(htmlOption);
+
+            treeBuilder.generateImpliedEndTags("p");
+
+            assertEquals(1, treeBuilder.stack.size(), namespace);
+            assertSame(foreignOption, treeBuilder.currentElement(), namespace);
+            treeBuilder.stack.clear();
+        }
+    }
+
     @Test void customRcdataTag() {
         String inner = "Blah\nblah\n<foo>Foo</foo>\n&quot;";
         String innerText = "Blah\nblah\n<foo>Foo</foo>\n\"";
