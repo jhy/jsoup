@@ -537,10 +537,36 @@ public abstract class Node implements Cloneable {
 
     protected void setParentNode(Node parentNode) {
         Validate.notNull(parentNode);
+        assert parentNode instanceof Element;
+        parentNode.validateChild(this);
+        setParentNodeUnchecked((Element) parentNode);
+    }
+
+    /** Reparents this node without cycle validation; callers must validate first. */
+    private void setParentNodeUnchecked(Element parentNode) {
         if (this.parentNode != null)
             this.parentNode.removeChild(this);
-        assert parentNode instanceof Element;
-        this.parentNode = (Element) parentNode;
+        this.parentNode = parentNode;
+    }
+
+    private static final String CycleError = "Cannot add a node here because it would create a cycle.";
+
+    /** Checks that the child is neither this node nor an ancestor of this node. */
+    private void validateChild(Node child) {
+        Validate.isFalse(child == this, CycleError);
+        if (child.childNodeSize() == 0) return;
+
+        for (Node ancestor = parentNode; ancestor != null; ancestor = ancestor.parentNode)
+            Validate.isFalse(ancestor == child, CycleError);
+    }
+
+    /** Checks every child before reparenting any of them. */
+    private void validateChildren(Node[] children) {
+        Validate.notNull(children);
+        for (Node child : children) {
+            Validate.notNull(child, "Array must not contain any null objects");
+            validateChild(child);
+        }
     }
 
     protected void replaceChild(Node out, Node in) {
@@ -548,16 +574,16 @@ public abstract class Node implements Cloneable {
         Validate.notNull(in);
         if (out == in) return; // no-op self replacement
 
-        if (in.parentNode != null)
-            in.parentNode.removeChild(in);
+        Element parent = (Element) this;
+        validateChild(in);
+        in.setParentNodeUnchecked(parent);
 
         final int index = out.siblingIndex();
         ensureChildNodes().set(index, in);
-        in.parentNode = (Element) this;
         in.setSiblingIndex(index);
         out.parentNode = null;
 
-        ((Element) this).childNodes.incrementMod(); // as mod count not changed in set(), requires explicit update, to invalidate the child element cache
+        parent.childNodes.incrementMod(); // as mod count not changed in set(), requires explicit update, to invalidate the child element cache
     }
 
     protected void removeChild(Node out) {
@@ -574,10 +600,14 @@ public abstract class Node implements Cloneable {
 
     protected void addChildren(Node... children) {
         //most used. short circuit addChildren(int), which hits reindex children and array copy
+        validateChildren(children);
+
         final List<Node> nodes = ensureChildNodes();
+        assert this instanceof Element;
+        Element parent = (Element) this;
 
         for (Node child: children) {
-            reparentChild(child);
+            child.setParentNodeUnchecked(parent);
             nodes.add(child);
             child.setSiblingIndex(nodes.size()-1);
         }
@@ -587,7 +617,11 @@ public abstract class Node implements Cloneable {
         // todo clean up all these and use the list, not the var array. just need to be careful when iterating the incoming (as we are removing as we go)
         Validate.notNull(children);
         if (children.length == 0) return;
+        validateChildren(children);
+
         final List<Node> nodes = ensureChildNodes();
+        assert this instanceof Element;
+        Element parent = (Element) this;
 
         // fast path - if used as a wrap (index=0, children = child[0].parent.children - do inplace
         final Node firstParent = children[0].parent();
@@ -606,21 +640,19 @@ public abstract class Node implements Cloneable {
                 firstParent.empty();
                 nodes.addAll(index, Arrays.asList(children));
                 i = children.length;
-                assert this instanceof Element;
                 while (i-- > 0) {
-                    children[i].parentNode = (Element) this;
+                    children[i].setParentNodeUnchecked(parent);
                 }
-                ((Element) this).invalidateChildren();
+                parent.invalidateChildren();
                 return;
             }
         }
 
-        Validate.noNullElements(children);
         for (Node child : children) {
-            reparentChild(child);
+            child.setParentNodeUnchecked(parent);
         }
         nodes.addAll(index, Arrays.asList(children));
-        ((Element) this).invalidateChildren();
+        parent.invalidateChildren();
     }
     
     protected void reparentChild(Node child) {

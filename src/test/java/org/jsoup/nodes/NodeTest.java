@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.helper.ValidationException;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.jsoup.select.NodeVisitor;
@@ -186,6 +187,82 @@ public class NodeTest {
 
         assertEquals("Child TwoChild ThreeChild OneChild Four",
                 TextUtil.stripNewlines(children.html()));
+    }
+
+    @Test void rejectsSelfParenting() {
+        Element element = new Element("div");
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> element.appendChild(element));
+        assertEquals("Cannot add a node here because it would create a cycle.", exception.getMessage());
+        assertNull(element.parent());
+        assertEquals(0, element.childNodeSize());
+    }
+
+    @Test void rejectsAncestorAsChild() {
+        Element root = new Element("root");
+        Element child = root.appendElement("child");
+        Element descendant = child.appendElement("descendant");
+        String originalHtml = root.outerHtml();
+
+        assertThrows(ValidationException.class, () -> descendant.appendChild(root));
+        assertEquals(originalHtml, root.outerHtml());
+        assertNull(root.parent());
+        assertSame(root, child.parent());
+        assertSame(child, descendant.parent());
+    }
+
+    @Test void rejectsAncestorReplacement() {
+        Element root = new Element("root");
+        Element child = root.appendElement("child");
+        child.appendElement("descendant");
+        String originalHtml = root.outerHtml();
+
+        assertThrows(ValidationException.class, () -> child.replaceWith(root));
+        assertEquals(originalHtml, root.outerHtml());
+        assertNull(root.parent());
+        assertSame(root, child.parent());
+    }
+
+    @Test void rejectsCyclicBatchAtomically() {
+        Element source = new Element("source");
+        Element movable = source.appendElement("movable");
+        Element ancestor = new Element("ancestor");
+        Element target = ancestor.appendElement("target");
+        String sourceHtml = source.outerHtml();
+        String ancestorHtml = ancestor.outerHtml();
+
+        assertThrows(ValidationException.class, () -> target.insertChildren(0, movable, ancestor));
+        assertEquals(sourceHtml, source.outerHtml());
+        assertEquals(ancestorHtml, ancestor.outerHtml());
+        assertSame(source, movable.parent());
+        assertNull(ancestor.parent());
+        assertSame(ancestor, target.parent());
+    }
+
+    @Test void rejectsCyclicWholeSourceMove() {
+        Element source = new Element("source");
+        Element ancestor = source.appendElement("ancestor");
+        Element target = ancestor.appendElement("target");
+        String originalHtml = source.outerHtml();
+
+        assertThrows(ValidationException.class, () -> target.insertChildren(0, source.childNodes()));
+        assertEquals(originalHtml, source.outerHtml());
+        assertNull(source.parent());
+        assertSame(source, ancestor.parent());
+        assertSame(ancestor, target.parent());
+    }
+
+    @Test void allowsPopulatedSubtreeMove() {
+        Element source = new Element("source");
+        Element subtree = source.appendElement("subtree");
+        subtree.appendElement("child").text("One");
+        Element target = new Element("target");
+
+        target.appendChild(subtree);
+        assertEquals(0, source.childNodeSize());
+        assertSame(target, subtree.parent());
+        assertSame(subtree, target.childNode(0));
+        assertEquals("One", target.text());
     }
 
     @Test public void ownerDocument() {
