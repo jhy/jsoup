@@ -473,7 +473,6 @@ public class W3CDom {
         /** Copies an attribute with its resolved namespace and W3C-safe name. */
         private void setAttribute(Element wEl, Attribute attribute, Syntax syntax) throws DOMException {
             String key = w3cSafeName(attribute.getKey(), syntax);
-            if (key == null) return;
 
             @Nullable String declarationPrefix = NamespaceBindings.declarationPrefix(key);
             if (declarationPrefix != null) {
@@ -507,10 +506,13 @@ public class W3CDom {
             ensureOutputBinding(wEl, prefix, namespace);
         }
 
-        /** Normalizes a name to a W3C-compatible QName, converting {@code a:b:c} to {@code a:b_c}. */
-        private @Nullable String w3cSafeName(String name, Syntax syntax) {
+        /** Normalizes a name to a W3C-compatible QName, converting {@code 1:a:b} to {@code _1:a_b}. */
+        private String w3cSafeName(String name, Syntax syntax) {
             @Nullable String normalized = Attribute.getValidKey(name, syntax);
-            if (normalized == null) return null;
+            if (normalized == null) {
+                normalized = Attribute.getValidKey("_" + name, syntax);
+                if (normalized == null) return "_";
+            }
             if (normalized.indexOf(':') == -1) return normalized;
 
             Matcher parts = QNameParts.matcher(normalized);

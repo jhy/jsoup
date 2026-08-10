@@ -698,6 +698,23 @@ public class W3CDomTest {
         assertSame(main, p.getParentNode());
     }
 
+    @Test void normalizesElementNamesWithInvalidXmlStarts() {
+        // DOM mutation can create names the parser rejects; conversion must still produce valid XML names
+        org.jsoup.nodes.Document jdoc = Jsoup.parse("<root><first><child/></first><second/></root>", "", Parser.xmlParser());
+        jdoc.expectFirst("first").tagName("1abc");
+        jdoc.expectFirst("second").tagName("-abc");
+
+        org.w3c.dom.Document w3CDoc = new W3CDom().fromJsoup(jdoc);
+        org.w3c.dom.Element root = w3CDoc.getDocumentElement();
+        org.w3c.dom.Element first = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("_1abc").item(0);
+        org.w3c.dom.Element child = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("child").item(0);
+        org.w3c.dom.Element second = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("_-abc").item(0);
+
+        assertSame(root, first.getParentNode());
+        assertSame(first, child.getParentNode());
+        assertSame(root, second.getParentNode());
+    }
+
     @Test void preservesValidQNameCharacters() {
         // Unicode letters are valid starts; other valid characters are retained by prepending a safe start
         String html = "<html xmlns:a='urn:a'><body><div a:é='unicode' a:_b='underscore' a:9b='digit'></div></body></html>";
