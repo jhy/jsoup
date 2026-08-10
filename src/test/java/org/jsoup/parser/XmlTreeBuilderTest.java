@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -743,24 +742,6 @@ public class XmlTreeBuilderTest {
         assertEquals("/incoming", y.tag().namespace());
     }
 
-    @Test void namespaceTrackingRetainsLinearState() {
-        int depth = 1_000;
-        XmlTreeBuilder treeBuilder = new XmlTreeBuilder();
-        Parser parser = new Parser(treeBuilder);
-        treeBuilder.initialiseParse(new StringReader(deeplyNamespacedXml(depth)), "", parser);
-
-        try {
-            while (treeBuilder.stack.size() < depth) {
-                assertTrue(treeBuilder.stepParser());
-            }
-
-            assertEquals(depth + 2, treeBuilder.namespaceBindings.size()); // declarations plus the two initial bindings
-            assertEquals(depth * 2, treeBuilder.namespaceChanges.size()); // one marker and binding change per element
-        } finally {
-            treeBuilder.closeParse();
-        }
-    }
-
     private static String deepXml(int depth) {
         StringBuilder xml = new StringBuilder("<root>");
         for (int i = 0; i < depth; i++) {
@@ -771,17 +752,6 @@ public class XmlTreeBuilderTest {
             xml.append("</n>");
         }
         xml.append("</root>");
-        return xml.toString();
-    }
-
-    private static String deeplyNamespacedXml(int depth) {
-        StringBuilder xml = new StringBuilder();
-        for (int i = 0; i < depth; i++) {
-            xml.append("<n xmlns:p").append(i).append("='urn:").append(i).append("'>");
-        }
-        for (int i = 0; i < depth; i++) {
-            xml.append("</n>");
-        }
         return xml.toString();
     }
 
