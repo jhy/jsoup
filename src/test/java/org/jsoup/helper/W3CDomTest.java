@@ -15,6 +15,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -545,14 +546,46 @@ public class W3CDomTest {
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body><div xmlns:v-bind=\"undefined\" v-bind:class=\"test\"/></body></html>", xml);
     }
 
+    @Test void serializesUndeclaredPrefixWithoutNamespaceAwareness() {
+        // prefixed DOM attributes still need a declaration for XML serialization
+        W3CDom w3CDom = new W3CDom().namespaceAware(false);
+        String html = "<html><body><div v-bind:class='test'></div></body></html>";
+        org.jsoup.nodes.Document jdoc = Jsoup.parse(html);
+        org.w3c.dom.Document w3CDoc = w3CDom.fromJsoup(jdoc);
+        org.w3c.dom.Element div = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("div").item(0);
+
+        assertNull(div.getAttributeNode("v-bind:class").getNamespaceURI());
+        String xml = assertDoesNotThrow(() -> w3CDom.asString(w3CDoc));
+        assertTrue(xml.contains("xmlns:v-bind=\"undefined\""));
+    }
+
+    @Test void normalizesInvalidPrefixWithoutNamespaceAwareness() {
+        // namespace declarations need a valid prefix even when the DOM is not namespace aware
+        W3CDom w3CDom = new W3CDom().namespaceAware(false);
+        org.w3c.dom.Document w3CDoc = w3CDom.fromJsoup(Jsoup.parseBodyFragment("<div 9a:b='v'></div>"));
+        org.w3c.dom.Element div = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("div").item(0);
+
+        assertEquals("v", div.getAttribute("_9a:b"));
+        assertEquals("undefined", div.getAttribute("xmlns:_9a"));
+        assertFalse(div.hasAttribute("xmlns:9a"));
+        String xml = w3CDom.asString(w3CDoc, W3CDom.OutputXml());
+        assertDoesNotThrow(() -> parseXml(xml, true));
+    }
+
     @Test void declaredNamespaceIsUsed() {
         W3CDom w3CDom = new W3CDom();
         String html = "<html xmlns:v-bind=\"http://example.com\"><body><div v-bind:class='test'></div></body></html>";
         org.jsoup.nodes.Document jdoc = Jsoup.parse(html);
         org.w3c.dom.Document w3CDoc = w3CDom.fromJsoup(jdoc);
+        org.w3c.dom.Element root = w3CDoc.getDocumentElement();
+        org.w3c.dom.Element div = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("div").item(0);
 
         String xml = w3CDom.asString(w3CDoc);
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:v-bind=\"http://example.com\"><head/><body><div v-bind:class=\"test\"/></body></html>", xml);
+        assertEquals(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, root.getAttributeNode("xmlns:v-bind").getNamespaceURI());
+        assertEquals("http://example.com", div.lookupNamespaceURI("v-bind"));
+        assertEquals(1, div.getAttributes().getLength());
+        assertEquals("test", div.getAttributeNS("http://example.com", "class"));
     }
 
     @Test void nestedElementsWithUndeclaredNamespace() {
@@ -560,9 +593,149 @@ public class W3CDomTest {
         String html = "<html><body><div v-bind:class='test'><span v-bind:style='color:red'></span></div></body></html>";
         org.jsoup.nodes.Document jdoc = Jsoup.parse(html);
         org.w3c.dom.Document w3CDoc = w3CDom.fromJsoup(jdoc);
+        org.w3c.dom.Element div = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("div").item(0);
+        org.w3c.dom.Element span = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("span").item(0);
 
         String xml = w3CDom.asString(w3CDoc);
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body><div xmlns:v-bind=\"undefined\" v-bind:class=\"test\"><span v-bind:style=\"color:red\"/></div></body></html>", xml);
+        assertTrue(div.hasAttributeNS(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "v-bind"));
+        assertFalse(span.hasAttributeNS(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "v-bind"));
+        assertEquals("undefined", span.lookupNamespaceURI("v-bind"));
+        assertEquals("color:red", span.getAttributeNS("undefined", "style"));
+    }
+
+    @Test void addedAttributeUsesInheritedNamespace() {
+        // attributes added after parsing have no namespace metadata, so resolve them from the active declaration
+        String xml = "<root xmlns:p='urn:p'><child/></root>";
+        org.jsoup.nodes.Document jdoc = Jsoup.parse(xml, "", Parser.xmlParser());
+        jdoc.expectFirst("child").attr("p:x", "value");
+
+        org.w3c.dom.Document w3CDoc = new W3CDom().fromJsoup(jdoc);
+        org.w3c.dom.Element child = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("child").item(0);
+
+        assertEquals("value", child.getAttributeNS("urn:p", "x"));
+        assertFalse(child.hasAttribute("xmlns:p"));
+    }
+
+    @Test void emptyBindingShadowsAncestor() {
+        // an empty declaration shadows its inherited binding only within the current scope
+        String html = "<html xmlns:p='urn:outer'><body><div xmlns:p='' p:x='value'></div><span p:x='after'></span></body></html>";
+        org.w3c.dom.Document w3CDoc = new W3CDom().fromJsoup(Jsoup.parse(html));
+        org.w3c.dom.Element div = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("div").item(0);
+        org.w3c.dom.Element span = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("span").item(0);
+
+        assertEquals("undefined", div.lookupNamespaceURI("p"));
+        assertEquals("value", div.getAttributeNS("undefined", "x"));
+        assertEquals("undefined", div.getAttributeNS(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "p"));
+        assertEquals("after", span.getAttributeNS("urn:outer", "x"));
+        assertFalse(span.hasAttributeNS(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "p"));
+    }
+
+    @Test void subtreeConversionPreservesInheritedNamespace() throws ParserConfigurationException {
+        // declarations outside the converted subtree must be carried into its standalone W3C output
+        String html = "<main xmlns:p='urn:p'><section><div p:x='value'></div></section></main>";
+        org.jsoup.nodes.Element section = Jsoup.parseBodyFragment(html).expectFirst("section");
+        org.w3c.dom.Document out = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+
+        new W3CDom().convert(section, out);
+        org.w3c.dom.Element div = (org.w3c.dom.Element) out.getElementsByTagName("div").item(0);
+
+        assertEquals("value", div.getAttributeNS("urn:p", "x"));
+        assertEquals("urn:p", div.getAttributeNS(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "p"));
+        assertDoesNotThrow(() -> new W3CDom().asString(out));
+    }
+
+    @Test void namespaceDisabledSubtreeDeclaresInheritedPrefix() throws ParserConfigurationException {
+        // attributes remain unnamespaced, but inherited prefixes must still be declared for serialization
+        String html = "<main xmlns:p='urn:p'><section><div p:x='value'></div></section></main>";
+        org.jsoup.nodes.Element section = Jsoup.parseBodyFragment(html).expectFirst("section");
+        org.w3c.dom.Document out = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+
+        W3CDom w3cDom = new W3CDom().namespaceAware(false);
+        w3cDom.convert(section, out);
+        org.w3c.dom.Element div = (org.w3c.dom.Element) out.getElementsByTagName("div").item(0);
+
+        assertNull(div.getAttributeNode("p:x").getNamespaceURI());
+        assertEquals("urn:p", div.getAttribute("xmlns:p"));
+        assertDoesNotThrow(() -> w3cDom.asString(out));
+    }
+
+    @Test void normalizesInvalidPrefixedAttribute() {
+        // normalize both prefix and local name without losing the declared namespace or value
+        String html = "<html xmlns:p;bad='urn:p'><body><div p;bad:x;local='value'></div></body></html>";
+        org.w3c.dom.Document w3CDoc = new W3CDom().fromJsoup(Jsoup.parse(html));
+        org.w3c.dom.Element div = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("div").item(0);
+
+        assertEquals(1, div.getAttributes().getLength());
+        assertEquals("value", div.getAttributeNS("urn:p", "x_local"));
+    }
+
+    @Test void normalizesMultiColonAttributeQName() {
+        // HTML permits multiple colons, but the W3C DOM accepts only one QName separator
+        String html = "<main><div a:b:c='v'><span>inside</span></div><p>after</p></main>";
+        org.w3c.dom.Document w3CDoc = new W3CDom().fromJsoup(Jsoup.parseBodyFragment(html));
+        org.w3c.dom.Element main = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("main").item(0);
+        org.w3c.dom.Element div = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("div").item(0);
+        org.w3c.dom.Element span = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("span").item(0);
+        org.w3c.dom.Element p = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("p").item(0);
+
+        assertSame(main, div.getParentNode());
+        assertSame(div, span.getParentNode());
+        assertSame(main, p.getParentNode());
+        assertEquals("v", div.getAttributeNS("undefined", "b_c"));
+    }
+
+    @Test void normalizesMultiColonElementQName() {
+        String html = "<main><a:b:c><span>inside</span></a:b:c><p>after</p></main>";
+        org.w3c.dom.Document w3CDoc = new W3CDom().fromJsoup(Jsoup.parseBodyFragment(html));
+        org.w3c.dom.Element main = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("main").item(0);
+        org.w3c.dom.Element child = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("a:b_c").item(0);
+        org.w3c.dom.Element span = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("span").item(0);
+        org.w3c.dom.Element p = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("p").item(0);
+
+        assertSame(main, child.getParentNode());
+        assertSame(child, span.getParentNode());
+        assertSame(main, p.getParentNode());
+    }
+
+    @Test void preservesValidQNameCharacters() {
+        // Unicode letters are valid starts; other valid characters are retained by prepending a safe start
+        String html = "<html xmlns:a='urn:a'><body><div a:é='unicode' a:_b='underscore' a:9b='digit'></div></body></html>";
+        org.w3c.dom.Document w3CDoc = new W3CDom().fromJsoup(Jsoup.parse(html));
+        org.w3c.dom.Element div = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("div").item(0);
+
+        assertEquals("unicode", div.getAttributeNS("urn:a", "é"));
+        assertEquals("underscore", div.getAttributeNS("urn:a", "_b"));
+        assertEquals("digit", div.getAttributeNS("urn:a", "_9b"));
+        assertEquals(3, div.getAttributes().getLength());
+    }
+
+    @Test void skipsUnrepresentableAttribute() {
+        // a reserved prefix bound to the wrong namespace cannot be represented, but must not drop its element
+        String html = "<main><div xmlns:xml='wrong' xml:x='v'><span>inside</span></div><p>after</p></main>";
+        org.w3c.dom.Document w3CDoc = new W3CDom().fromJsoup(Jsoup.parseBodyFragment(html));
+        org.w3c.dom.Element main = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("main").item(0);
+        org.w3c.dom.Element div = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("div").item(0);
+        org.w3c.dom.Element span = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("span").item(0);
+        org.w3c.dom.Element p = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("p").item(0);
+
+        assertSame(main, div.getParentNode());
+        assertSame(div, span.getParentNode());
+        assertSame(main, p.getParentNode());
+        assertFalse(div.hasAttribute("xml:x"));
+    }
+
+    @Test void preservesTreeForUnrepresentableElement() {
+        // invalid namespace combinations fall back to text without changing the surrounding tree
+        String html = "<main><xml:thing><span>inside</span></xml:thing><p>after</p></main>";
+        org.w3c.dom.Document w3CDoc = new W3CDom().fromJsoup(Jsoup.parseBodyFragment(html));
+        org.w3c.dom.Element main = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("main").item(0);
+        org.w3c.dom.Element span = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("span").item(0);
+        org.w3c.dom.Element p = (org.w3c.dom.Element) w3CDoc.getElementsByTagName("p").item(0);
+
+        assertSame(main, span.getParentNode());
+        assertSame(main, p.getParentNode());
+        assertEquals(0, w3CDoc.getElementsByTagName("xml:thing").getLength());
     }
 
     private static Stream<Arguments> parserProvider() {

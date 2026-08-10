@@ -5,9 +5,18 @@
 ### Improvements
 * Improved consecutive `StreamParser.selectFirst(...)` calls during progressive parsing, so later matches are returned with their parsed contents when earlier selections have left them as parser lookahead. E.g., given `<title>One</title><p id=hit>Full</p><p>Next</p>`, selecting `title` and then `#hit` now advances the partial lookahead and returns `<p id="hit">Full</p>`, rather than returning an empty `<p id="hit"></p>` before its content is parsed. The updated readiness tracking follows StreamParser's normal emission order across implicit HTML structure and parser recovery. [#2551](https://github.com/jhy/jsoup/pull/2551)
 * Improved XML parser performance and memory use for documents with many nested namespace declarations by recording namespace changes within each element scope. [#2556](https://github.com/jhy/jsoup/pull/2556)
+* Improved `W3CDom` conversion performance for documents with many nested namespace declarations.
+  The W3C converter now uses the same optimized namespace tracking as the XML parser.
 * DOM mutation methods, including child insertion and replacement, now reject operations that would create a cycle, such as making a node its own child or moving an ancestor beneath a descendant. [#2552](https://github.com/jhy/jsoup/issues/2552)
 
 ### Bug Fixes
+* Fixed `W3CDom` namespace conversion in several cases:
+  * Namespace declarations and prefixed attributes now carry the correct namespace URI, so namespace-aware DOM lookups work as expected.
+  * Attributes added after parsing, or included through subtree conversion, now use inherited prefix declarations.
+  * Namespace declarations now apply regardless of attribute order, and an empty declaration shadows an inherited binding only within its scope.
+  * With namespace awareness disabled, inherited and undeclared prefixes now receive the declarations needed for XML serialization.
+  * Valid HTML names that are not XML QNames, such as `a:b:c`, are normalized.
+    Attributes that still cannot be represented are skipped, and unrepresentable elements no longer change the surrounding tree.
 * Fixed the JDK `HttpClient` implementation to accept responses without a `Content-Type` header, matching the `HttpURLConnection` implementation. [#2549](https://github.com/jhy/jsoup/pull/2549)
 * Fixed HTTP response content-type matching to handle media types case-insensitively and recognize structured `+xml` suffixes, including vendor-specific media types. [#2550](https://github.com/jhy/jsoup/pull/2550)
 * Corrected multipart form encoding to percent-escape CR and LF in field names and filenames, matching the HTML form submission specification. Multipart file content-types containing CR or LF are now rejected with a `ValidationException`. [#2555](https://github.com/jhy/jsoup/pull/2555)

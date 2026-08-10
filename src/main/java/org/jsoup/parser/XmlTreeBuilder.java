@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.NamespaceBindings;
 import org.jsoup.internal.SharedConstants;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
@@ -20,7 +21,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,33 +35,7 @@ import static org.jsoup.parser.Parser.NamespaceXml;
  * @author Jonathan Hedley
  */
 public class XmlTreeBuilder extends TreeBuilder {
-    static final String XmlnsKey = "xmlns";
-    static final String XmlnsPrefix = "xmlns:";
-    private static final NamespaceChange ScopeMarker = new NamespaceChange("", null);
-    final HashMap<String, String> namespaceBindings = new HashMap<>();
-    final ArrayDeque<NamespaceChange> namespaceChanges = new ArrayDeque<>();
-
-    /**
-     Tracks namespace binding changes within element scopes. Each scope starts with a shared marker, followed by a
-     change record for each namespace declaration. When the scope closes, the change records are applied in reverse to
-     restore the parent bindings.
-     */
-    private static final class NamespaceChange {
-        private final String prefix;
-        private final @Nullable String previousValue;
-
-        /** Creates a namespace change; a null previous value means the prefix was previously unbound. */
-        private NamespaceChange(String prefix, @Nullable String previousValue) {
-            this.prefix = prefix;
-            this.previousValue = previousValue;
-        }
-
-        /** Restores the binding that was active before this change. */
-        private void restore(Map<String, String> namespaceBindings) {
-            if (previousValue == null) namespaceBindings.remove(prefix);
-            else namespaceBindings.put(prefix, previousValue);
-        }
-    }
+    final NamespaceBindings namespaceBindings = new NamespaceBindings();
 
     @Override ParseSettings defaultSettings() {
         return ParseSettings.preserveCase;
@@ -76,7 +50,6 @@ public class XmlTreeBuilder extends TreeBuilder {
             .prettyPrint(false); // as XML, we don't understand what whitespace is significant or not
 
         namespaceBindings.clear();
-        namespaceChanges.clear();
         namespaceBindings.put("xml", NamespaceXml);
         namespaceBindings.put("", NamespaceXml);
     }
@@ -96,7 +69,7 @@ public class XmlTreeBuilder extends TreeBuilder {
         for (int i = chain.size() - 1; i >= 0; i--) {
             Element el = chain.get(i);
             if (el.attributesSize() > 0) {
-                applyNamespaceDeclarations(el.attributes());
+                namespaceBindings.applyDeclarations(el.attributes());
             }
         }
     }
@@ -172,10 +145,10 @@ public class XmlTreeBuilder extends TreeBuilder {
         }
 
         enforceStackDepthLimit();
-        namespaceChanges.push(ScopeMarker);
+        namespaceBindings.pushScope();
 
         if (attributes != null) {
-            applyNamespaceDeclarations(attributes);
+            namespaceBindings.applyDeclarations(attributes);
             applyNamespacesToAttributes(attributes);
             startTag.finaliseAttributeRanges(settings);
         }
@@ -198,33 +171,14 @@ public class XmlTreeBuilder extends TreeBuilder {
         }
     }
 
-    /** Applies namespace declarations and records changes within an element scope. */
-    private void applyNamespaceDeclarations(Attributes attributes) {
-        for (Attribute attr : attributes) {
-            String key = attr.getKey();
-            String value = attr.getValue();
-            String prefix;
-            if (key.equals(XmlnsKey)) {
-                prefix = ""; // new default for this level
-            } else if (key.startsWith(XmlnsPrefix)) {
-                prefix = key.substring(XmlnsPrefix.length());
-            } else {
-                continue;
-            }
-
-            String previousValue = namespaceBindings.put(prefix, value);
-            if (!namespaceChanges.isEmpty()) namespaceChanges.push(new NamespaceChange(prefix, previousValue));
-        }
-    }
-
     /** Applies resolved namespace URIs to prefixed attributes. */
     private void applyNamespacesToAttributes(Attributes attributes) {
         // collect first, then add, as userData is stored as an attribute
         Map<String, String> attrPrefix = new HashMap<>();
         for (Attribute attr: attributes) {
+            if (NamespaceBindings.isDeclaration(attr.getKey())) continue;
             String prefix = attr.prefix();
             if (!prefix.isEmpty()) {
-                if (prefix.equals(XmlnsKey)) continue;
                 String ns = namespaceBindings.get(prefix);
                 if (ns != null) attrPrefix.put(SharedConstants.XmlnsAttr + prefix, ns);
             }
@@ -239,18 +193,16 @@ public class XmlTreeBuilder extends TreeBuilder {
         int pos = tagName.indexOf(':');
         if (pos > 0) {
             String prefix = tagName.substring(0, pos);
-            if (namespaceBindings.containsKey(prefix))
-                ns = namespaceBindings.get(prefix);
+            String boundNamespace = namespaceBindings.get(prefix);
+            if (boundNamespace != null)
+                ns = boundNamespace;
         }
         return ns;
     }
 
     @Override
     Element pop() {
-        NamespaceChange change;
-        while ((change = namespaceChanges.pop()) != ScopeMarker) {
-            change.restore(namespaceBindings);
-        }
+        namespaceBindings.popScope();
         return super.pop();
     }
 
