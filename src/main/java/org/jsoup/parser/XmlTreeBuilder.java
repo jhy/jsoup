@@ -144,6 +144,7 @@ public class XmlTreeBuilder extends TreeBuilder {
             attributes.deduplicate(settings);
         }
 
+        // close pruned namespace scopes before opening the incoming element's scope
         enforceStackDepthLimit();
         namespaceBindings.pushScope();
 

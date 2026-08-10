@@ -374,19 +374,21 @@ public class W3CDom {
                 sourceNamespaces.applyDeclarations(sourceEl.attributes());
                 @Nullable String namespace = namespaceAware ? w3cNamespace(sourceEl) : null;
                 String tagName = w3cSafeName(sourceEl.tagName(), Syntax.xml);
+                Element el;
                 try {
                     // use an empty namespace if none is present but the tag name has a prefix
                     String imputedNamespace = namespace == null && tagName.contains(":") ? "" : namespace;
-                    Element el = doc.createElementNS(imputedNamespace, tagName);
-                    copyAttributes(sourceEl, el);
-                    append(el, sourceEl);
-                    if (sourceEl == contextElement)
-                        doc.setUserData(ContextNodeProperty, el, null);
-                    dest = el; // descend
-                } catch (DOMException e) {
+                    el = doc.createElementNS(imputedNamespace, tagName);
+                } catch (DOMException ignored) {
                     // If the Normalize didn't get it XML / W3C safe, inserts as plain text
                     append(doc.createTextNode("<" + tagName + ">"), sourceEl);
+                    return;
                 }
+                copyAttributes(sourceEl, el);
+                append(el, sourceEl);
+                if (sourceEl == contextElement)
+                    doc.setUserData(ContextNodeProperty, el, null);
+                dest = el; // descend
             } else if (source instanceof org.jsoup.nodes.TextNode) {
                 org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
                 Text text = doc.createTextNode(sourceText.getWholeText());
@@ -429,7 +431,7 @@ public class W3CDom {
 
         @Override
         public void tail(org.jsoup.nodes.Node source, int depth) {
-            // head may emit an invalid element as text without descending, so only ascend from its matching output element
+            // head may emit an unrepresentable element as text without descending, so only ascend from its matching output element
             if (source instanceof org.jsoup.nodes.Element && dest.getUserData(SourceProperty) == source &&
                 dest.getParentNode() instanceof Element) {
                 dest = dest.getParentNode(); // undescend
