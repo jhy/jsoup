@@ -2225,6 +2225,24 @@ public class HtmlParserTest {
         assertEquals("One", div.expectFirst("p").text());
     }
 
+    @Test void popsForeignElementsForHtmlBreakoutTags() {
+        Document doc = Jsoup.parse("<svg><s><p>One</p></s></svg>");
+
+        assertEquals("<svg></svg>\n<s>\n <p>One</p>\n</s>", doc.body().html());
+        assertHtmlNamespace(doc.expectFirst("s"));
+
+        Document endTag = Jsoup.parse("<svg><g></p><circle></circle>");
+        assertEquals("<svg>\n <g></g>\n</svg>\n<p></p>\n<circle></circle>", endTag.body().html());
+        assertHtmlNamespace(endTag.expectFirst("circle"));
+    }
+
+    @Test void doesNotPopForeignElementsForOtherEndTags() {
+        Document doc = Jsoup.parse("<svg><g></div><circle></circle></g></svg>");
+
+        Element circle = doc.expectFirst("svg > g > circle");
+        assertSvgNamespace(circle);
+    }
+
     @Test void mathParseText() {
         String html = "<div><math><mi><p>One</p><svg><text>Blah</text></svg></mi><ms></ms></div>";
         Document doc = Jsoup.parse(html);
@@ -2263,8 +2281,9 @@ public class HtmlParserTest {
 
         Element svgStyle = doc.expectFirst("svg style");
         assertMathNamespace(svgStyle); // in inherited math namespace as not an HTML integration point
-        Element styleImg = svgStyle.expectFirst("img");
-        assertHtmlNamespace(styleImg); // this one is an img tag - in foreign to html elements
+        assertEquals("", svgStyle.html());
+        Element breakoutImg = doc.expectFirst("body > img");
+        assertHtmlNamespace(breakoutImg); // img breaks out of foreign content
 
         assertMathNamespace(doc.expectFirst("svg"));
         assertMathNamespace(doc.expectFirst("math"));

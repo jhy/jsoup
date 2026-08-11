@@ -1768,12 +1768,12 @@ enum HtmlTreeBuilderState {
                 case StartTag:
                     Token.StartTag start = t.asStartTag();
                     if (StringUtil.in(start.normalName, InForeignToHtml))
-                        return processAsHtml(t, tb);
+                        return breakoutToHtml(t, tb);
                     if (start.normalName.equals("font") && (
                         start.hasAttributeIgnoreCase("color")
                             || start.hasAttributeIgnoreCase("face")
                             || start.hasAttributeIgnoreCase("size")))
-                        return processAsHtml(t, tb);
+                        return breakoutToHtml(t, tb);
 
                     // Any other start:
                     // (whatwg says to fix up tag name and attribute case per a table - we will preserve original case instead)
@@ -1796,7 +1796,7 @@ enum HtmlTreeBuilderState {
                 case EndTag:
                     Token.EndTag end = t.asEndTag();
                     if (end.normalName.equals("br") || end.normalName.equals("p"))
-                        return processAsHtml(t, tb);
+                        return breakoutToHtml(t, tb);
                     if (end.normalName.equals("script") && tb.currentElementIs("script", Parser.NamespaceSvg)) {
                         // script level and execution elided.
                         tb.pop();
@@ -1833,8 +1833,23 @@ enum HtmlTreeBuilderState {
             return true;
         }
 
+        /** Reprocesses a token as HTML, retaining the open-element stack. */
         boolean processAsHtml(Token t, HtmlTreeBuilder tb) {
             return tb.state().process(t, tb);
+        }
+
+        /** Pops foreign elements, then reprocesses the breakout token as HTML. */
+        boolean breakoutToHtml(Token t, HtmlTreeBuilder tb) {
+            // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inforeign
+            while (!tb.getStack().isEmpty()) {
+                Element current = tb.currentElement();
+                if (Parser.NamespaceHtml.equals(current.tag().namespace())
+                    || HtmlTreeBuilder.isMathmlTextIntegration(current)
+                    || HtmlTreeBuilder.isHtmlIntegration(current))
+                    break;
+                tb.pop();
+            }
+            return processAsHtml(t, tb);
         }
     };
 

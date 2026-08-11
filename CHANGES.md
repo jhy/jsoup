@@ -21,6 +21,7 @@
 * Corrected multipart form encoding to percent-escape CR and LF in field names and filenames, matching the HTML form submission specification. Multipart file content-types containing CR or LF are now rejected with a `ValidationException`. [#2555](https://github.com/jhy/jsoup/pull/2555)
 * Aligned trailing comment placement with the HTML specification: comments after `</body>` remain children of the `html` element, while comments after `</html>` remain children of the document. [#2557](https://github.com/jhy/jsoup/pull/2557)
 * When using the optional `re2j` regular expression engine, heap exhaustion caused by complex selector patterns during matching is now normalized to a `ValidationException` with a `Pattern complexity error` message.
+* Fixed parsing of malformed SVG and MathML content so that breakout HTML tags are placed according to the HTML specification. [#2562](https://github.com/jhy/jsoup/issues/2562)
 
 
 ## 1.23.1 (2026-Jul-30)
