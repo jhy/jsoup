@@ -18,6 +18,12 @@ Please provide as much detail as possible in your report, including the steps to
 
 Alternatively to using GitHub, or if you have a security question, please email `security@jsoup.org`.
 
+Before reporting, please confirm that the issue reproduces through a supported and correctly implemented use of jsoup.
+
+Reports must identify a security guarantee violated by jsoup itself. Application errors, mismatched protocols or character encodings, security risks introduced by a custom `Safelist` policy, and issues that depend on a separate vulnerability or broken trust boundary in another system are outside jsoup’s security boundary and will be closed.
+
+Potential correctness bugs that do not cross this boundary should be reported through the regular issue tracker.
+
 ## Fixing Vulnerabilities
 
 We take all vulnerability reports seriously and strive to fix them as quickly as possible. Once we receive a report, we will verify the vulnerability and its impact. We will then work to develop and test a fix for the vulnerability, and release it as soon as possible.
