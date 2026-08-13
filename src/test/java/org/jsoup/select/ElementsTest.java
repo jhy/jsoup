@@ -169,10 +169,38 @@ public class ElementsTest {
         assertEquals("<p>This <span>foo</span><a>is</a> <span>foo</span><a>jsoup</a>.</p>", TextUtil.stripNewlines(doc.body().html()));
     }
 
+    @Test public void beforeNode() {
+        Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
+        Element span = new Element("span").text("foo");
+        doc.select("a").before(span);
+        assertEquals("<p>This <span>foo</span><a>is</a> <span>foo</span><a>jsoup</a>.</p>", TextUtil.stripNewlines(doc.body().html()));
+        assertNull(span.parent()); // cloned per target; original is left alone
+        assertNotSame(span, doc.selectFirst("span"));
+    }
+
     @Test public void after() {
         Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
         doc.select("a").after("<span>foo</span>");
         assertEquals("<p>This <a>is</a><span>foo</span> <a>jsoup</a><span>foo</span>.</p>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test public void afterNode() {
+        Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
+        Element span = new Element("span").text("foo");
+        doc.select("a").after(span);
+        assertEquals("<p>This <a>is</a><span>foo</span> <a>jsoup</a><span>foo</span>.</p>", TextUtil.stripNewlines(doc.body().html()));
+        assertNull(span.parent());
+    }
+
+    @Test public void prependAppendNode() {
+        Document doc = Jsoup.parse("<p>One</p><p>Two</p><p>Three</p>");
+        Elements ps = doc.select("p");
+        Element bold = new Element("b").text("Bold");
+        Element ital = new Element("i").text("Ital");
+        ps.prepend(bold).append(ital);
+        assertEquals("<p><b>Bold</b>Two<i>Ital</i></p>", TextUtil.stripNewlines(ps.get(1).outerHtml()));
+        assertNull(bold.parent());
+        assertNull(ital.parent());
     }
 
     @Test public void wrap() {

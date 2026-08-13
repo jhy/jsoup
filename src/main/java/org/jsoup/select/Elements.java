@@ -314,6 +314,20 @@ public class Elements extends Nodes<Element> {
         }
         return this;
     }
+
+    /**
+     * Add the supplied node to the start of each matched element's inner HTML. The node is cloned for each target.
+     * @param node the node to add inside each element, before the existing HTML
+     * @return this, for chaining
+     * @see Element#prependChild(Node)
+     */
+    public Elements prepend(Node node) {
+        Validate.notNull(node);
+        for (Element element : this) {
+            element.prependChild(node.clone());
+        }
+        return this;
+    }
     
     /**
      * Add the supplied HTML to the end of each matched element's inner HTML.
@@ -324,6 +338,20 @@ public class Elements extends Nodes<Element> {
     public Elements append(String html) {
         for (Element element : this) {
             element.append(html);
+        }
+        return this;
+    }
+
+    /**
+     * Add the supplied node to the end of each matched element's inner HTML. The node is cloned for each target.
+     * @param node the node to add inside each element, after the existing HTML
+     * @return this, for chaining
+     * @see Element#appendChild(Node)
+     */
+    public Elements append(Node node) {
+        Validate.notNull(node);
+        for (Element element : this) {
+            element.appendChild(node.clone());
         }
         return this;
     }
@@ -342,6 +370,21 @@ public class Elements extends Nodes<Element> {
     }
 
     /**
+     Insert the supplied node before each matched element's outer HTML. The node is cloned for each target.
+
+     @param node the node to insert before each element
+     @return this, for chaining
+     @see Element#before(Node)
+     */
+    public Elements before(Node node) {
+        Validate.notNull(node);
+        for (Element element : this) {
+            element.before(node.clone());
+        }
+        return this;
+    }
+
+    /**
      Insert the supplied HTML after each matched element's outer HTML.
 
      @param html HTML to insert after each element
@@ -351,6 +394,21 @@ public class Elements extends Nodes<Element> {
     @Override
     public Elements after(String html) {
         super.after(html);
+        return this;
+    }
+
+    /**
+     Insert the supplied node after each matched element's outer HTML. The node is cloned for each target.
+
+     @param node the node to insert after each element
+     @return this, for chaining
+     @see Element#after(Node)
+     */
+    public Elements after(Node node) {
+        Validate.notNull(node);
+        for (Element element : this) {
+            element.after(node.clone());
+        }
         return this;
     }
 
