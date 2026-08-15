@@ -715,6 +715,52 @@ public class W3CDomTest {
         assertSame(root, second.getParentNode());
     }
 
+    @Test void preservesProcessingInstructions() {
+        // preserve both PI positions, but not the XML declaration
+        String xml = "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"style.xsl\"?><root xmlns=\"urn:test\"><?target data?></root>";
+        org.jsoup.nodes.Document jdoc = Jsoup.parse(xml, "", Parser.xmlParser());
+
+        org.w3c.dom.Document w3cDoc = new W3CDom().fromJsoup(jdoc);
+        Node top = w3cDoc.getFirstChild();
+        Node child = w3cDoc.getDocumentElement().getFirstChild();
+
+        assertEquals(Node.PROCESSING_INSTRUCTION_NODE, top.getNodeType());
+        assertEquals("xml-stylesheet", top.getNodeName());
+        assertEquals("type=\"text/xsl\" href=\"style.xsl\"", top.getNodeValue());
+        assertNotNull(child);
+        assertEquals(Node.PROCESSING_INSTRUCTION_NODE, child.getNodeType());
+        assertEquals("target", child.getNodeName());
+        assertEquals("data", child.getNodeValue());
+    }
+
+    @Test void preservesDocumentLevelComments() {
+        // keeps comments, doctype, and root in source order
+        String xml = "<!--before--><!DOCTYPE root><root xmlns=\"urn:test\"><child/></root><!--after-->";
+        org.jsoup.nodes.Document jdoc = Jsoup.parse(xml, "", Parser.xmlParser());
+
+        org.w3c.dom.Document w3cDoc = new W3CDom().fromJsoup(jdoc);
+
+        assertEquals(Node.COMMENT_NODE, w3cDoc.getFirstChild().getNodeType());
+        assertEquals("before", w3cDoc.getFirstChild().getNodeValue());
+        assertEquals(Node.DOCUMENT_TYPE_NODE, w3cDoc.getFirstChild().getNextSibling().getNodeType());
+        assertSame(w3cDoc.getDocumentElement(), w3cDoc.getFirstChild().getNextSibling().getNextSibling());
+        assertEquals(Node.COMMENT_NODE, w3cDoc.getLastChild().getNodeType());
+        assertEquals("after", w3cDoc.getLastChild().getNodeValue());
+    }
+
+    @Test void preservesCdataSections() {
+        // CDATA has a direct W3C node type, so retain it through conversion
+        String xml = "<root xmlns=\"urn:test\"><![CDATA[x < y & z]]></root>";
+        org.jsoup.nodes.Document jdoc = Jsoup.parse(xml, "", Parser.xmlParser());
+
+        org.w3c.dom.Document w3cDoc = new W3CDom().fromJsoup(jdoc);
+        Node child = w3cDoc.getDocumentElement().getFirstChild();
+
+        assertEquals(Node.CDATA_SECTION_NODE, child.getNodeType());
+        assertEquals("x < y & z", child.getNodeValue());
+        assertTrue(W3CDom.asString(w3cDoc, W3CDom.OutputXml()).contains("<![CDATA[x < y & z]]>"));
+    }
+
     @Test void preservesValidQNameCharacters() {
         // Unicode letters are valid starts; other valid characters are retained by prepending a safe start
         String html = "<html xmlns:a='urn:a'><body><div a:é='unicode' a:_b='underscore' a:9b='digit'></div></body></html>";
