@@ -713,8 +713,17 @@ public class XmlTreeBuilderTest {
         // we infer that empty els can be represented with self-closing if seen in parse
     }
 
-    @Test public void xmlParserHasUnlimitedDepthByDefault() {
+    @Test public void xmlParserHasDefaultDepth() {
         Parser parser = Parser.xmlParser();
+        Document doc = Jsoup.parse(deepXml(600), "", parser);
+        Element target = doc.selectFirst("target");
+        assertNotNull(target);
+        assertEquals(512, parser.getMaxDepth());
+        assertEquals(parser.getMaxDepth(), depth(target));
+    }
+
+    @Test public void xmlParserCanUseUnlimitedDepth() {
+        Parser parser = Parser.xmlParser().setMaxDepth(Integer.MAX_VALUE);
         Document doc = Jsoup.parse(deepXml(600), "", parser);
         Element target = doc.selectFirst("target");
         assertNotNull(target);
@@ -727,6 +736,18 @@ public class XmlTreeBuilderTest {
         Element target = doc.selectFirst("target");
         assertNotNull(target);
         assertEquals(parser.getMaxDepth(), depth(target));
+    }
+
+    @Test void deepEndTagClosesElement() {
+        StringBuilder xml = new StringBuilder("<root><ancestor>");
+        for (int i = 0; i < 300; i++) {
+            xml.append("<n>");
+        }
+        xml.append("</ancestor><target />");
+
+        Document doc = Jsoup.parse(xml.toString(), "", Parser.xmlParser());
+        Element target = doc.expectFirst("target");
+        assertEquals("root", target.parent().normalName());
     }
 
     @Test void namespaceScopeTracksDepthPruning() {

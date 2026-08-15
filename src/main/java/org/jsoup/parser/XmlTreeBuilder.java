@@ -101,11 +101,6 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     @Override
-    int defaultMaxDepth() {
-        return Integer.MAX_VALUE;
-    }
-
-    @Override
     protected boolean process(Token token) {
         currentToken = token;
 
@@ -248,14 +243,10 @@ public class XmlTreeBuilder extends TreeBuilder {
      * @param endTag tag to close
      */
     protected void popStackToClose(Token.EndTag endTag) {
-        // like in HtmlTreeBuilder - don't scan up forever for very (artificially) deeply nested stacks
         String elName = settings.normalizeTag(endTag.name());
         Element firstFound = null;
 
-        final int bottom = stack.size() - 1;
-        final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
-
-        for (int pos = stack.size() -1; pos >= upper; pos--) {
+        for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
             if (next.nodeName().equals(elName)) {
                 firstFound = next;
@@ -272,5 +263,4 @@ public class XmlTreeBuilder extends TreeBuilder {
             }
         }
     }
-    private static final int maxQueueDepth = 256; // an arbitrary tension point between real XML and crafted pain
 }
