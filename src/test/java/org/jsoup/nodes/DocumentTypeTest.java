@@ -72,6 +72,15 @@ public class DocumentTypeTest {
         assertEquals(emptySubset, xmlOutput(emptySubset));
     }
 
+    @Test void systemIdentifierUsesSafeQuote() {
+        // use a delimiter that does not occur in the system identifier
+        String doubleQuote = "<!DOCTYPE root SYSTEM 'a\"b.dtd'>";
+        assertEquals(doubleQuote, xmlOutput(doubleQuote));
+
+        String singleQuote = "<!DOCTYPE root SYSTEM \"a'b.dtd\">";
+        assertEquals(singleQuote, xmlOutput(singleQuote));
+    }
+
     private String htmlOutput(String in) {
         DocumentType type = (DocumentType) Jsoup.parse(in).childNode(0);
         return type.outerHtml();

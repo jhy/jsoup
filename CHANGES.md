@@ -19,6 +19,7 @@
   * With namespace awareness disabled, inherited and undeclared prefixes now receive the declarations needed for XML serialization.
   * Valid HTML names that are not XML QNames, such as `a:b:c`, are normalized. Attributes that still cannot be represented are skipped, and unrepresentable elements no longer change the surrounding tree.
 * Fixed `W3CDom` conversion of programmatically created or renamed elements whose names can be represented in a jsoup HTML DOM but are not valid XML names, such as `1abc`. These names are now normalized (e.g. `_1abc`) instead of causing a `NullPointerException`. [#2560](https://github.com/jhy/jsoup/issues/2560)
+* Fixed XML doctype serialization when a system identifier contains a double quote, which could otherwise produce invalid XML. [#2571](https://github.com/jhy/jsoup/issues/2571)
 * Fixed the JDK `HttpClient` implementation to accept responses without a `Content-Type` header, matching the `HttpURLConnection` implementation. [#2549](https://github.com/jhy/jsoup/pull/2549)
 * Fixed HTTP response content-type matching to handle media types case-insensitively and recognize structured `+xml` suffixes, including vendor-specific media types. [#2550](https://github.com/jhy/jsoup/pull/2550)
 * Corrected multipart form encoding to percent-escape CR and LF in field names and filenames, matching the HTML form submission specification. Multipart file content-types containing CR or LF are now rejected with a `ValidationException`. [#2555](https://github.com/jhy/jsoup/pull/2555)
