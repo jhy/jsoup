@@ -2660,6 +2660,29 @@ public class HtmlParserTest {
             assertEquals("<table>\n <tbody></tbody>\n <tr></tr>\n <td></td>\n</table>", container.html());
         }
 
+        @Test void deepBodyResetWithinMaxDepth() {
+            assertDeepBodyReset(255, 512);
+        }
+
+        @Test void deepBodyResetBeyondMaxDepth() {
+            assertDeepBodyReset(20, 16);
+        }
+
+        private void assertDeepBodyReset(int nesting, int maxDepth) {
+            StringBuilder html = new StringBuilder("<dl><b>");
+            for (int i = 0; i < nesting; i++) {
+                html.append("<r>");
+            }
+            html.append("</body>x</b>");
+
+            Parser parser = Parser.htmlParser().setMaxDepth(maxDepth);
+            Document doc = Jsoup.parse(html.toString(), "", parser);
+            Elements bodies = doc.select("body");
+            assertEquals(1, bodies.size());
+            assertEquals("x", bodies.first().text());
+            assertEquals(nesting, doc.select("r").size());
+        }
+
         @Test void customDepthLimit() {
             Parser parser = Parser.htmlParser().setMaxDepth(5);
             String input = "<html><body><div><div><div><div><div><div>";
