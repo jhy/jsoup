@@ -10,7 +10,7 @@
 * DOM mutation methods, including child insertion and replacement, now reject operations that would create a cycle, such as making a node its own child or moving an ancestor beneath a descendant. [#2552](https://github.com/jhy/jsoup/issues/2552)
 
 ### Changes
-* Aligned the XML parser stack depth and lookups to the configured maximum, which now defaults to 512 for both HTML and XML.
+* Aligned the XML parser stack depth and lookups to the configured maximum, which now defaults to 512 for both HTML and XML. [#2570](https://github.com/jhy/jsoup/pull/2570)
 
 ### Bug Fixes
 * Fixed `W3CDom` namespace conversion in several cases: [#2559](https://github.com/jhy/jsoup/pull/2559)
