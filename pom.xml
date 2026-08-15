@@ -606,7 +606,7 @@
       <!-- org.jspecify.annotations.nonnull, with Apache 2 license. Build time only. -->
       <groupId>org.jspecify</groupId>
       <artifactId>jspecify</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
       <scope>provided</scope>
     </dependency>
 
