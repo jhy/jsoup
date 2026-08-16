@@ -4,17 +4,20 @@ import org.jsoup.internal.NamespaceBindings;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.CDataNode;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.Selector;
-import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 import org.jspecify.annotations.Nullable;
 
 import javax.xml.XMLConstants;
@@ -365,51 +368,47 @@ public class W3CDom {
 
         @Override
         public void head(org.jsoup.nodes.Node source, int depth) {
-            if (source instanceof org.jsoup.nodes.Element) {
-                org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
-                if (depth == 0)
-                    seedSourceNamespaces(sourceEl);
-                sourceNamespaces.pushScope();
-                outputNamespaces.pushScope();
-                sourceNamespaces.applyDeclarations(sourceEl.attributes());
-                @Nullable String namespace = namespaceAware ? w3cNamespace(sourceEl) : null;
-                String tagName = w3cSafeName(sourceEl.tagName(), Syntax.xml);
-                Element el;
-                try {
-                    // use an empty namespace if none is present but the tag name has a prefix
-                    String imputedNamespace = namespace == null && tagName.contains(":") ? "" : namespace;
-                    el = doc.createElementNS(imputedNamespace, tagName);
-                } catch (DOMException ignored) {
-                    // If the Normalize didn't get it XML / W3C safe, inserts as plain text
-                    append(doc.createTextNode("<" + tagName + ">"), sourceEl);
-                    return;
-                }
-                copyAttributes(sourceEl, el);
-                append(el, sourceEl);
-                if (sourceEl == contextElement)
-                    doc.setUserData(ContextNodeProperty, el, null);
-                dest = el; // descend
-            } else if (source instanceof org.jsoup.nodes.DocumentType) {
+            if (source instanceof org.jsoup.nodes.Element)
+                appendElement((org.jsoup.nodes.Element) source, depth);
+            else if (source instanceof org.jsoup.nodes.DocumentType)
                 appendDocumentType((org.jsoup.nodes.DocumentType) source);
-            } else if (source instanceof org.jsoup.nodes.CDataNode) {
-                appendCdata((org.jsoup.nodes.CDataNode) source);
-            } else if (source instanceof org.jsoup.nodes.TextNode) {
-                org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
-                Text text = doc.createTextNode(sourceText.getWholeText());
-                append(text, sourceText);
-            } else if (source instanceof org.jsoup.nodes.Comment) {
-                org.jsoup.nodes.Comment sourceComment = (org.jsoup.nodes.Comment) source;
-                Comment comment = doc.createComment(sourceComment.getData());
-                append(comment, sourceComment);
-            } else if (source instanceof org.jsoup.nodes.DataNode) {
-                org.jsoup.nodes.DataNode sourceData = (org.jsoup.nodes.DataNode) source;
-                Text node = doc.createTextNode(sourceData.getWholeData());
-                append(node, sourceData);
-            } else if (source instanceof org.jsoup.nodes.XmlDeclaration) {
-                appendProcessingInstruction((org.jsoup.nodes.XmlDeclaration) source);
-            } else {
-                // unhandled
+            else if (source instanceof CDataNode)
+                appendCdata((CDataNode) source);
+            else if (source instanceof TextNode)
+                append(doc.createTextNode(((TextNode) source).getWholeText()), source);
+            else if (source instanceof Comment)
+                append(doc.createComment(((Comment) source).getData()), source);
+            else if (source instanceof DataNode)
+                append(doc.createTextNode(((DataNode) source).getWholeData()), source);
+            else if (source instanceof XmlDeclaration)
+                appendProcessingInstruction((XmlDeclaration) source);
+
+        }
+
+        /** Converts and appends an element, descending into its output node when representable. */
+        private void appendElement(org.jsoup.nodes.Element source, int depth) {
+            if (depth == 0)
+                seedSourceNamespaces(source);
+            sourceNamespaces.pushScope();
+            outputNamespaces.pushScope();
+            sourceNamespaces.applyDeclarations(source.attributes());
+            String namespace = namespaceAware ? w3cNamespace(source) : null;
+            String tagName = w3cSafeName(source.tagName(), Syntax.xml);
+            Element el;
+            try {
+                // use an empty namespace if none is present but the tag name has a prefix
+                String imputedNamespace = namespace == null && tagName.contains(":") ? "" : namespace;
+                el = doc.createElementNS(imputedNamespace, tagName);
+            } catch (DOMException ignored) {
+                // If the Normalize didn't get it XML / W3C safe, inserts as plain text
+                append(doc.createTextNode("<" + tagName + ">"), source);
+                return;
             }
+            copyAttributes(source, el);
+            append(el, source);
+            if (source == contextElement)
+                doc.setUserData(ContextNodeProperty, el, null);
+            dest = el; // descend
         }
 
         // Keep the doctype in document order; invalid doctypes cannot be represented.
