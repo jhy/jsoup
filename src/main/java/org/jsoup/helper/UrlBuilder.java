@@ -45,7 +45,9 @@ final class UrlBuilder {
             appendToAscii(u.getPath(), false, normUrl);
             if (q != null) {
                 normUrl.append('?');
-                appendToAscii(StringUtil.releaseBuilder(q), true, normUrl);
+                String query = StringUtil.releaseBuilder(q);
+                q = null; // don't retain the released builder
+                appendToAscii(query, true, normUrl);
             }
             if (u.getRef() != null) {
                 normUrl.append('#');

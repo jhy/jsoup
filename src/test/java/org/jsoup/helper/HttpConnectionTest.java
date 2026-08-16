@@ -308,8 +308,10 @@ public class HttpConnectionTest {
 
     @Test public void encodeUrl() throws MalformedURLException {
         URL url1 = new URL("https://test.com/foo%20bar/%5BOne%5D?q=white+space#frag");
-        URL url2 = new UrlBuilder(url1).build();
+        UrlBuilder builder = new UrlBuilder(url1);
+        URL url2 = builder.build();
         assertEquals("https://test.com/foo%20bar/%5BOne%5D?q=white+space#frag", url2.toExternalForm());
+        assertNull(builder.q);
     }
 
     @Test public void encodeUrlSupplementary() throws MalformedURLException {

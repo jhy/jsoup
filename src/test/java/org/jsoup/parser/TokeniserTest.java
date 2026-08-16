@@ -213,4 +213,18 @@ public class TokeniserTest {
         data.append("def");
         assertEquals("abcdef", data.toString());
     }
+
+    @Test void tokenDataValueLifecycle() {
+        TokenData data = new TokenData();
+        data.set("abc");
+        data.append("def");
+        assertEquals("abcdef", data.value());
+        assertEquals("abcdef", data.value());
+
+        data.append('g');
+        assertEquals("abcdefg", data.value());
+
+        data.reset();
+        assertEquals("", data.value());
+    }
 }
