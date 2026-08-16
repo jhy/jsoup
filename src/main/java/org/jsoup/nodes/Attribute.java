@@ -191,7 +191,6 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
 
     static void html(String key, @Nullable String val, QuietAppendable accum, Document.OutputSettings out) {
         key = getValidKey(key, out.syntax());
-        if (key == null) return; // can't write it :(
         htmlNoValidate(key, val, accum, out);
     }
 
@@ -219,20 +218,23 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
 
     private static final Pattern xmlKeyReplace = Pattern.compile("[^-a-zA-Z0-9_:.]+");
     private static final Pattern htmlKeyReplace = Pattern.compile("[\\x00-\\x1f\\x7f-\\x9f \"'/=]+");
+
     /**
-     * Get a valid attribute key for the given syntax. If the key is not valid, it will be coerced into a valid key.
-     * @param key the original attribute key
-     * @param syntax HTML or XML
-     * @return the original key if it's valid; a key with invalid characters replaced with "_" otherwise; or null if a valid key could not be created.
+     Get a valid key for the output syntax. Invalid character runs are replaced with {@code _}, and XML keys with
+     invalid starts are prefixed with {@code _}.
+
+     @param key    the input key
+     @param syntax HTML or XML
+     @return a valid key for the output syntax
      */
-    @Nullable public static String getValidKey(String key, Syntax syntax) {
+    public static String getValidKey(String key, Syntax syntax) {
+        if (key.isEmpty()) return "_";
         if (syntax == Syntax.xml && !isValidXmlKey(key)) {
             key = xmlKeyReplace.matcher(key).replaceAll("_");
-            return isValidXmlKey(key) ? key : null; // null if could not be coerced
-        }
-        else if (syntax == Syntax.html && !isValidHtmlKey(key)) {
+            if (!isValidXmlKeyStart(key.charAt(0)))
+                key = StringUtil.concat('_', key);
+        } else if (syntax == Syntax.html && !isValidHtmlKey(key)) {
             key = htmlKeyReplace.matcher(key).replaceAll("_");
-            return isValidHtmlKey(key) ? key : null; // null if could not be coerced
         }
         return key;
     }
@@ -244,14 +246,18 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         final int length = key.length();
         if (length == 0) return false;
         char c = key.charAt(0);
-        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == ':'))
-            return false;
+        if (!isValidXmlKeyStart(c)) return false;
         for (int i = 1; i < length; i++) {
             c = key.charAt(i);
             if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == ':' || c == '.'))
                 return false;
         }
         return true;
+    }
+
+    /** Check that the character can start an XML name */
+    private static boolean isValidXmlKeyStart(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == ':';
     }
 
     private static boolean isValidHtmlKey(String key) {

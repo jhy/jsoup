@@ -286,6 +286,20 @@ public class XmlTreeBuilderTest {
         assertEquals("<a bB1-_:.=\"foo\" _9_=\"bar\" xmlns:p1=\"qux\">One</a>", out); // first is same, second coerced
     }
 
+    @Test void normalizesAttributeNamesWithInvalidXmlStarts() {
+        // digits and hyphens are valid within XML names, but not at the start
+        Document doc = Jsoup.parse("<root 1a='one' -a='two' />", Parser.xmlParser());
+
+        assertEquals("<root _1a=\"one\" _-a=\"two\" />", doc.html());
+    }
+
+    @Test void makesRepairedXmlAttributeNameUnique() {
+        // valid names are preserved and repaired collisions receive underscore prefixes until unique
+        Document doc = Jsoup.parse("<root 1a='one' _1a='two' __1a='three' />", Parser.xmlParser());
+
+        assertEquals("<root ___1a=\"one\" _1a=\"two\" __1a=\"three\" />", doc.html());
+    }
+
     @Test void customTagsAreFlyweights() {
         String xml = "<foo>Foo</foo><foo>Foo</foo><FOO>FOO</FOO><FOO>FOO</FOO>";
         Document doc = Jsoup.parse(xml, Parser.xmlParser());

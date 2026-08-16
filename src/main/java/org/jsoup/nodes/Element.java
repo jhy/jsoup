@@ -1,7 +1,6 @@
 package org.jsoup.nodes;
 
 import org.jsoup.helper.Validate;
-import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.QuietAppendable;
 import org.jsoup.helper.Regex;
 import org.jsoup.internal.StringUtil;
@@ -2023,9 +2022,9 @@ public class Element extends Node implements Iterable<Element> {
         // if empty, we have already closed in htmlHead
     }
 
-    /* If XML syntax, normalizes < to _ in tag name. */
-    @Nullable private String safeTagName(Document.OutputSettings.Syntax syntax) {
-        return syntax == xml ? Normalizer.xmlSafeTagName(tagName()) : tagName();
+    /** Gets the tag name normalized for the output syntax. */
+    private String safeTagName(Document.OutputSettings.Syntax syntax) {
+        return syntax == xml ? Attribute.getValidKey(tagName(), xml) : tagName();
     }
 
     /**

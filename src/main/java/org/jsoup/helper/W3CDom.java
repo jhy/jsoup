@@ -545,11 +545,7 @@ public class W3CDom {
 
         /** Normalizes a name to a W3C-compatible QName, converting {@code 1:a:b} to {@code _1:a_b}. */
         private String w3cSafeName(String name, Syntax syntax) {
-            @Nullable String normalized = Attribute.getValidKey(name, syntax);
-            if (normalized == null) {
-                normalized = Attribute.getValidKey("_" + name, syntax);
-                if (normalized == null) return "_";
-            }
+            String normalized = Attribute.getValidKey(name, syntax);
             if (normalized.indexOf(':') == -1) return normalized;
 
             Matcher parts = QNameParts.matcher(normalized);
@@ -560,14 +556,11 @@ public class W3CDom {
         /** Normalizes one QName component while preserving valid XML name characters. */
         private String w3cSafeNcName(String name) {
             if (isValidNcName(name)) return name;
-            String safeStart = "_" + name;
+            String safeStart = StringUtil.concat('_', name);
             if (isValidNcName(safeStart)) return safeStart;
 
             String colonSafe = name.replace(':', '_');
-            @Nullable String normalized = Attribute.getValidKey(colonSafe, Syntax.xml);
-            if (normalized != null) return normalized;
-            normalized = Attribute.getValidKey("_" + colonSafe, Syntax.xml);
-            return normalized != null ? normalized : "_";
+            return Attribute.getValidKey(colonSafe, Syntax.xml);
         }
 
         /** Tests a component against the XML NCName rules used by the output DOM. */

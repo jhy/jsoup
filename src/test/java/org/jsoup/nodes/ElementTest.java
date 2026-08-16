@@ -3359,6 +3359,15 @@ public class ElementTest {
         assertEquals("<p_>One</p_>", xml);
     }
 
+    @Test void normalizesElementNamesWithInvalidXmlStarts() {
+        // programmatic elements can hold names the XML parser would reject
+        Document doc = new Document("");
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        doc.appendChild(new Element("1root").text("One"));
+
+        assertEquals("<_1root>One</_1root>", doc.html());
+    }
+
     @Test
     public void invalidCharactersDiscardedInXml() {
         // https://github.com/jhy/jsoup/issues/1743
