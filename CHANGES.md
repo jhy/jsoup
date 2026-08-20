@@ -3,11 +3,11 @@
 ## 1.23.2 (pending)
 
 ### Improvements
-* Added `Elements#before(Node)`, `after(Node)`, `prepend(Node)`, and `append(Node)` to match the existing HTML string methods. The supplied node is cloned for each matched element. [#953](https://github.com/jhy/jsoup/issues/953)
 * Improved consecutive `StreamParser.selectFirst(...)` calls during progressive parsing, so later matches are returned with their parsed contents when earlier selections have left them as parser lookahead. E.g., given `<title>One</title><p id=hit>Full</p><p>Next</p>`, selecting `title` and then `#hit` now advances the partial lookahead and returns `<p id="hit">Full</p>`, rather than returning an empty `<p id="hit"></p>` before its content is parsed. The updated readiness tracking follows StreamParser's normal emission order across implicit HTML structure and parser recovery. [#2551](https://github.com/jhy/jsoup/pull/2551)
 * Improved XML parser performance and memory use for documents with many nested namespace declarations by recording namespace changes within each element scope. [#2556](https://github.com/jhy/jsoup/pull/2556)
 * Improved `W3CDom` conversion performance for documents with many nested namespace declarations. The W3C converter now uses the same optimized namespace tracking as the XML parser. [#2559](https://github.com/jhy/jsoup/pull/2559)
 * DOM mutation methods, including child insertion and replacement, now reject operations that would create a cycle, such as making a node its own child or moving an ancestor beneath a descendant. [#2552](https://github.com/jhy/jsoup/issues/2552)
+* Added `Elements#before(Node)`, `after(Node)`, `prepend(Node)`, and `append(Node)` to match the existing HTML string methods. [#953](https://github.com/jhy/jsoup/issues/953)
 
 ### Bug Fixes
 * Fixed `W3CDom` namespace conversion in several cases: [#2559](https://github.com/jhy/jsoup/pull/2559)

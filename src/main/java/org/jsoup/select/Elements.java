@@ -14,10 +14,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.function.BiConsumer;
 import java.util.function.UnaryOperator;
 
 /**
@@ -316,17 +315,14 @@ public class Elements extends Nodes<Element> {
     }
 
     /**
-     * Add the supplied node to the start of each matched element's inner HTML. The node is cloned for each target.
-     * @param node the node to add inside each element, before the existing HTML
-     * @return this, for chaining
-     * @see Element#prependChild(Node)
+     Add the supplied node to the start of each matched element's inner HTML. The node is cloned for each target.
+
+     @param node the node to add inside each element, before the existing HTML
+     @return this, for chaining
+     @see Element#prependChild(Node)
      */
     public Elements prepend(Node node) {
-        Validate.notNull(node);
-        for (Element element : this) {
-            element.prependChild(node.clone());
-        }
-        return this;
+        return insert(node, Element::prependChild);
     }
     
     /**
@@ -343,17 +339,14 @@ public class Elements extends Nodes<Element> {
     }
 
     /**
-     * Add the supplied node to the end of each matched element's inner HTML. The node is cloned for each target.
-     * @param node the node to add inside each element, after the existing HTML
-     * @return this, for chaining
-     * @see Element#appendChild(Node)
+     Add the supplied node to the end of each matched element's inner HTML. The node is cloned for each target.
+
+     @param node the node to add inside each element, after the existing HTML
+     @return this, for chaining
+     @see Element#appendChild(Node)
      */
     public Elements append(Node node) {
-        Validate.notNull(node);
-        for (Element element : this) {
-            element.appendChild(node.clone());
-        }
-        return this;
+        return insert(node, Element::appendChild);
     }
 
     /**
@@ -377,11 +370,7 @@ public class Elements extends Nodes<Element> {
      @see Element#before(Node)
      */
     public Elements before(Node node) {
-        Validate.notNull(node);
-        for (Element element : this) {
-            element.before(node.clone());
-        }
-        return this;
+        return insert(node, Element::before);
     }
 
     /**
@@ -405,10 +394,20 @@ public class Elements extends Nodes<Element> {
      @see Element#after(Node)
      */
     public Elements after(Node node) {
+        return insert(node, Element::after);
+    }
+
+    /**
+     Applies a node insertion to each matched element, cloning the node for each target.
+
+     @param node     the node to insert
+     @param inserter the insertion operation
+     @return this, for chaining
+     */
+    private Elements insert(Node node, BiConsumer<Element, Node> inserter) {
         Validate.notNull(node);
-        for (Element element : this) {
-            element.after(node.clone());
-        }
+        for (Element element : this)
+            inserter.accept(element, node.clone());
         return this;
     }
 
