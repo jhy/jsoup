@@ -4,18 +4,20 @@ import org.jsoup.internal.NamespaceBindings;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.CDataNode;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.Selector;
-import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
-import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 import org.jspecify.annotations.Nullable;
 
 import javax.xml.XMLConstants;
@@ -202,18 +204,8 @@ public class W3CDom {
         DocumentBuilder builder;
         try {
             builder = factory.newDocumentBuilder();
-            DOMImplementation impl = builder.getDOMImplementation();
             Document out = builder.newDocument();
             org.jsoup.nodes.Document inDoc = in.ownerDocument();
-            org.jsoup.nodes.DocumentType doctype = inDoc != null ? inDoc.documentType() : null;
-            if (doctype != null) {
-                try {
-                    org.w3c.dom.DocumentType documentType = impl.createDocumentType(doctype.name(), doctype.publicId(), doctype.systemId());
-                    out.appendChild(documentType);
-                } catch (DOMException ignored) {
-                    // invalid / empty doctype dropped
-                }
-            }
             out.setXmlStandalone(true);
             // if in is Document, use the root element, not the wrapping document, as the context:
             org.jsoup.nodes.Element context = (in instanceof org.jsoup.nodes.Document) ? in.firstElementChild() : in;
@@ -256,9 +248,10 @@ public class W3CDom {
             }
             builder.syntax = inDoc.outputSettings().syntax();
         }
-        org.jsoup.nodes.Element rootEl = in instanceof org.jsoup.nodes.Document ? in.firstElementChild() : in; // skip the #root node if a Document
-        assert rootEl != null;
-        builder.traverse(rootEl);
+        if (in instanceof org.jsoup.nodes.Document)
+            builder.traverseDocument((org.jsoup.nodes.Document) in);
+        else
+            builder.traverse(in);
     }
 
     /**
@@ -363,46 +356,87 @@ public class W3CDom {
             contextElement = (org.jsoup.nodes.Element) doc.getUserData(ContextProperty); // Track the context jsoup Element, so we can save the corresponding w3c element
         }
 
+        // Traverse only nodes supported as W3C document children, and keep the first element as the root.
+        private void traverseDocument(org.jsoup.nodes.Document source) {
+            org.jsoup.nodes.Element root = source.firstElementChild();
+            for (org.jsoup.nodes.Node child : source.childNodes()) {
+                if (child == root || child instanceof org.jsoup.nodes.DocumentType ||
+                    child instanceof org.jsoup.nodes.Comment || child instanceof org.jsoup.nodes.XmlDeclaration)
+                    traverse(child);
+            }
+        }
+
         @Override
         public void head(org.jsoup.nodes.Node source, int depth) {
-            if (source instanceof org.jsoup.nodes.Element) {
-                org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
-                if (depth == 0)
-                    seedSourceNamespaces(sourceEl);
-                sourceNamespaces.pushScope();
-                outputNamespaces.pushScope();
-                sourceNamespaces.applyDeclarations(sourceEl.attributes());
-                @Nullable String namespace = namespaceAware ? w3cNamespace(sourceEl) : null;
-                String tagName = w3cSafeName(sourceEl.tagName(), Syntax.xml);
-                Element el;
-                try {
-                    // use an empty namespace if none is present but the tag name has a prefix
-                    String imputedNamespace = namespace == null && tagName.contains(":") ? "" : namespace;
-                    el = doc.createElementNS(imputedNamespace, tagName);
-                } catch (DOMException ignored) {
-                    // If the Normalize didn't get it XML / W3C safe, inserts as plain text
-                    append(doc.createTextNode("<" + tagName + ">"), sourceEl);
-                    return;
-                }
-                copyAttributes(sourceEl, el);
-                append(el, sourceEl);
-                if (sourceEl == contextElement)
-                    doc.setUserData(ContextNodeProperty, el, null);
-                dest = el; // descend
-            } else if (source instanceof org.jsoup.nodes.TextNode) {
-                org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
-                Text text = doc.createTextNode(sourceText.getWholeText());
-                append(text, sourceText);
-            } else if (source instanceof org.jsoup.nodes.Comment) {
-                org.jsoup.nodes.Comment sourceComment = (org.jsoup.nodes.Comment) source;
-                Comment comment = doc.createComment(sourceComment.getData());
-                append(comment, sourceComment);
-            } else if (source instanceof org.jsoup.nodes.DataNode) {
-                org.jsoup.nodes.DataNode sourceData = (org.jsoup.nodes.DataNode) source;
-                Text node = doc.createTextNode(sourceData.getWholeData());
-                append(node, sourceData);
-            } else {
-                // unhandled. note that doctype is not handled here - rather it is used in the initial doc creation
+            if (source instanceof org.jsoup.nodes.Element)
+                appendElement((org.jsoup.nodes.Element) source, depth);
+            else if (source instanceof org.jsoup.nodes.DocumentType)
+                appendDocumentType((org.jsoup.nodes.DocumentType) source);
+            else if (source instanceof CDataNode)
+                appendCdata((CDataNode) source);
+            else if (source instanceof TextNode)
+                append(doc.createTextNode(((TextNode) source).getWholeText()), source);
+            else if (source instanceof Comment)
+                append(doc.createComment(((Comment) source).getData()), source);
+            else if (source instanceof DataNode)
+                append(doc.createTextNode(((DataNode) source).getWholeData()), source);
+            else if (source instanceof XmlDeclaration)
+                appendProcessingInstruction((XmlDeclaration) source);
+
+        }
+
+        /** Converts and appends an element, descending into its output node when representable. */
+        private void appendElement(org.jsoup.nodes.Element source, int depth) {
+            if (depth == 0)
+                seedSourceNamespaces(source);
+            sourceNamespaces.pushScope();
+            outputNamespaces.pushScope();
+            sourceNamespaces.applyDeclarations(source.attributes());
+            String namespace = namespaceAware ? w3cNamespace(source) : null;
+            String tagName = w3cSafeName(source.tagName(), Syntax.xml);
+            Element el;
+            try {
+                // use an empty namespace if none is present but the tag name has a prefix
+                String imputedNamespace = namespace == null && tagName.contains(":") ? "" : namespace;
+                el = doc.createElementNS(imputedNamespace, tagName);
+            } catch (DOMException ignored) {
+                // If the Normalize didn't get it XML / W3C safe, inserts as plain text
+                append(doc.createTextNode("<" + tagName + ">"), source);
+                return;
+            }
+            copyAttributes(source, el);
+            append(el, source);
+            if (source == contextElement)
+                doc.setUserData(ContextNodeProperty, el, null);
+            dest = el; // descend
+        }
+
+        // Keep the doctype in document order; invalid doctypes cannot be represented.
+        private void appendDocumentType(org.jsoup.nodes.DocumentType source) {
+            try {
+                DocumentType type = doc.getImplementation().createDocumentType(source.name(), source.publicId(), source.systemId());
+                append(type, source);
+            } catch (DOMException ignored) {
+                // invalid / empty doctype dropped
+            }
+        }
+
+        // Preserve CDATA where possible; programmatic content may be invalid for a W3C CDATA node.
+        private void appendCdata(org.jsoup.nodes.CDataNode source) {
+            try {
+                append(doc.createCDATASection(source.getWholeText()), source);
+            } catch (DOMException ignored) {
+                append(doc.createTextNode(source.getWholeText()), source);
+            }
+        }
+
+        // XmlDeclaration also represents <!name ...> nodes; XML declarations are reserved by the W3C DOM.
+        private void appendProcessingInstruction(org.jsoup.nodes.XmlDeclaration source) {
+            if (!source.outerHtml().startsWith("<?") || source.name().equalsIgnoreCase("xml")) return;
+            try {
+                append(doc.createProcessingInstruction(source.name(), source.getWholeDeclaration()), source);
+            } catch (DOMException ignored) {
+                // invalid programmatic processing instruction dropped
             }
         }
 
@@ -433,7 +467,7 @@ public class W3CDom {
         public void tail(org.jsoup.nodes.Node source, int depth) {
             // head may emit an unrepresentable element as text without descending, so only ascend from its matching output element
             if (source instanceof org.jsoup.nodes.Element && dest.getUserData(SourceProperty) == source &&
-                dest.getParentNode() instanceof Element) {
+                dest.getParentNode() != null) {
                 dest = dest.getParentNode(); // undescend
             }
             if (source instanceof org.jsoup.nodes.Element) {
@@ -510,11 +544,7 @@ public class W3CDom {
 
         /** Normalizes a name to a W3C-compatible QName, converting {@code 1:a:b} to {@code _1:a_b}. */
         private String w3cSafeName(String name, Syntax syntax) {
-            @Nullable String normalized = Attribute.getValidKey(name, syntax);
-            if (normalized == null) {
-                normalized = Attribute.getValidKey("_" + name, syntax);
-                if (normalized == null) return "_";
-            }
+            String normalized = Attribute.getValidKey(name, syntax);
             if (normalized.indexOf(':') == -1) return normalized;
 
             Matcher parts = QNameParts.matcher(normalized);
@@ -525,14 +555,11 @@ public class W3CDom {
         /** Normalizes one QName component while preserving valid XML name characters. */
         private String w3cSafeNcName(String name) {
             if (isValidNcName(name)) return name;
-            String safeStart = "_" + name;
+            String safeStart = StringUtil.concat('_', name);
             if (isValidNcName(safeStart)) return safeStart;
 
             String colonSafe = name.replace(':', '_');
-            @Nullable String normalized = Attribute.getValidKey(colonSafe, Syntax.xml);
-            if (normalized != null) return normalized;
-            normalized = Attribute.getValidKey("_" + colonSafe, Syntax.xml);
-            return normalized != null ? normalized : "_";
+            return Attribute.getValidKey(colonSafe, Syntax.xml);
         }
 
         /** Tests a component against the XML NCName rules used by the output DOM. */

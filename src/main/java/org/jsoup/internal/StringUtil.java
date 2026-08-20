@@ -349,6 +349,18 @@ public final class StringUtil {
         () -> new StringBuilder(InitBuilderSize));
 
     /**
+     Concatenates a character and string using a pooled builder.
+     @param first the leading character
+     @param second the following string
+     @return the concatenated string
+     */
+    public static String concat(char first, String second) {
+        StringBuilder builder = borrowBuilder();
+        builder.append(first).append(second);
+        return releaseBuilder(builder);
+    }
+
+    /**
      * Maintains cached StringBuilders in a flyweight pattern, to minimize new StringBuilder GCs. The StringBuilder is
      * prevented from growing too large.
      * <p>

@@ -4,6 +4,7 @@ import org.jsoup.helper.Validate;
 import org.jsoup.internal.QuietAppendable;
 import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
+import org.jsoup.nodes.Document.OutputSettings.Syntax;
 import org.jsoup.parser.ParseSettings;
 import org.jspecify.annotations.Nullable;
 
@@ -14,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
+import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
 import static org.jsoup.nodes.Range.AttributeRange.UntrackedAttr;
 
 /**
@@ -562,15 +565,45 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     final void html(final QuietAppendable accum, final Document.OutputSettings out) {
         final int sz = size;
+        final Syntax syntax = out.syntax();
+        @Nullable Set<String> usedKeys = null; // avoid allocation for normal serialization
         for (int i = 0; i < sz; i++) {
             String key = keys[i];
             assert key != null;
             if (isInternalKey(key))
                 continue;
-            final String validated = Attribute.getValidKey(key, out.syntax());
-            if (validated != null)
-                Attribute.htmlNoValidate(validated, (String) vals[i], accum.append(' '), out);
+            String validated = Attribute.getValidKey(key, syntax);
+            if (!validated.equals(key)) {
+                if (usedKeys == null)
+                    usedKeys = collectSourceKeys(syntax); // valid source names win regardless of attribute order
+                // preserve repaired attributes without outputting duplicate names
+                while (!usedKeys.add(comparisonKey(validated, syntax)))
+                    validated = StringUtil.concat('_', validated);
+            }
+            Attribute.htmlNoValidate(validated, (String) vals[i], accum.append(' '), out);
         }
+    }
+
+    /** Collects source keys so repaired names can be made unique without changing valid names. */
+    private Set<String> collectSourceKeys(Syntax syntax) {
+        Set<String> sourceKeys = new HashSet<>(size);
+        for (int i = 0; i < size; i++) {
+            String key = keys[i];
+            assert key != null;
+            if (!isInternalKey(key))
+                sourceKeys.add(comparisonKey(key, syntax));
+        }
+        return sourceKeys;
+    }
+
+    /** Normalizes a key for the output syntax's case sensitivity. */
+    private static String comparisonKey(String key, Syntax syntax) {
+        return syntax == xml ? key : lowerCase(key);
+    }
+
+    /** Compares keys with the requested case sensitivity. */
+    private static boolean keysEqual(String first, String second, boolean caseSensitive) {
+        return caseSensitive ? first.equals(second) : first.equalsIgnoreCase(second);
     }
 
     @Override
@@ -667,7 +700,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             String keyI = keys[i];
             assert keyI != null;
             for (int j = i + 1; j < size; j++) {
-                if ((preserve && keyI.equals(keys[j])) || (!preserve && keyI.equalsIgnoreCase(keys[j]))) {
+                if (keysEqual(keyI, keys[j], preserve)) {
                     dupes++;
                     remove(j);
                     j--;

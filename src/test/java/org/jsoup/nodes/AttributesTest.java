@@ -45,6 +45,15 @@ public class AttributesTest {
         assertEquals(a.html(), a.toString());
     }
 
+    @Test void makesRepairedHtmlAttributeNameUnique() {
+        // valid names are preserved and repaired collisions receive an underscore prefix
+        Attributes attributes = new Attributes();
+        attributes.put("A=B", "one");
+        attributes.put("a_b", "two");
+
+        assertEquals(" _A_B=\"one\" a_b=\"two\"", attributes.html());
+    }
+
     @Test
     public void testIteratorRemovable() {
         Attributes a = new Attributes();

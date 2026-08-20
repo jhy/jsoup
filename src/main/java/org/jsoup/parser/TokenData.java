@@ -74,8 +74,7 @@ class TokenData {
     String value() {
         if (builder != null) {
             // in rare case we get hit twice, don't toString the builder twice
-            value = builder.toString();
-            StringUtil.releaseBuilder(builder);
+            value = StringUtil.releaseBuilder(builder);
             builder = null;
             return value;
         }

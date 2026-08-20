@@ -19,6 +19,12 @@ public class StringUtilTest {
         assertEquals("one two three", StringUtil.join(Arrays.asList("one", "two", "three"), " "));
     }
 
+    @Test void concatCharacterAndString() {
+        // joins the values without exposing the pooled builder lifecycle
+        assertEquals("_key", StringUtil.concat('_', "key"));
+        assertEquals("_", StringUtil.concat('_', ""));
+    }
+
     @Test public void padding() {
         assertEquals("", StringUtil.padding(0));
         assertEquals(" ", StringUtil.padding(1));

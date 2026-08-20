@@ -525,7 +525,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     boolean onStack(Element el) {
-        return onStack(stack, el);
+        return stack.contains(el);
     }
 
     /** Checks if there is an HTML element with the given name on the stack. */
@@ -533,25 +533,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return getFromStack(elName) != null;
     }
 
-    private static final int maxQueueDepth = 256; // an arbitrary tension point between real HTML and crafted pain
-    private static boolean onStack(ArrayList<Element> queue, Element element) {
-        final int bottom = queue.size() - 1;
-        final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
-        for (int pos = bottom; pos >= upper; pos--) {
-            Element next = queue.get(pos);
-            if (next == element) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /** Gets the nearest (lowest) HTML element with the given name from the stack. */
     @Nullable
     Element getFromStack(String elName) {
-        final int bottom = stack.size() - 1;
-        final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
-        for (int pos = bottom; pos >= upper; pos--) {
+        for (int pos = stack.size() - 1; pos >= 0; pos--) {
             Element next = stack.get(pos);
             if (next.elementIs(elName, NamespaceHtml)) {
                 return next;
@@ -685,29 +670,18 @@ public class HtmlTreeBuilder extends TreeBuilder {
         queue.set(i, in);
     }
 
-    /**
-     * Reset the insertion mode, by searching up the stack for an appropriate insertion mode. The stack search depth
-     * is limited to {@link #maxQueueDepth}.
-     * @return true if the insertion mode was actually changed.
-     */
+    /** Reset the insertion mode by searching up the stack for an appropriate insertion mode. */
     boolean resetInsertionMode() {
         // https://html.spec.whatwg.org/multipage/parsing.html#the-insertion-mode
-        boolean last = false;
-        final int bottom = stack.size() - 1;
-        final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
         final HtmlTreeBuilderState origState = this.state;
 
         if (stack.size() == 0) { // nothing left of stack, just get to body
             transition(HtmlTreeBuilderState.InBody);
         }
 
-        LOOP: for (int pos = bottom; pos >= upper; pos--) {
-            Element node = stack.get(pos);
-            if (pos == upper) {
-                last = true;
-                if (fragmentParsing)
-                    node = contextElement;
-            }
+        LOOP: for (int pos = stack.size() - 1; pos >= 0; pos--) {
+            boolean last = pos == 0;
+            Element node = last && fragmentParsing ? contextElement : stack.get(pos);
             String name = node != null && NamespaceHtml.equals(node.tag().namespace()) ? node.normalName() : "";
 
             switch (name) {
@@ -1070,8 +1044,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void reconstructFormattingElements() {
-        if (stack.size() > maxQueueDepth)
-            return;
         Element last = lastFormattingElement();
         if (last == null || onStack(last))
             return;
@@ -1129,7 +1101,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     boolean isInActiveFormattingElements(Element el) {
-        return onStack(formattingElements, el);
+        return formattingElements.contains(el);
     }
 
     @Nullable
