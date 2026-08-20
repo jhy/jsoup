@@ -10,6 +10,7 @@
 * DOM mutation methods, including child insertion and replacement, now reject operations that would create a cycle, such as making a node its own child or moving an ancestor beneath a descendant. [#2552](https://github.com/jhy/jsoup/issues/2552)
 * Added `Elements#before(Node)`, `after(Node)`, `prepend(Node)`, and `append(Node)` to match the existing HTML string methods. [#953](https://github.com/jhy/jsoup/issues/953)
 * XML serialization now repairs element and attribute names that start with an invalid character, rather than outputting `<null>` elements or dropping attributes. For example, an attribute named `1a` is written as `_1a`. Additional leading underscores keep repaired attribute names unique if they conflict with another attribute. [#2573](https://github.com/jhy/jsoup/issues/2573)
+* Large file-backed uploads through `Connection.requestBodyStream(InputStream)` now stream directly with the JDK `HttpClient` on Java 11+, rather than being loaded fully into memory first.
 
 ### Changes
 * Aligned the XML parser stack depth and lookups to the configured maximum, which now defaults to 512 for both HTML and XML. [#2570](https://github.com/jhy/jsoup/pull/2570)

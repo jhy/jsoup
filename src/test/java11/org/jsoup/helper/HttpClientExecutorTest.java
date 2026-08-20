@@ -4,14 +4,18 @@ import org.jsoup.internal.SharedConstants;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.SocketAddress;
 import java.net.URI;
+import java.net.http.HttpRequest;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.jsoup.Connection.Method.POST;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HttpClientExecutorTest {
@@ -35,6 +39,24 @@ public class HttpClientExecutorTest {
         System.clearProperty(SharedConstants.UseHttpClient);
         RequestExecutor executor = RequestDispatch.get(new HttpConnection.Request(), null);
         assertTrue(HttpClientTestAccess.isHttpClientExecutor(executor));
+    }
+
+    @Test void requestBodyStreamIsNotBuffered() {
+        AtomicInteger reads = new AtomicInteger();
+        InputStream stream = new InputStream() {
+            @Override public int read() {
+                reads.incrementAndGet();
+                return -1;
+            }
+        };
+        HttpConnection.Request request = new HttpConnection.Request();
+        request.method(POST);
+        request.requestBodyStream(stream);
+
+        // building the publisher should not consume the stream; HttpClient only reads when sending
+        HttpRequest.BodyPublisher publisher = HttpClientTestAccess.requestBody(request);
+        assertEquals(-1, publisher.contentLength());
+        assertEquals(0, reads.get());
     }
 
     @Test void downgradesSocksProxyToUrlConnectionExecutor() {

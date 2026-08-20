@@ -799,6 +799,11 @@ public class HttpConnection implements Connection {
             return this;
         }
 
+        /** Get the request body as an InputStream, or null if it is not a stream. */
+        @Nullable InputStream requestBodyStream() {
+            return body instanceof InputStream ? (InputStream) body : null;
+        }
+
         @Override
         public Request parser(Parser parser) {
             this.parser = parser;
