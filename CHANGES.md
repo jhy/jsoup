@@ -8,6 +8,7 @@
 * Improved `W3CDom` conversion performance for documents with many nested namespace declarations. The W3C converter now uses the same optimized namespace tracking as the XML parser. [#2559](https://github.com/jhy/jsoup/pull/2559)
 * Improved `W3CDom` XML conversion to retain processing instructions, comments outside the root element, and CDATA sections, which were previously dropped or converted to text. [#2572](https://github.com/jhy/jsoup/issues/2572)
 * DOM mutation methods, including child insertion and replacement, now reject operations that would create a cycle, such as making a node its own child or moving an ancestor beneath a descendant. [#2552](https://github.com/jhy/jsoup/issues/2552)
+* Added `Elements#before(Node)`, `after(Node)`, `prepend(Node)`, and `append(Node)` to match the existing HTML string methods. [#953](https://github.com/jhy/jsoup/issues/953)
 * XML serialization now repairs element and attribute names that start with an invalid character, rather than outputting `<null>` elements or dropping attributes. For example, an attribute named `1a` is written as `_1a`. Additional leading underscores keep repaired attribute names unique if they conflict with another attribute. [#2573](https://github.com/jhy/jsoup/issues/2573)
 
 ### Changes

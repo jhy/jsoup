@@ -14,10 +14,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.function.BiConsumer;
 import java.util.function.UnaryOperator;
 
 /**
@@ -314,6 +313,17 @@ public class Elements extends Nodes<Element> {
         }
         return this;
     }
+
+    /**
+     Add the supplied node to the start of each matched element's inner HTML. The node is cloned for each target.
+
+     @param node the node to add inside each element, before the existing HTML
+     @return this, for chaining
+     @see Element#prependChild(Node)
+     */
+    public Elements prepend(Node node) {
+        return insert(node, Element::prependChild);
+    }
     
     /**
      * Add the supplied HTML to the end of each matched element's inner HTML.
@@ -326,6 +336,17 @@ public class Elements extends Nodes<Element> {
             element.append(html);
         }
         return this;
+    }
+
+    /**
+     Add the supplied node to the end of each matched element's inner HTML. The node is cloned for each target.
+
+     @param node the node to add inside each element, after the existing HTML
+     @return this, for chaining
+     @see Element#appendChild(Node)
+     */
+    public Elements append(Node node) {
+        return insert(node, Element::appendChild);
     }
 
     /**
@@ -342,6 +363,17 @@ public class Elements extends Nodes<Element> {
     }
 
     /**
+     Insert the supplied node before each matched element's outer HTML. The node is cloned for each target.
+
+     @param node the node to insert before each element
+     @return this, for chaining
+     @see Element#before(Node)
+     */
+    public Elements before(Node node) {
+        return insert(node, Element::before);
+    }
+
+    /**
      Insert the supplied HTML after each matched element's outer HTML.
 
      @param html HTML to insert after each element
@@ -351,6 +383,31 @@ public class Elements extends Nodes<Element> {
     @Override
     public Elements after(String html) {
         super.after(html);
+        return this;
+    }
+
+    /**
+     Insert the supplied node after each matched element's outer HTML. The node is cloned for each target.
+
+     @param node the node to insert after each element
+     @return this, for chaining
+     @see Element#after(Node)
+     */
+    public Elements after(Node node) {
+        return insert(node, Element::after);
+    }
+
+    /**
+     Applies a node insertion to each matched element, cloning the node for each target.
+
+     @param node     the node to insert
+     @param inserter the insertion operation
+     @return this, for chaining
+     */
+    private Elements insert(Node node, BiConsumer<Element, Node> inserter) {
+        Validate.notNull(node);
+        for (Element element : this)
+            inserter.accept(element, node.clone());
         return this;
     }
 
