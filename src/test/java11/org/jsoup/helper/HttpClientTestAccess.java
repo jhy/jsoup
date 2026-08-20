@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.URL;
+import java.net.http.HttpRequest;
 
 /**
  Test access shim for the Java 11 multi-release classes.
@@ -29,6 +30,17 @@ final class HttpClientTestAccess {
         if (resource == null)
             throw new IllegalStateException("Could not load " + ExecutorClassResource);
         return resource;
+    }
+
+    static HttpRequest.BodyPublisher requestBody(HttpConnection.Request request) {
+        // expose the publisher so we can verify that streamed bodies are created lazily
+        try {
+            return (HttpRequest.BodyPublisher) executorClass()
+                    .getDeclaredMethod("requestBody", HttpConnection.Request.class)
+                    .invoke(null, request);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Could not invoke HttpClientExecutor.requestBody", e);
+        }
     }
 
     static ProxySelector newProxyWrap() {

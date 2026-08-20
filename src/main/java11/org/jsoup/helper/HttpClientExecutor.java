@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.jsoup.helper.HttpConnection.Response;
 import static org.jsoup.helper.HttpConnection.Response.writePost;
@@ -147,13 +148,21 @@ class HttpClientExecutor extends RequestExecutor {
     }
 
     static HttpRequest.BodyPublisher requestBody(final HttpConnection.Request req) throws IOException {
-        if (req.method.hasBody()) {
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            writePost(req, buf);
-            return HttpRequest.BodyPublishers.ofByteArray(buf.toByteArray());
-        } else {
+        if (!req.method.hasBody())
             return HttpRequest.BodyPublishers.noBody();
+
+        InputStream bodyStream = req.requestBodyStream();
+        if (bodyStream != null) {
+            // stream the upload so that the HttpClient does not buffer it before sending
+            // a caller supplied stream is one-shot, so a replay gets nothing via an AtomicReference
+            AtomicReference<InputStream> stream = new AtomicReference<>(bodyStream);
+            return HttpRequest.BodyPublishers.ofInputStream(() -> stream.getAndSet(null));
         }
+
+        // other bodies are fields or text; need to serialize
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        writePost(req, buf);
+        return HttpRequest.BodyPublishers.ofByteArray(buf.toByteArray());
     }
 
     static class ProxyWrap extends ProxySelector {

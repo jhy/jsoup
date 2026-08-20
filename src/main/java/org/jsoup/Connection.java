@@ -330,6 +330,8 @@ public interface Connection {
      </pre></code>
      <p>Or, use a FileInputStream to data from disk.</p>
      <p>You should close the stream in a finally block.</p>
+     <p>The stream is sent once and cannot be replayed. If a redirect or authentication challenge requires the request
+     to be resent, execution will fail; resend the request with a fresh stream.</p>
 
      @param stream the input stream to send.
      @return this Request, for chaining
@@ -867,6 +869,8 @@ public interface Connection {
          </pre></code>
          <p>Or, use a FileInputStream to data from disk.</p>
          <p>You should close the stream in a finally block.</p>
+         <p>The stream is sent once and cannot be replayed. If a redirect or authentication challenge requires the
+         request to be resent, execution will fail; resend the request with a fresh stream.</p>
 
          @param stream the input stream to send.
          @return this Request, for chaining
