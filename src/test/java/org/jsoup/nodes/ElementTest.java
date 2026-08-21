@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -855,6 +856,24 @@ public class ElementTest {
         div.appendText(" there & now >");
         assertEquals ("Hello there & now >", div.text());
         assertEquals("<p>Hello</p>there &amp; now &gt;", TextUtil.stripNewlines(div.html()));
+    }
+
+    @Test
+    public void escapesSupplementaryTextForNonUtf() {
+        Document doc = Document.createShell("");
+        doc.outputSettings().charset(StandardCharsets.ISO_8859_1).prettyPrint(false);
+        doc.body().appendElement("p").text(new String(Character.toChars(0x100A3)));
+
+        assertEquals("<p>&#x100a3;</p>", doc.body().html());
+    }
+
+    @Test
+    public void escapesSupplementaryAttributeForNonUtf() {
+        Document doc = Document.createShell("");
+        doc.outputSettings().charset(StandardCharsets.ISO_8859_1).prettyPrint(false);
+        doc.body().appendElement("p").attr("data-probe", new String(Character.toChars(0x100A3)));
+
+        assertEquals("<p data-probe=\"&#x100a3;\"></p>", doc.body().html());
     }
 
     @Test

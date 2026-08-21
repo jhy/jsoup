@@ -4,6 +4,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.jsoup.nodes.Document.OutputSettings;
 import static org.jsoup.nodes.Entities.EscapeMode.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -79,11 +81,40 @@ public class EntitiesTest {
     }
 
     @Test public void escapeSupplementaryCharacter() {
+        // Supplementary code points are escaped for ASCII but preserved for UTF-8
         String text = new String(Character.toChars(135361));
         String escapedAscii = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(base));
         assertEquals("&#x210c1;", escapedAscii);
         String escapedUtf = Entities.escape(text, new OutputSettings().charset("UTF-8").escapeMode(base));
         assertEquals(text, escapedUtf);
+
+        // The low 16 bits of U+1D800 form a surrogate code unit; UTF-8 must still preserve the full code point
+        String textWithSurrogateCodeUnit = new String(Character.toChars(0x1D800));
+        assertEquals(textWithSurrogateCodeUnit,
+            Entities.escape(textWithSurrogateCodeUnit, new OutputSettings().charset("UTF-8").escapeMode(base)));
+    }
+
+    @Test public void escapeSupplementaryNonUtf() {
+        // U+100A3 is supplementary, but its low 16 bits are U+00A3, which ISO-8859-1 can encode
+        String text = new String(Character.toChars(0x100A3));
+        String escaped = Entities.escape(text, new OutputSettings()
+            .charset(StandardCharsets.ISO_8859_1)
+            .escapeMode(base));
+
+        assertEquals("&#x100a3;", escaped);
+    }
+
+    @Test public void escapeSupplementarySequenceNonUtf() {
+        // A non-UTF encoder must check the complete supplementary character, not just its low 16 bits.
+        // before this fix, those low 16-bit checks decided U+100A3 and U+100A9 were encodable, so the original
+        // code points were emitted raw rather than escaped
+        String text = "A" + new String(Character.toChars(0x100A3))
+            + " & " + new String(Character.toChars(0x100A9)) + " Z";
+        String escaped = Entities.escape(text, new OutputSettings()
+            .charset(StandardCharsets.ISO_8859_1)
+            .escapeMode(base));
+
+        assertEquals("A&#x100a3; &amp; &#x100a9; Z", escaped);
     }
 
     @Test public void notMissingMultis() {

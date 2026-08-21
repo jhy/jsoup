@@ -8,6 +8,7 @@ import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.parser.CharacterReader;
 import org.jsoup.parser.Parser;
 
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.ArrayList;
@@ -266,11 +267,11 @@ public class Entities {
                     accum.append(c);
                     break;
                 default:
-                    if (c < 0x20 || !canEncode(coreCharset, c, fallback)) appendEncoded(accum, escapeMode, codePoint);
+                    if (c < 0x20 || !canEncode(coreCharset, codePoint, fallback)) appendEncoded(accum, escapeMode, codePoint);
                     else accum.append(c);
             }
         } else {
-            if (canEncode(coreCharset, c, fallback)) {
+            if (canEncode(coreCharset, codePoint, fallback)) {
                 // reads into charBuf - we go through these steps to avoid GC objects as much as possible (would be a new String and a new char[2] for each character)
                 char[] chars = charBuf.get();
                 int len = Character.toChars(codePoint, chars, 0);
@@ -339,15 +340,22 @@ public class Entities {
      * Alterslash: 3013, 28
      * Jsoup: 167, 2
      */
-    private static boolean canEncode(final CoreCharset charset, final char c, final CharsetEncoder fallback) {
+    private static boolean canEncode(final CoreCharset charset, final int codePoint, final CharsetEncoder fallback) {
         // todo add more charset tests if impacted by Android's bad perf in canEncode
         switch (charset) {
             case ascii:
-                return c < 0x80;
+                return codePoint < 0x80;
             case utf:
-                return !(c >= Character.MIN_SURROGATE && c < (Character.MAX_SURROGATE + 1)); // !Character.isSurrogate(c); but not in Android 10 desugar
+                // reject unpaired UTF-16 surrogate code units; valid supplementary code points are outside this range
+                return codePoint < Character.MIN_SURROGATE || codePoint > Character.MAX_SURROGATE;
             default:
-                return fallback.canEncode(c);
+                if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT)
+                    return fallback.canEncode((char) codePoint);
+
+                // check the complete UTF-16 pair; checking only the low 16 bits could accept an unencodable code point
+                char[] chars = charBuf.get();
+                int len = Character.toChars(codePoint, chars, 0);
+                return fallback.canEncode(CharBuffer.wrap(chars, 0, len));
         }
     }
 
