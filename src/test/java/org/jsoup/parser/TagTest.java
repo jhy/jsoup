@@ -2,6 +2,7 @@ package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
+import org.jsoup.helper.ValidationException;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 
@@ -191,6 +192,27 @@ public class TagTest {
         assertTrue(input.isFormSubmittable());
         assertEquals(imgOpts, img.options);
         assertEquals(inputOpts, input.options);
+    }
+
+    @Test void validatesTextTagNames() {
+        String[] validNames = {"x", "custom-data", "custom-ã", "widget_2", "prefix:name"};
+        for (String name : validNames) {
+            assertTrue(new Tag(name).set(Tag.Data).is(Tag.Data));
+            assertTrue(new Tag(name).set(Tag.RcData).is(Tag.RcData));
+        }
+
+        String[] invalidNames = {"", "ã-custom", "x y", "x<y", "x>y", "x/y", "x\0y", "x\uFFFDy"};
+        for (String name : invalidNames) {
+            for (int textMode : new int[] {Tag.Data, Tag.RcData}) {
+                Tag tag = new Tag(name);
+                assertThrows(ValidationException.class, () -> tag.set(textMode), name);
+                assertFalse(tag.is(textMode));
+            }
+        }
+
+        Tag data = new Tag("custom-data").set(Tag.Data);
+        assertThrows(ValidationException.class, () -> data.name("x<y"));
+        assertEquals("custom-data", data.name());
     }
 
     @Test void stableHashcode() {

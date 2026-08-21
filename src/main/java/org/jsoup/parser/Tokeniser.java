@@ -49,7 +49,6 @@ final class Tokeniser {
     final Token.Comment commentPending = new Token.Comment(); // comment building up
     final Token.XmlDecl xmlDeclPending; // xml decl building up
     @Nullable private String lastStartTag; // the last start tag emitted, to test appropriate end tag
-    @Nullable private String lastStartCloseSeq; // "</" + lastStartTag, so we can quickly check for that in RCData
 
     private int markupStartPos, charStartPos = 0; // reader pos at the start of markup / characters. markup updated on state transition, char on token emit.
 
@@ -90,7 +89,6 @@ final class Tokeniser {
         if (token.type == Token.TokenType.StartTag) {
             Token.StartTag startTag = (Token.StartTag) token;
             lastStartTag = startTag.name();
-            lastStartCloseSeq = null; // only lazy inits
         } else if (token.type == Token.TokenType.EndTag) {
             Token.EndTag endTag = (Token.EndTag) token;
             if (endTag.hasAttributes())
@@ -262,25 +260,26 @@ final class Tokeniser {
         dataBuffer.reset();
     }
 
-    /** Test if CDATA sections are allowed at the adjusted current node */
+    /** Test if CDATA sections are allowed at the adjusted current node. */
     boolean isCdataAllowed() {
         return syntax == Document.OutputSettings.Syntax.xml
             || (treeBuilder.hasCurrentElement() && !Parser.NamespaceHtml.equals(treeBuilder.currentElement().tag().namespace()));
     }
 
+    /** Test if the pending end tag matches the last emitted start tag. */
     boolean isAppropriateEndTagToken() {
         return lastStartTag != null && tagPending.name().equalsIgnoreCase(lastStartTag);
     }
 
-    @Nullable String appropriateEndTagName() {
-        return lastStartTag; // could be null
-    }
+    /** Test if appending the character would keep the pending end tag a prefix of the expected name. */
+    boolean isAppropriateEndTagPrefix(char next) {
+        if (lastStartTag == null) return false;
 
-    /** Returns the closer sequence {@code </lastStart} */
-    String appropriateEndTagSeq() {
-        if (lastStartCloseSeq == null) // reset on start tag emit
-            lastStartCloseSeq = "</" + lastStartTag;
-        return lastStartCloseSeq;
+        String candidate = tagPending.normalName();
+        int length = candidate.length();
+        return length < lastStartTag.length()
+            && lastStartTag.regionMatches(true, 0, candidate, 0, length)
+            && lastStartTag.charAt(length) == next;
     }
 
     void error(TokeniserState state) {

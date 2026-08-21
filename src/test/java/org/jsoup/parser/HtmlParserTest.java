@@ -147,11 +147,10 @@ public class HtmlParserTest {
     }
 
     @Test public void parsesUnterminatedTextarea() {
-        // don't parse right to end, but break on <p>
         Document doc = Jsoup.parse("<body><p><textarea>one<p>two");
         Element t = doc.select("textarea").first();
-        assertEquals("one", t.text());
-        assertEquals("two", doc.select("p").get(1).text());
+        assertEquals("one<p>two", t.text());
+        assertEquals(1, doc.select("p").size());
     }
 
     @Test public void parsesUnterminatedOption() {
@@ -1152,9 +1151,9 @@ public class HtmlParserTest {
         assertEquals("One <b>Two <b>Three", one.title());
         assertEquals("Test", one.select("p").first().text());
 
-        Document two = Jsoup.parse("<title>One<b>Two <p>Test</p>"); // no title, so <b> causes </title> breakout
-        assertEquals("One", two.title());
-        assertEquals("<b>Two \n <p>Test</p></b>", two.body().html());
+        Document two = Jsoup.parse("<title>One<b>Two <p>Test</p>");
+        assertEquals("One<b>Two <p>Test</p>", two.title());
+        assertEquals("", two.body().html());
     }
 
     @Test public void handlesUnclosedScriptAtEof() {
