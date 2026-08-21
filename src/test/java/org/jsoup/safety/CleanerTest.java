@@ -331,6 +331,38 @@ public class CleanerTest {
         assertEquals("<a href=\"/foo\">Link</a><img src=\"/bar\"> <img>", clean);
     }
 
+    @Test void dropsHostlessUrls() {
+        // http(s) URLs need a host after resolution. A one-slash URL resolves against the base when its scheme matches,
+        // but remains hostless when its scheme differs; preserved links retain their source spelling after validation
+        String html = "<a href='https:/foo/bar'>Cross scheme</a>"
+            + "<a href='https://'>Empty host</a>"
+            + "<a href='https://?query'>Query without host</a>";
+
+        String clean = Jsoup.clean(html, "http://example.com/a/b", Safelist.basic());
+
+        assertEquals("<a rel=\"nofollow\">Cross scheme</a>"
+            + "<a rel=\"nofollow\">Empty host</a>"
+            + "<a rel=\"nofollow\">Query without host</a>", clean);
+    }
+
+    @Test void resolvesSameSchemeUrl() {
+        String clean = Jsoup.clean("<a href='https:/foo/bar'>Link</a>", "https://example.com/a/b", Safelist.basic());
+
+        assertEquals("<a href=\"https://example.com/foo/bar\">Link</a>", clean);
+    }
+
+    @Test void checksPreservedLinks() {
+        Safelist safelist = Safelist.basic().preserveRelativeLinks(true);
+
+        Document httpBase = Jsoup.parseBodyFragment("<a href='https:/foo/bar'>Link</a>", "http://example.com/a/b");
+        Cleaner cleaner = new Cleaner(safelist);
+        assertFalse(cleaner.isValid(httpBase));
+        assertEquals("<a rel=\"nofollow\">Link</a>", cleaner.clean(httpBase).body().html());
+
+        String httpsOutput = Jsoup.clean("<a href='https:/foo/bar'>Link</a>", "https://example.com/a/b", safelist);
+        assertEquals("<a href=\"https:/foo/bar\">Link</a>", httpsOutput);
+    }
+
     @Test public void dropsUnresolvableRelativeLinks() { // when not preserving
         String html = "<a href='/foo'>Link</a>";
         String clean = Jsoup.clean(html, Safelist.basic());

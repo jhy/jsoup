@@ -614,6 +614,14 @@ public class ConnectTest {
         assertEquals(origin().hello.url(), doc.location());
     }
 
+    @Test public void rejectsHostlessHttpRedirect() {
+        IOException exception = assertThrows(IOException.class, () -> Jsoup.connect(origin().redirect.url())
+            .data(RedirectRoute.LocationParam, "https:/foo/bar")
+            .execute());
+
+        assertTrue(exception.getMessage().contains("host is missing"));
+    }
+
     @Test public void handlesEmptyRedirect() {
         boolean threw = false;
         try {

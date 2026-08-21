@@ -7,6 +7,7 @@ package org.jsoup.safety;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.Normalizer;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
@@ -552,7 +553,7 @@ public class Safelist {
 
     private String getProtocolValue(Element el, Attribute attr) {
         String value = el.absUrl(attr.getKey());
-        if (value.isEmpty())
+        if (value.isEmpty() && !StringUtil.hasHttpScheme(attr.getValue()))
             value = attr.getValue(); // if it could not be made abs, run as-is to allow custom unknown protocols
         return value;
     }
@@ -569,9 +570,10 @@ public class Safelist {
                 }
             }
 
-            prot += ":";
-
-            if (lowerCase(value).startsWith(prot)) {
+            String lc = lowerCase(value);
+            if (lc.startsWith(prot)
+                && lc.length() > prot.length()
+                && lc.charAt(prot.length()) == ':') {
                 return true;
             }
         }
