@@ -117,7 +117,6 @@ public final class CharacterReader implements AutoCloseable {
         fillPoint = Math.min(bufLength, RefillPoint);
 
         scanBufferForNewlines(); // if enabled, we index newline positions for line number tracking
-        lastIcSeq = null; // cache for last containsIgnoreCase(seq)
     }
 
     void mark() {
@@ -147,11 +146,6 @@ public final class CharacterReader implements AutoCloseable {
      */
     public int pos() {
         return consumed + bufPos;
-    }
-
-    /** Tests if the buffer has been fully read. */
-    boolean readFully() {
-        return readFully;
     }
 
     /**
@@ -535,8 +529,9 @@ public final class CharacterReader implements AutoCloseable {
         return data;
     }
 
+    /** Consumes ASCII letters used by the HTML tokenizer's name states. */
     String consumeLetterSequence() {
-        return consumeMatching(Character::isLetter);
+        return consumeMatching(StringUtil::isAsciiLetter);
     }
 
     String consumeLetterThenDigitSequence() {
@@ -665,34 +660,6 @@ public final class CharacterReader implements AutoCloseable {
         } else {
             return false;
         }
-    }
-
-    // we maintain a cache of the previously scanned sequence, and return that if applicable on repeated scans.
-    // that improves the situation where there is a sequence of <p<p<p<p<p<p<p...</title> and we're bashing on the <p
-    // looking for the </title>. Resets in bufferUp()
-    @Nullable private String lastIcSeq; // scan cache
-    private int lastIcIndex; // nearest found indexOf
-
-    /** Used to check presence of </title>, </style> when we're in RCData and see a <xxx. */
-    boolean containsIgnoreCase(String seq) {
-        bufferUp();
-        if (seq.equals(lastIcSeq)) {
-            if (lastIcIndex == -1) return false;
-            if (lastIcIndex >= bufPos) return true;
-        }
-        lastIcSeq = seq;
-
-        int scanLength = seq.length();
-        int maxStart = bufLength - scanLength;
-        for (int scan = bufPos; scan <= maxStart; scan++) {
-            if (rangeMatchesIgnoreCase(seq, scan)) {
-                lastIcIndex = scan;
-                return true;
-            }
-        }
-
-        lastIcIndex = -1;
-        return false;
     }
 
     @Override

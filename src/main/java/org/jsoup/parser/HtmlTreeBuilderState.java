@@ -140,10 +140,7 @@ enum HtmlTreeBuilderState {
                         tb.startNoscript(start);
                     } else if (name.equals("script")) {
                         // skips some script rules as won't execute them
-                        tb.tokeniser.transition(TokeniserState.ScriptData);
-                        tb.markInsertionMode();
-                        tb.transition(Text);
-                        tb.insertElementFor(start);
+                        HandleTextState(start, tb, TokeniserState.ScriptData);
                     } else if (name.equals("head")) {
                         tb.error(this);
                         return false;
@@ -1878,6 +1875,7 @@ enum HtmlTreeBuilderState {
         return false;
     }
 
+    /** Inserts a text element and switches the tokenizer and tree builder into their text states. */
     private static void HandleTextState(Token.StartTag startTag, HtmlTreeBuilder tb, @Nullable TokeniserState state) {
         if (state != null)
             tb.tokeniser.transition(state);

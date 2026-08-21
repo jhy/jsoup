@@ -664,5 +664,9 @@ public class CleanerTest {
         assertEquals("content is &lt;data&gt;", clean2);
     }
 
-
+    @Test void malformedRawtext() {
+        Safelist policy = Safelist.basic().addTags("style");
+        String input = "<style></t</style><img>";
+        assertEquals("<style></t</style>", Jsoup.clean(input, policy));
+    }
 }

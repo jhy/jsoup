@@ -1,5 +1,7 @@
 package org.jsoup.parser;
 
+import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
@@ -95,9 +97,11 @@ public class Tag implements Cloneable {
      Change the tag's name. As Tags are reused throughout a Document, this will change the name for all uses of this tag.
      @param tagName the new name of the tag. Case-sensitive.
      @return this tag
+     @throws IllegalArgumentException if this is a Data or RcData tag and the name cannot form a recognizable end tag
      @since 1.20.1
      */
     public Tag name(String tagName) {
+        if (is(RcData) || is(Data)) validateTextTagName(tagName);
         this.tagName = tagName;
         this.normalName = ParseSettings.normalName(tagName);
         setParserOptions();
@@ -161,12 +165,24 @@ public class Tag implements Cloneable {
      <p>Once a tag has a setting applied, it will be considered a known tag.</p>
      @param option the option to set
      @return this tag
+     @throws IllegalArgumentException if setting Data or RcData on a tag whose name cannot form a recognizable end tag
      @since 1.20.1
      */
     public Tag set(int option) {
+        if ((option & (RcData | Data)) != 0) validateTextTagName(tagName);
         options |= option;
         options |= Tag.Known; // considered known if touched
         return this;
+    }
+
+    /** Ensures a text-mode tag has an unambiguous tokenizer end tag. */
+    private static void validateTextTagName(String name) {
+        boolean valid = !name.isEmpty() && StringUtil.isAsciiLetter(name.charAt(0));
+        for (int i = 0; valid && i < name.length(); i++) {
+            char c = name.charAt(i);
+            valid = c != '<' && c != '>' && c != '/' && c != '\0' && c != '\uFFFD' && !StringUtil.isWhitespace(c);
+        }
+        Validate.isTrue(valid, "Data and RcData tag names must start with an ASCII letter and contain no whitespace, '<', '>', '/', null, or replacement characters");
     }
 
     /**

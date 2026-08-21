@@ -187,14 +187,7 @@ enum TokeniserState {
         // from < in rcdata
         @Override void read(Tokeniser t, CharacterReader r) {
             if (r.matches('/')) {
-                t.createTempBuffer();
                 t.advanceTransition(RCDATAEndTagOpen);
-            } else if (r.readFully() && r.matchesAsciiAlpha() && t.appropriateEndTagName() != null &&  !r.containsIgnoreCase(t.appropriateEndTagSeq())) {
-                // diverge from spec: got a start tag, but there's no appropriate end tag (</title>), so rather than
-                // consuming to EOF; break out here
-                t.tagPending = t.createTagPending(false).name(t.appropriateEndTagName());
-                t.emitTagPending();
-                t.transition(TagOpen); // straight into TagOpen, as we came from < and looks like we're on a start tag
             } else {
                 t.emit('<');
                 t.transition(Rcdata);
@@ -203,68 +196,17 @@ enum TokeniserState {
     },
     RCDATAEndTagOpen {
         @Override void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesAsciiAlpha()) {
-                t.createTagPending(false);
-                t.tagPending.appendTagName(r.current());
-                t.dataBuffer.append(r.current());
-                t.advanceTransition(RCDATAEndTagName);
-            } else {
-                t.emit("</");
-                t.transition(Rcdata);
-            }
+            readEndTag(t, r, RCDATAEndTagName, Rcdata);
         }
     },
     RCDATAEndTagName {
         @Override void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesAsciiAlpha()) {
-                String name = r.consumeTagName();
-                t.tagPending.appendTagName(name);
-                t.dataBuffer.append(name);
-                return;
-            }
-
-            char c = r.consume();
-            switch (c) {
-                case '\t':
-                case '\n':
-                case '\r':
-                case '\f':
-                case ' ':
-                    if (t.isAppropriateEndTagToken())
-                        t.transition(BeforeAttributeName);
-                    else
-                        anythingElse(t, r);
-                    break;
-                case '/':
-                    if (t.isAppropriateEndTagToken())
-                        t.transition(SelfClosingStartTag);
-                    else
-                        anythingElse(t, r);
-                    break;
-                case '>':
-                    if (t.isAppropriateEndTagToken()) {
-                        t.emitTagPending();
-                        t.transition(Data);
-                    }
-                    else
-                        anythingElse(t, r);
-                    break;
-                default:
-                    anythingElse(t, r);
-            }
-        }
-
-        private void anythingElse(Tokeniser t, CharacterReader r) {
-            t.emit("</");
-            t.emit(t.dataBuffer.value());
-            r.unconsume();
-            t.transition(Rcdata);
+            handleDataEndTag(t, r, Rcdata);
         }
     },
     RawtextLessthanSign {
         @Override void read(Tokeniser t, CharacterReader r) {
             if (r.matches('/')) {
-                t.createTempBuffer();
                 t.advanceTransition(RawtextEndTagOpen);
             } else {
                 t.emit('<');
@@ -286,7 +228,6 @@ enum TokeniserState {
         @Override void read(Tokeniser t, CharacterReader r) {
             switch (r.consume()) {
                 case '/':
-                    t.createTempBuffer();
                     t.transition(ScriptDataEndTagOpen);
                     break;
                 case '!':
@@ -430,7 +371,6 @@ enum TokeniserState {
                 t.emit(r.current());
                 t.advanceTransition(ScriptDataDoubleEscapeStart);
             } else if (r.matches('/')) {
-                t.createTempBuffer();
                 t.advanceTransition(ScriptDataEscapedEndTagOpen);
             } else {
                 t.emit('<');
@@ -440,15 +380,7 @@ enum TokeniserState {
     },
     ScriptDataEscapedEndTagOpen {
         @Override void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesAsciiAlpha()) {
-                t.createTagPending(false);
-                t.tagPending.appendTagName(r.current());
-                t.dataBuffer.append(r.current());
-                t.advanceTransition(ScriptDataEscapedEndTagName);
-            } else {
-                t.emit("</");
-                t.transition(ScriptDataEscaped);
-            }
+            readEndTag(t, r, ScriptDataEscapedEndTagName, ScriptDataEscaped);
         }
     },
     ScriptDataEscapedEndTagName {
@@ -1701,49 +1633,53 @@ enum TokeniserState {
     private static final String replacementStr = String.valueOf(Tokeniser.replacementChar);
     private static final char eof = CharacterReader.EOF;
 
-    /**
-     * Handles RawtextEndTagName, ScriptDataEndTagName, and ScriptDataEscapedEndTagName. Same body impl, just
-     * different else exit transitions.
-     */
+    /** Handles the common RCDATA, RAWTEXT, and script-data end tag name states. */
     private static void handleDataEndTag(Tokeniser t, CharacterReader r, TokeniserState elseTransition) {
         if (r.matchesAsciiAlpha()) {
-            String name = r.consumeTagName();
+            String name = r.consumeLetterSequence();
             t.tagPending.appendTagName(name);
-            t.dataBuffer.append(name);
             return;
         }
 
-        boolean needsExitTransition = false;
+        if (!r.isEmpty()) {
+            char c = r.current();
+            if (isCustomEndTagNameChar(c) && t.isAppropriateEndTagPrefix(c)) {
+                r.advance();
+                t.tagPending.appendTagName(c);
+                return;
+            }
+        }
+
         if (t.isAppropriateEndTagToken() && !r.isEmpty()) {
-            char c = r.consume();
-            switch (c) {
+            switch (r.current()) {
                 case '\t':
                 case '\n':
                 case '\r':
                 case '\f':
                 case ' ':
+                    r.advance();
                     t.transition(BeforeAttributeName);
-                    break;
+                    return;
                 case '/':
+                    r.advance();
                     t.transition(SelfClosingStartTag);
-                    break;
+                    return;
                 case '>':
+                    r.advance();
                     t.emitTagPending();
                     t.transition(Data);
-                    break;
-                default:
-                    t.dataBuffer.append(c);
-                    needsExitTransition = true;
+                    return;
             }
-        } else {
-            needsExitTransition = true;
         }
 
-        if (needsExitTransition) {
-            t.emit("</");
-            t.emit(t.dataBuffer.value());
-            t.transition(elseTransition);
-        }
+        t.emit("</");
+        t.emit(t.tagPending.name());
+        t.transition(elseTransition); // reconsume the current character in the text state
+    }
+
+    /** Test if the character may extend a configured custom text tag name. */
+    private static boolean isCustomEndTagNameChar(char c) {
+        return c != '<' && c != '/' && c != '>' && !StringUtil.isWhitespace(c);
     }
 
     private static void readRawData(Tokeniser t, CharacterReader r, TokeniserState current, TokeniserState advance) {
@@ -1775,13 +1711,14 @@ enum TokeniserState {
         t.transition(advance);
     }
 
-    private static void readEndTag(Tokeniser t, CharacterReader r, TokeniserState a, TokeniserState b) {
+    /** Starts a text end tag candidate, or returns to its text state. */
+    private static void readEndTag(Tokeniser t, CharacterReader r, TokeniserState endTagNameState, TokeniserState textState) {
         if (r.matchesAsciiAlpha()) {
             t.createTagPending(false);
-            t.transition(a);
+            t.transition(endTagNameState);
         } else {
             t.emit("</");
-            t.transition(b);
+            t.transition(textState);
         }
     }
 

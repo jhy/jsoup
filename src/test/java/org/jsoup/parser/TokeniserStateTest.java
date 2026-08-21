@@ -2,17 +2,22 @@ package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class TokeniserStateTest {
 
@@ -104,12 +109,30 @@ public class TokeniserStateTest {
         body = "<textarea><open";
         doc = Jsoup.parse(body);
         els = doc.select("textarea");
-        assertEquals("", els.text());
+        assertEquals("<open", els.text());
 
         body = "<textarea>hello world</?fake</textarea>";
         doc = Jsoup.parse(body);
         els = doc.select("textarea");
         assertEquals("hello world</?fake", els.text());
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void textEndTagParsing(String input, String expected) {
+        Document doc = Jsoup.parseBodyFragment(input);
+        assertEquals(expected, TextUtil.normalizeSpaces(doc.body().html()));
+    }
+
+    private static Arguments[] textEndTagParsing() {
+        return new Arguments[] {
+            arguments("<style></t</style><img>", "<style></t</style><img>"),
+            arguments("<style></style</style><img>", "<style></style</style><img>"),
+            arguments("<script></t</script><img>", "<script></t</script><img>"),
+            arguments("<script><!--</t</script><img>", "<script><!--</t</script><img>"),
+            arguments("<textarea></t</textarea><img>", "<textarea>&lt;/t</textarea><img>"),
+            arguments("<textarea><img>", "<textarea>&lt;img&gt;</textarea>")
+        };
     }
 
     @Test
@@ -225,18 +248,6 @@ public class TokeniserStateTest {
     }
 
     @Test
-    public void testUnconsumeAfterBufferUp() {
-        // test for after consume() a bufferUp occurs (look-forward) but then attempts to unconsume. Would throw a "No buffer left to unconsume"
-        String triggeringSnippet = "<title>One <span>Two";
-        char[] padding = new char[CharacterReader.RefillPoint - triggeringSnippet.length() + 8]; // The "<span" part must be just at the limit. The "containsIgnoreCase" scan does a bufferUp, losing the unconsume
-        Arrays.fill(padding, ' ');
-        String paddedSnippet = String.valueOf(padding) + triggeringSnippet;
-        ParseErrorList errorList = ParseErrorList.tracking(1);
-        Parser.parseFragment(paddedSnippet, null, "", errorList);
-        // just asserting we don't get a WTF on unconsume
-    }
-
-    @Test
     public void testOpeningAngleBracketInsteadOfAttribute() {
         String triggeringSnippet = "<html <";
         ParseErrorList errorList = ParseErrorList.tracking(1);
@@ -284,18 +295,53 @@ public class TokeniserStateTest {
         assertEquals("<p foo></p>", doc.body().html());
     }
 
-    @Test void customDataTagWithHyphen() {
+    @ParameterizedTest
+    @MethodSource
+    void customDataEndTags(String input, String expected) {
         // https://github.com/jhy/jsoup/issues/2332
 
         TagSet tagSet = TagSet.Html();
         tagSet.valueOf("custom-data", Parser.NamespaceHtml).set(Tag.Data);
-        tagSet.valueOf("custom-rcdata", Parser.NamespaceHtml).set(Tag.RcData);
+        Document doc = Jsoup.parse("<body>" + input, Parser.htmlParser().tagSet(tagSet));
+        assertEquals(expected, TextUtil.normalizeSpaces(doc.body().html()));
+    }
 
-        String html = "<body><custom-data>a < > b</custom-data><p>One</p><custom-rcdata>a < > b</custom-rcdata><p>Two</p>";
-        Document doc = Jsoup.parse(html, Parser.htmlParser().tagSet(tagSet));
-        assertEquals(
-            "<custom-data>a < > b</custom-data><p>One</p><custom-rcdata>a &lt; &gt; b</custom-rcdata><p>Two</p>",
-            TextUtil.normalizeSpaces(doc.body().html()));
+    private static Arguments[] customDataEndTags() {
+        return new Arguments[] {
+            arguments("<custom-data>a < > b</custom-data><p>One</p>", "<custom-data>a < > b</custom-data><p>One</p>"),
+            arguments("<custom-data></custom-x</custom-data><p>One</p>", "<custom-data></custom-x</custom-data><p>One</p>"),
+            arguments("<custom-data>x</CUSTOM-DATA><p>One</p>", "<custom-data>x</custom-data><p>One</p>")
+        };
+    }
+
+    @Test void customRcdataEndTag() {
+        TagSet tagSet = TagSet.Html();
+        tagSet.valueOf("custom-rcdata", Parser.NamespaceHtml).set(Tag.RcData);
+        Document doc = Jsoup.parse("<body><custom-rcdata>a < > b</custom-rcdata><p>One</p>", Parser.htmlParser().tagSet(tagSet));
+        assertEquals("<custom-rcdata>a &lt; &gt; b</custom-rcdata><p>One</p>", TextUtil.normalizeSpaces(doc.body().html()));
+    }
+
+    @Test void customTextEndTagAcrossBufferBoundary() {
+        String prefix = "custom-";
+        String name = prefix + StringUtil.padding(CharacterReader.BufferSize + 1 - prefix.length(), -1).replace(' ', 'x');
+
+        assertCustomTextEndTag(name);
+    }
+
+    @Test void customTextEndTagWithNonAsciiLetter() {
+        assertCustomTextEndTag("custom-ã");
+    }
+
+    private static void assertCustomTextEndTag(String name) {
+        for (int textMode : new int[] {Tag.Data, Tag.RcData}) {
+            TagSet tagSet = TagSet.Html();
+            tagSet.valueOf(name, Parser.NamespaceHtml).set(textMode);
+            Document doc = Jsoup.parse("<body><" + name + ">x</" + name + "><p>after</p>", Parser.htmlParser().tagSet(tagSet));
+
+            assertEquals(2, doc.body().childrenSize());
+            assertEquals("p", doc.body().child(1).normalName());
+            assertEquals("after", doc.body().child(1).text());
+        }
     }
 
     @Test void customDataTagWithHyphenXml() {
