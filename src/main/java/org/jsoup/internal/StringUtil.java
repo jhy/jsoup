@@ -308,7 +308,9 @@ public final class StringUtil {
         if (url.getRef() != null) {
             fixedFile = fixedFile + "#" + url.getRef();
         }
-        return new URL(url.getProtocol(), url.getHost(), url.getPort(), fixedFile);
+        URL resolved = new URL(url.getProtocol(), url.getHost(), url.getPort(), fixedFile);
+        validateHttpUrl(resolved);
+        return resolved;
     }
 
     /**
@@ -321,22 +323,39 @@ public final class StringUtil {
         // workaround: java will allow control chars in a path URL and may treat as relative, but Chrome / Firefox will strip and may see as a scheme. Normalize to browser's view.
         baseUrl = stripControlChars(baseUrl); relUrl = stripControlChars(relUrl);
         try {
-            URL base;
-            try {
-                base = new URL(baseUrl);
-            } catch (MalformedURLException e) {
-                // the base is unsuitable, but the attribute/rel may be abs on its own, so try that
-                URL abs = new URL(relUrl);
-                return abs.toExternalForm();
-            }
+            URL base = new URL(baseUrl);
             return resolve(base, relUrl).toExternalForm();
         } catch (MalformedURLException e) {
-            // it may still be valid, just that Java doesn't have a registered stream handler for it, e.g. tel
-            // we test here vs at start to normalize supported URLs (e.g. HTTP -> http)
-            return validUriScheme.matcher(relUrl).find() ? relUrl : "";
+            try {
+                // the base is unsuitable, or resolution failed; the attribute/rel may be abs on its own
+                URL abs = new URL(relUrl);
+                validateHttpUrl(abs);
+                return abs.toExternalForm();
+            } catch (MalformedURLException ignored) {
+                // it may still be valid, just that Java doesn't have a registered stream handler for it, e.g. tel
+                // we test here vs at start to normalize supported URLs (e.g. HTTP -> http)
+                return validUriScheme.matcher(relUrl).find() && !hasHttpScheme(relUrl) ? relUrl : "";
+            }
         }
     }
     private static final Pattern validUriScheme = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+-.]*:");
+
+    /** Validates that an HTTP(S) URL has the host required by its scheme. */
+    private static void validateHttpUrl(URL url) throws MalformedURLException {
+        if (isHttpScheme(url.getProtocol()) && url.getHost().isEmpty())
+            throw new MalformedURLException("Invalid URL: host is missing");
+    }
+
+    /** Tests if the supplied scheme is HTTP or HTTPS. */
+    public static boolean isHttpScheme(String scheme) {
+        return scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https");
+    }
+
+    /** Tests if the supplied value starts with an HTTP or HTTPS scheme. */
+    public static boolean hasHttpScheme(String value) {
+        int colon = value.indexOf(':');
+        return colon > 0 && isHttpScheme(value.substring(0, colon));
+    }
 
     private static final Pattern controlChars = Pattern.compile("[\\x00-\\x1f]*"); // matches ascii 0 - 31, to strip from url
     private static String stripControlChars(final String input) {

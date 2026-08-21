@@ -33,6 +33,7 @@
 * Fixed parsing of malformed SVG and MathML content so that breakout HTML tags are placed according to the HTML specification. [#2562](https://github.com/jhy/jsoup/issues/2562)
 * Fixed deeply nested malformed HTML parsing that could lose the document body because stack lookups did not align to the configured maximum parser depth. [#2569](https://github.com/jhy/jsoup/pull/2569)
 * Aligned RCDATA, RAWTEXT, and script-data parsing with the HTML specification: malformed end tags no longer consume following markup, unclosed `title`/`textarea` content stays text through EOF, and custom text tags match exact names. [#2577](https://github.com/jhy/jsoup/pull/2577)
+* Improved URL validation during HTTP/HTTPS URL resolution and cleaning; resolved URLs without a host are now rejected instead of being accepted based only on their scheme prefix, aligning to RFC 9110. Valid relative links and non-HTTP(S) schemes are unchanged. [#2579](https://github.com/jhy/jsoup/pull/2579)
 
 ## 1.23.1 (2026-Jul-30)
 

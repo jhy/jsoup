@@ -3,6 +3,8 @@ package org.jsoup.internal;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -160,6 +162,34 @@ public class StringUtilTest {
 
     @Test void allowsSpaceInUrl() {
         assertEquals("https://example.com/foo bar/", resolve("HTTPS://example.com/example/", "../foo bar/"));
+    }
+
+    @Test void rejectsHostlessHttpUrls() throws MalformedURLException {
+        URL httpBase = new URL("http://example.com/a/b");
+        URL httpsBase = new URL("https://example.com/a/b");
+
+        assertEquals("https://example.com/foo/bar", resolve(httpsBase, "https:/foo/bar").toExternalForm());
+        assertThrows(MalformedURLException.class, () -> resolve(httpBase, "https:/foo/bar"));
+
+        assertEquals("", resolve("http://example.com/a/b", "https:/foo/bar"));
+        assertEquals("", resolve("", "https:/foo/bar"));
+        assertEquals("", resolve("", "https://"));
+        assertEquals("", resolve("", "https://?query"));
+
+        assertEquals("tel:867-5309", resolve("", "tel:867-5309"));
+        assertEquals("file:/tmp/example", resolve("", "file:/tmp/example"));
+    }
+
+    @Test void identifiesHttpSchemes() {
+        assertTrue(StringUtil.isHttpScheme("http"));
+        assertTrue(StringUtil.isHttpScheme("HTTPS"));
+        assertFalse(StringUtil.isHttpScheme("http:"));
+        assertFalse(StringUtil.isHttpScheme("ftp"));
+
+        assertTrue(StringUtil.hasHttpScheme("http://example.com"));
+        assertTrue(StringUtil.hasHttpScheme("HTTPS:/foo"));
+        assertFalse(StringUtil.hasHttpScheme("httpx://example.com"));
+        assertFalse(StringUtil.hasHttpScheme("/relative/path"));
     }
 
     @Test
