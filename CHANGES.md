@@ -1,5 +1,4 @@
 # jsoup Changelog
-# jsoup Changelog
 
 ## 1.23.2 (pending)
 
