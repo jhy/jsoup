@@ -614,6 +614,18 @@ public class ConnectTest {
         assertEquals(origin().hello.url(), doc.location());
     }
 
+    @Test void handlesShortBrokenHttpRedirect() throws IOException {
+        URL start = new URL(origin().redirect.url());
+
+        // the redirect should resolve to /; ignore the test server's expected 404.
+        Connection.Response response = Jsoup.connect(start.toExternalForm())
+            .data(RedirectRoute.LocationParam, "http:/")
+            .ignoreHttpErrors(true)
+            .execute();
+
+        assertEquals(new URL(start, "/"), response.url());
+    }
+
     @Test public void rejectsHostlessHttpRedirect() {
         IOException exception = assertThrows(IOException.class, () -> Jsoup.connect(origin().redirect.url())
             .data(RedirectRoute.LocationParam, "https:/foo/bar")
