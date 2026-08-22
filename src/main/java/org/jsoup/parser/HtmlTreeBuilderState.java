@@ -163,7 +163,7 @@ enum HtmlTreeBuilderState {
                     } else if (inSorted(name, Constants.InHeadEnd)) {
                         return anythingElse(t, tb);
                     } else if (name.equals("template")) {
-                        if (!tb.onStack(name)) {
+                        if (!tb.onStackAboveContext(name)) {
                             tb.error(this);
                         } else {
                             tb.generateImpliedEndTags(true);
@@ -1578,7 +1578,7 @@ enum HtmlTreeBuilderState {
                     }
                     break;
                 case EOF:
-                    if (!tb.onStack("template")) {// stop parsing
+                    if (!tb.onStackAboveContext("template")) { // stop parsing
                         return true;
                     }
                     tb.error(this);

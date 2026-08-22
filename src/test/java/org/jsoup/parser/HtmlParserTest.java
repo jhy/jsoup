@@ -2036,6 +2036,20 @@ public class HtmlParserTest {
         assertEquals(want, TextUtil.stripNewlines(doc.html()));
     }
 
+    @Test void templateFragmentContextCannotBeClosedByInputAtEof() {
+        Document doc = Jsoup.parseBodyFragment("<template id=context></template>");
+        Element template = doc.expectFirst("#context");
+        template.html("</template><p><template>");
+        assertEquals("<p><template></template></p>", TextUtil.stripNewlines(template.html()));
+    }
+
+    @Test void templateFragmentCanCloseNestedTemplate() {
+        Document doc = Jsoup.parseBodyFragment("<template id=context></template>");
+        Element template = doc.expectFirst("#context");
+        template.html("</template><p><template><b>One</b></template><i>Two</i>");
+        assertEquals("<p><template><b>One</b></template><i>Two</i></p>", TextUtil.stripNewlines(template.html()));
+    }
+
     @Test void templateFragment() {
         // https://github.com/jhy/jsoup/issues/1315
         String html = "<template id=\"lorem-ipsum\"><tr><td>Lorem</td><td>Ipsum</td></tr></template>";

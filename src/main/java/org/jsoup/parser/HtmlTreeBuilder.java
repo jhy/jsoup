@@ -533,6 +533,12 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return getFromStack(elName) != null;
     }
 
+    /** Checks if there is an HTML element with the given name above the synthetic fragment context. */
+    boolean onStackAboveContext(String elName) {
+        Element el = getFromStack(elName);
+        return el != null && el != contextElement;
+    }
+
     /** Gets the nearest (lowest) HTML element with the given name from the stack. */
     @Nullable
     Element getFromStack(String elName) {
