@@ -953,8 +953,6 @@ public class HttpConnection implements Connection {
 
                     String location = res.header(LOCATION);
                     Validate.notNull(location);
-                    if (location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
-                        location = location.substring(6);
                     URL redir = StringUtil.resolve(req.url(), location);
                     if (!sameOrigin(req.url(), redir)) {
                         // remove sensitive headers; defense-in-depth against open redirects

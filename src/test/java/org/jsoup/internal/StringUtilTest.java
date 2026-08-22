@@ -168,6 +168,8 @@ public class StringUtilTest {
         URL httpBase = new URL("http://example.com/a/b");
         URL httpsBase = new URL("https://example.com/a/b");
 
+        // http:/foo resolves from the origin root, not relative to /a/.
+        assertEquals("http://example.com/foo", resolve(httpBase, "http:/foo").toExternalForm());
         assertEquals("https://example.com/foo/bar", resolve(httpsBase, "https:/foo/bar").toExternalForm());
         assertThrows(MalformedURLException.class, () -> resolve(httpBase, "https:/foo/bar"));
 
