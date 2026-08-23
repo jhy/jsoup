@@ -353,7 +353,7 @@ class PositionTest {
 
         Document multiline = Jsoup.parse("One\n<?xml", TrackingHtmlParser);
         assertEquals("2,6:9-2,6:9", multiline.endSourceRange().toString());
-        Comment comment = multiline.nodeStream(Comment.class).findFirst().orElseThrow();
+        Comment comment = multiline.nodeStream(Comment.class).findFirst().orElseThrow(() -> new AssertionError("comment missing"));
         assertEquals("2,1:4-2,6:9", comment.sourceRange().toString());
     }
 
