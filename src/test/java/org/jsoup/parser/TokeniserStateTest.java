@@ -136,6 +136,12 @@ public class TokeniserStateTest {
     }
 
     @Test
+    void scriptDoubleEscapeTagAtEof() {
+        assertEquals("<!--<script", Jsoup.parse("<script><!--<script").expectFirst("script").data());
+        assertEquals("<!--<script>foo</script", Jsoup.parse("<script><!--<script>foo</script").expectFirst("script").data());
+    }
+
+    @Test
     public void testRCDATAEndTagName() {
         for (char c : whiteSpace) {
             String body = String.format("<textarea>data</textarea%c>", c);

@@ -145,7 +145,8 @@ public final class CharacterReader implements AutoCloseable {
      * @return current position
      */
     public int pos() {
-        return consumed + bufPos;
+        // consuming EOF advances to a virtual position so it can be unconsumed; don't expose that beyond the input
+        return consumed + Math.min(bufPos, bufLength);
     }
 
     /**

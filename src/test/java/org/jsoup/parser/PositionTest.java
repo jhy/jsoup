@@ -288,6 +288,82 @@ class PositionTest {
         assertFalse(doc.expectFirst("meta").endSourceRange().isImplicit());
         assertEquals("html:0-0~31-31; head:0-0~6-6; meta:0-6~0-6; body:6-6~31-31; img:6-11~6-11; p:11-14~17-17; p:17-20~23-23; p:23-26~31-31; ", track.toString());
     }
+
+    @Test void tracksAdoptedFormattingElementsFromTheirStartTokens() {
+        Document anchors = Jsoup.parse("<a><address><a>", TrackingHtmlParser);
+        StringBuilder anchorTrack = new StringBuilder();
+        anchors.select("a").forEach(anchor -> accumulatePositions(anchor, anchorTrack));
+        assertEquals("a:0-3~12-12; a:0-3~12-12; a:12-15~15-15; ", anchorTrack.toString());
+
+        Document nobrs = Jsoup.parse("<nobr><address><nobr>", TrackingHtmlParser);
+        StringBuilder nobrTrack = new StringBuilder();
+        nobrs.select("nobr").forEach(nobr -> accumulatePositions(nobr, nobrTrack));
+        assertEquals("nobr:0-6~15-15; nobr:0-6~15-15; nobr:15-21~21-21; ", nobrTrack.toString());
+    }
+
+    @Test void tracksAdoptedFormattingAttributes() {
+        Document host = Document.createShell("");
+        List<Node> nodes = TrackingHtmlParser.parseFragmentInput("<b id=one><p></b>", host.body(), "");
+        List<Element> bold = nodes.stream()
+            .flatMap(node -> node.nodeStream(Element.class))
+            .filter(element -> element.normalName().equals("b"))
+            .collect(Collectors.toList());
+
+        assertEquals(2, bold.size());
+        for (Element element : bold) {
+            assertEquals("1,1:0-1,11:10", element.sourceRange().toString());
+            assertEquals("1,4:3-1,6:5=1,7:6-1,10:9", element.attributes().sourceRange("id").toString());
+            assertEquals("1,14:13-1,18:17", element.endSourceRange().toString());
+        }
+    }
+
+    @Test void tracksAdoptedFormattingElementsInsideTemplates() {
+        String html = "<template><b><p></b></template><p>tail</p>";
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+        Elements bold = doc.select("b");
+
+        assertEquals(2, bold.size());
+        for (Element element : bold) {
+            assertEquals("1,11:10-1,14:13", element.sourceRange().toString());
+            assertTrue(element.endSourceRange().isTracked());
+        }
+    }
+
+    @Test void reconstructedFormattingElementsTrackTheirOwnClose() {
+        Document doc = Jsoup.parse("<p><b>one</p>two", TrackingHtmlParser);
+        Elements bold = doc.select("b");
+
+        assertEquals(2, bold.size());
+        assertEquals("1,4:3-1,7:6", bold.get(0).sourceRange().toString());
+        assertEquals("1,10:9-1,10:9", bold.get(0).endSourceRange().toString());
+        assertEquals("1,4:3-1,7:6", bold.get(1).sourceRange().toString());
+        assertEquals("1,17:16-1,17:16", bold.get(1).endSourceRange().toString());
+    }
+
+    @Test void malformedEofRangesStayWithinSource() {
+        for (String html : new String[] {"<?xml", "<!", "<!--", "<a", "</a", "<!DOCTYPE", "<a x="}) {
+            Document doc = Jsoup.parse(html, TrackingHtmlParser);
+            doc.forEachNode(node -> {
+                assertRangeWithinSource(node.sourceRange(), html);
+                if (node instanceof Element)
+                    assertRangeWithinSource(((Element) node).endSourceRange(), html);
+            });
+            assertEquals(html.length(), doc.endSourceRange().endPos(), html);
+        }
+
+        Document multiline = Jsoup.parse("One\n<?xml", TrackingHtmlParser);
+        assertEquals("2,6:9-2,6:9", multiline.endSourceRange().toString());
+        Comment comment = multiline.nodeStream(Comment.class).findFirst().orElseThrow();
+        assertEquals("2,1:4-2,6:9", comment.sourceRange().toString());
+    }
+
+    private static void assertRangeWithinSource(Range range, String source) {
+        if (!range.isTracked()) return;
+        assertTrue(range.startPos() >= 0, range::toString);
+        assertTrue(range.startPos() <= range.endPos(), range::toString);
+        assertTrue(range.endPos() <= source.length(), range::toString);
+    }
+
     private void printRange(Node node) {
         if (node instanceof Element) {
             Element el = (Element) node;

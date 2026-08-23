@@ -36,6 +36,7 @@
 * Improved URL validation during HTTP/HTTPS URL resolution and cleaning; resolved URLs without a host are now rejected instead of being accepted based only on their scheme prefix, aligning to RFC 9110. Valid relative links and non-HTTP(S) schemes are unchanged. [#2579](https://github.com/jhy/jsoup/pull/2579)
 * Redirects with malformed single-slash HTTP locations now use standard URL resolution to align with browsers. [#2580](https://github.com/jhy/jsoup/pull/2580)
 * Template fragment parsing now handles unmatched `</template>` tags without throwing a `ValidationException`.
+* Improved source tracking for adopted formatting elements and malformed markup ending at EOF.
 
 ## 1.23.1 (2026-Jul-30)
 

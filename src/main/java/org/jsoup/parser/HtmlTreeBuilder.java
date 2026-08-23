@@ -11,6 +11,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.NodeInternals;
 import org.jsoup.nodes.TextNode;
 import org.jspecify.annotations.Nullable;
 
@@ -1075,7 +1076,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
             // 8. create new element from element, 9 insert into current node, onto stack
             skip = false; // can only skip increment from 4.
-            Element newEl = new Element(tagFor(entry.nodeName(), entry.normalName(), defaultNamespace(), settings), null, entry.attributes().clone());
+            Element newEl = recreateElement(entry);
             doInsertElement(newEl);
 
             // 10. replace entry with new entry
@@ -1086,6 +1087,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 break;
         }
     }
+
+    /** Copies an element's originating source ranges, ready to track a new close. */
+    Element recreateElement(Element source) {
+        Element element = new Element(source.tag(), null, source.attributes().clone());
+        NodeInternals.clearEndSourceRange(element);
+        return element;
+    }
+
     private static final int maxUsedFormattingElements = 12; // limit how many elements get recreated
 
     void clearFormattingElementsToLastMarker() {

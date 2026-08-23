@@ -31,8 +31,10 @@ public class CharacterReaderTest {
         assertEquals('e', r.consume());
         assertTrue(r.isEmpty());
         assertEquals(CharacterReader.EOF, r.consume());
+        assertEquals(3, r.pos());
         assertTrue(r.isEmpty());
         assertEquals(CharacterReader.EOF, r.consume());
+        assertEquals(3, r.pos());
     }
 
     @Test public void unconsume() {

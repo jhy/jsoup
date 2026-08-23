@@ -333,6 +333,11 @@ abstract class TreeBuilder {
     void trackNodePosition(Node node, boolean isStart) {
         if (!trackSourceRange) return;
 
+        if (isStart && node.sourceRange().isTracked())
+            return; // recreated nodes retain the position of their originating token
+        if (!isStart && node instanceof Element && ((Element) node).endSourceRange().isTracked())
+            return; // an element's first close is its source close
+
         final Token token = currentToken;
         int startPos = token.startPos();
         int endPos = token.endPos();
@@ -341,8 +346,6 @@ abstract class TreeBuilder {
         if (node instanceof Element) {
             final Element el = (Element) node;
             if (token.isEOF()) {
-                if (el.endSourceRange().isTracked())
-                    return; // /body and /html are left on stack until EOF, don't reset them
                 startPos = endPos = reader.pos();
             } else if (isStart) { // opening tag
                 if  (!token.isStartTag() || !el.normalName().equals(token.asStartTag().normalName)) {

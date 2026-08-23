@@ -914,7 +914,7 @@ enum HtmlTreeBuilderState {
                         tb.removeFromActiveFormattingElements(el);
                         break; // exit inner loop; proceed with step 14 using current lastEl
                     }
-                    Element replacement = new Element(tb.tagFor(el.nodeName(), el.normalName(), tb.defaultNamespace(), ParseSettings.preserveCase), tb.getBaseUri());
+                    Element replacement = tb.recreateElement(el);
                     tb.replaceActiveFormattingElement(el, replacement);
                     tb.replaceOnStack(el, replacement);
                     el = replacement;
@@ -932,8 +932,7 @@ enum HtmlTreeBuilderState {
                 // just use commonAncestor as target:
                 commonAncestor.appendChild(lastEl);
                 // 15. [Create an element for the token] for which formattingElement was created, in the [HTML namespace], with furthestBlock as the intended parent.
-                Element adoptor = new Element(formatEl.tag(), tb.getBaseUri());
-                adoptor.attributes().addAll(formatEl.attributes()); // also attributes
+                Element adoptor = tb.recreateElement(formatEl);
                 // 16. Take all of the child nodes of furthestBlock and append them to the element created in the last step.
                 for (Node child : furthestBlock.childNodes()) {
                     adoptor.appendChild(child);

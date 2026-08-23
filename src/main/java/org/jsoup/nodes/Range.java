@@ -424,6 +424,12 @@ public class Range {
             endTagEndPos = endPos;
         }
 
+        /** Clears the end-tag range when a parser-created element is recreated from an earlier start token. */
+        void clearEndSourceRange() {
+            endTagStartPos = -1;
+            endTagEndPos = -1;
+        }
+
         /**
          Gets the source ranges for an attribute slot.
          */

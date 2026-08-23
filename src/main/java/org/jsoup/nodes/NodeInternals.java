@@ -28,6 +28,16 @@ public final class NodeInternals {
     }
 
     /**
+     Clears a copied end-tag range so a parser-recreated element can track its own close.
+     */
+    public static void clearEndSourceRange(Element element) {
+        Validate.notNull(element);
+        Range.Spans spans = element.spans();
+        if (spans != null)
+            spans.clearEndSourceRange();
+    }
+
+    /**
      Sets parser-tracked source offsets for an attribute.
      */
     public static void attributeRange(
