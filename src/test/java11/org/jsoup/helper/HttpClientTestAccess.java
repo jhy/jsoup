@@ -1,7 +1,10 @@
 package org.jsoup.helper;
 
+import org.jsoup.Connection;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.URL;
@@ -40,6 +43,28 @@ final class HttpClientTestAccess {
                     .invoke(null, request);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("Could not invoke HttpClientExecutor.requestBody", e);
+        }
+    }
+
+    static Object client(Connection connection) {
+        try {
+            HttpConnection.Request request = (HttpConnection.Request) connection.request();
+            RequestExecutor executor = RequestDispatch.get(request, null);
+            Method method = executorClass().getDeclaredMethod("client");
+            method.setAccessible(true);
+            return method.invoke(executor);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Could not retrieve the configured HttpClient", e);
+        }
+    }
+
+    static void resetSharedClient() {
+        try {
+            Field field = executorClass().getDeclaredField("sharedClientState");
+            field.setAccessible(true);
+            field.set(null, null);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Could not reset the shared HttpClient", e);
         }
     }
 

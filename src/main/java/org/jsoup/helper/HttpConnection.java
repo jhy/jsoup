@@ -74,8 +74,7 @@ public class HttpConnection implements Connection {
 
     private HttpConnection.Request req;
     private Connection.@Nullable Response res;
-    @Nullable Object client; // The HttpClient for this Connection, if via the HttpClientExecutor
-    @Nullable RequestAuthenticator lastAuth; // The previous Authenticator used by this Connection, if via the HttpClientExecutor
+    volatile @Nullable Object clientState; // Java 11 HttpClient state, held as Object for Java 8 compatibility
 
     /**
      Create a new Connection, with the request URL specified.

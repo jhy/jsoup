@@ -15,11 +15,14 @@ import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+
+import javax.net.ssl.SSLContext;
 
 import static org.jsoup.helper.HttpConnection.Response;
 import static org.jsoup.helper.HttpConnection.Response.writePost;
@@ -29,9 +32,11 @@ import static org.jsoup.helper.HttpConnection.Response.writePost;
  property {@code jsoup.useHttpClient} to {@code false}.
  */
 class HttpClientExecutor extends RequestExecutor {
-    // HttpClient expects proxy settings per client; we do per request, so held as a thread local. Can't do same for
-    // auth because that callback is on a worker thread, so can only do auth per Connection. So we create a new client
-    // if the authenticator is different between requests
+    private static final Object SharedClientLock = new Object();
+    private static volatile @Nullable ClientState sharedClientState;
+
+    // HttpClient expects proxy settings per client; jsoup supports them per request, so resolve them from the calling
+    // thread.
     static ThreadLocal<@Nullable Proxy> perRequestProxy = new ThreadLocal<>();
 
     @Nullable
@@ -42,33 +47,57 @@ class HttpClientExecutor extends RequestExecutor {
     }
 
     /**
-     Retrieve the HttpClient from the Connection, or create a new one. Allows for connection pooling of requests in the
-     same Connection (session).
+     Returns the shared client for default requests, or the owning connection's configured client.
      */
     HttpClient client() {
-        // we try to reuse the same Client across requests in a given Connection; but if the request's auth or ssl context have changed, we need to create a new client
-        if (req.connection.client != null) {
-            HttpClient client = (HttpClient) req.connection.client;
-            boolean reuse = true;
+        RequestAuthenticator auth = req.authenticator;
+        // HttpClient captures the JVM default SSL context when built, and that default can change at runtime.
+        SSLContext sslContext = req.sslContext != null ? req.sslContext : defaultSslContext();
+        if (auth == null && req.sslContext == null) return sharedClient(sslContext);
+        return configuredClient(auth, sslContext);
+    }
 
-            RequestAuthenticator prevAuth = req.connection.lastAuth;
-            req.connection.lastAuth = req.authenticator;
-            if (prevAuth != req.authenticator) // might both be null
-                reuse = false;
-            if (req.sslContext != null && !(client.sslContext() == req.sslContext)) // client returns default context if not otherwise set
-                reuse = false;
-            if (reuse) return client;
+    private HttpClient configuredClient(@Nullable RequestAuthenticator auth, SSLContext sslContext) {
+        ClientState state = (ClientState) req.connection.clientState;
+        if (state != null && state.matches(auth, sslContext)) return state.client;
+        synchronized (req.connection) {
+            // another request may have initialized this connection's client while we waited for the lock.
+            state = (ClientState) req.connection.clientState;
+            if (state == null || !state.matches(auth, sslContext)) {
+                state = new ClientState(auth, sslContext);
+                req.connection.clientState = state;
+            }
+            return state.client;
         }
+    }
 
+    private static HttpClient sharedClient(SSLContext sslContext) {
+        ClientState state = sharedClientState;
+        if (state != null && state.matches(null, sslContext)) return state.client;
+        synchronized (SharedClientLock) {
+            state = sharedClientState;
+            if (state != null && state.matches(null, sslContext)) return state.client;
+            state = new ClientState(null, sslContext);
+            sharedClientState = state;
+            return state.client;
+        }
+    }
+
+    private static HttpClient newClient(@Nullable RequestAuthenticator authenticator, SSLContext sslContext) {
         HttpClient.Builder builder = HttpClient.newBuilder();
         builder.followRedirects(HttpClient.Redirect.NEVER); // customized redirects
         builder.proxy(new ProxyWrap()); // thread local impl for per request; called on executing thread
-        if (req.authenticator != null) builder.authenticator(new AuthenticationHandler(req.authenticator));
-        if (req.sslContext    != null) builder.sslContext(req.sslContext);
+        if (authenticator != null) builder.authenticator(new AuthenticationHandler(authenticator));
+        builder.sslContext(sslContext);
+        return builder.build();
+    }
 
-        HttpClient client = builder.build();
-        req.connection.client = client;
-        return client;
+    private static SSLContext defaultSslContext() {
+        try {
+            return SSLContext.getDefault();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("No default SSL context is available", e);
+        }
     }
 
     @Override
@@ -191,6 +220,22 @@ class HttpClientExecutor extends RequestExecutor {
             if (defaultSelector != null && defaultSelector != this) {
                 defaultSelector.connectFailed(uri, sa, ioe);
             }
+        }
+    }
+
+    private static final class ClientState {
+        final HttpClient client;
+        final @Nullable RequestAuthenticator authenticator;
+        final SSLContext sslContext;
+
+        ClientState(@Nullable RequestAuthenticator authenticator, SSLContext sslContext) {
+            this.client = newClient(authenticator, sslContext);
+            this.authenticator = authenticator;
+            this.sslContext = sslContext;
+        }
+
+        boolean matches(@Nullable RequestAuthenticator authenticator, SSLContext sslContext) {
+            return this.authenticator == authenticator && this.sslContext == sslContext;
         }
     }
 }

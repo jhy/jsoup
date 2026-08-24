@@ -37,6 +37,7 @@
 * Redirects with malformed single-slash HTTP locations now use standard URL resolution to align with browsers. [#2580](https://github.com/jhy/jsoup/pull/2580)
 * Template fragment parsing now handles unmatched `</template>` tags without throwing a `ValidationException`. [#2581](https://github.com/jhy/jsoup/pull/2581)
 * Improved source tracking for adopted formatting elements and malformed markup ending at EOF. [#2582](https://github.com/jhy/jsoup/pull/2582)
+* Extended Java 11+ HTTP client reuse from requests sharing a `Jsoup.newSession()` to ordinary `Jsoup.connect(...)` calls, reducing transport thread and connection setup churn under sustained request loads. Sessions with custom authentication or SSL contexts continue to use their own client. [#2516](https://github.com/jhy/jsoup/issues/2516)
 
 ## 1.23.1 (2026-Jul-30)
 
