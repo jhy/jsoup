@@ -11,6 +11,7 @@
 * Added `Elements#before(Node)`, `after(Node)`, `prepend(Node)`, and `append(Node)` to match the existing HTML string methods. [#953](https://github.com/jhy/jsoup/issues/953)
 * XML serialization now repairs element and attribute names that start with an invalid character, rather than outputting `<null>` elements or dropping attributes. For example, an attribute named `1a` is written as `_1a`. Additional leading underscores keep repaired attribute names unique if they conflict with another attribute. [#2573](https://github.com/jhy/jsoup/issues/2573)
 * Large file-backed uploads through `Connection.requestBodyStream(InputStream)` now stream directly with the JDK `HttpClient` on Java 11+, rather than being loaded fully into memory first.
+* Extended Java 11+ HTTP client reuse from requests sharing a `Jsoup.newSession()` to ordinary `Jsoup.connect(...)` calls, reducing transport thread and connection setup churn under sustained request loads. Sessions with custom authentication or SSL contexts continue to use their own client. [#2584](https://github.com/jhy/jsoup/pull/2584)
 
 ### Changes
 * Aligned the XML parser stack depth and lookups to the configured maximum, which now defaults to 512 for both HTML and XML. [#2570](https://github.com/jhy/jsoup/pull/2570)
@@ -37,7 +38,6 @@
 * Redirects with malformed single-slash HTTP locations now use standard URL resolution to align with browsers. [#2580](https://github.com/jhy/jsoup/pull/2580)
 * Template fragment parsing now handles unmatched `</template>` tags without throwing a `ValidationException`. [#2581](https://github.com/jhy/jsoup/pull/2581)
 * Improved source tracking for adopted formatting elements and malformed markup ending at EOF. [#2582](https://github.com/jhy/jsoup/pull/2582)
-* Extended Java 11+ HTTP client reuse from requests sharing a `Jsoup.newSession()` to ordinary `Jsoup.connect(...)` calls, reducing transport thread and connection setup churn under sustained request loads. Sessions with custom authentication or SSL contexts continue to use their own client. [#2516](https://github.com/jhy/jsoup/issues/2516)
 
 ## 1.23.1 (2026-Jul-30)
 
