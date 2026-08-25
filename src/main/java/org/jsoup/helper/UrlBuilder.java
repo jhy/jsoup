@@ -83,7 +83,7 @@ final class UrlBuilder {
         }
     }
 
-    private static final String unsafeCharacters = "<>\"{}|\\^[]`";
+    private static final String unsafeCharacters = "<>\"{}|\\^[]`#";
 
     private static void appendToAscii(String s, boolean spaceAsPlus, StringBuilder sb) throws UnsupportedEncodingException {
         for (int i = 0; i < s.length(); i++) {
@@ -97,7 +97,7 @@ final class UrlBuilder {
                 } else {
                     sb.append("%25");
                 }
-            } else if (c > 127 || unsafeCharacters.indexOf(c) != -1) { // past ascii, or otherwise unsafe
+            } else if (c < 0x20 || c >= 0x7f || unsafeCharacters.indexOf(c) != -1) { // ascii control, past ascii, or otherwise unsafe
                 sb.append(URLEncoder.encode(new String(Character.toChars(c)), UTF_8.name()));
                 if (Character.charCount(c) == 2) i++; // advance past supplemental
             } else {

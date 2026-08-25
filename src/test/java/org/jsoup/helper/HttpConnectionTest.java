@@ -320,6 +320,12 @@ public class HttpConnectionTest {
         assertEquals("https://example.com/tools/test%F0%9F%92%A9.html", url2.toExternalForm());
     }
 
+    @Test void urlControlCharsAreEncoded() throws MalformedURLException {
+        URL input = new URL("https://example.com/a\tb\u007F?q=\u0001#f\u001Fg#h");
+        URL normalized = new UrlBuilder(input).build();
+        assertEquals("https://example.com/a%09b%7F?q=%01#f%1Fg%23h", normalized.toExternalForm());
+    }
+
     @Test void encodedUrlDoesntDoubleEncode() throws MalformedURLException {
         URL url1 = new URL("https://test.com/foo%20bar/%5BOne%5D?q=white+space#frag%20ment");
         URL url2 = new UrlBuilder(url1).build();
