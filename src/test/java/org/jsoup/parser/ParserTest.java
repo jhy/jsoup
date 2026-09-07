@@ -22,6 +22,19 @@ public class ParserTest {
         assertEquals("One & Two", s);
     }
 
+    @Test public void unescapeEntitiesInAttributes() {
+        String input = "&copy- &copy_ &copy= &copya &copyZ &copy1 &copy;= &copy;A &copy;1";
+        assertEquals("©- ©_ &copy= &copya &copyZ &copy1 ©= ©A ©1", Parser.unescapeEntities(input, true));
+        assertEquals("©- ©_ ©= ©a ©Z ©1 ©= ©A ©1", Parser.unescapeEntities(input, false));
+    }
+
+    @Test public void unescapeQueryParametersInTextOnly() {
+        // https://github.com/jhy/jsoup/issues/2588
+        String input = "?one=1&timestamp=2&param=3";
+        assertEquals(input, Parser.unescapeEntities(input, true));
+        assertEquals("?one=1×tamp=2¶m=3", Parser.unescapeEntities(input, false));
+    }
+
     @Test
     public void unescapeEntitiesHandlesLargeInput() {
         StringBuilder longBody = new StringBuilder(500000);

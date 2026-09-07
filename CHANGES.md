@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 * Standardized parser normalization of tag and attribute names so that HTML comparisons use ASCII-only case folding, and accepted control characters are preserved, aligning name handling to the HTML and XML specs. [#2594](https://github.com/jhy/jsoup/issues/2594)
+* Named character references without a semicolon before `-` or `_` now decode correctly in attribute values, matching HTML and browser behavior (e.g., `&copy-` becomes `©-`). [#2588](https://github.com/jhy/jsoup/issues/2588)
 
 ## 1.23.2 (2026-Aug-26)
 
