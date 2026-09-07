@@ -116,4 +116,13 @@ public class AttributeTest {
         Attribute attr = new Attribute("one", "two");
         assertEquals("", attr.namespace());
     }
+
+    @Test void trimsWhitespaceButPreservesNameControls() {
+        Attribute attr = new Attribute(" \tDATA-X\u0001\n", "one");
+        assertEquals("DATA-X\u0001", attr.getKey());
+        attr.setKey(" \r\u0001\f");
+        assertEquals("\u0001", attr.getKey());
+        assertEquals("_=\"one\"", attr.html()); // serialization still repairs invalid HTML names
+    }
+
 }

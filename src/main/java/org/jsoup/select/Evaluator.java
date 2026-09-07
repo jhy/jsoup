@@ -17,7 +17,8 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
-import static org.jsoup.internal.Normalizer.normalize;
+import static org.jsoup.internal.Normalizer.asciiLowerCase;
+import static org.jsoup.internal.StringUtil.trimAsciiWhitespace;
 import static org.jsoup.internal.StringUtil.normaliseWhitespace;
 
 
@@ -237,14 +238,14 @@ public abstract class Evaluator {
 
         public AttributeStarting(String keyPrefix) {
             Validate.notNull(keyPrefix); // OK to be empty - will find elements with any attributes
-            this.keyPrefix = lowerCase(keyPrefix);
+            this.keyPrefix = asciiLowerCase(keyPrefix);
         }
 
         @Override
         public boolean matches(Element root, Element element) {
             List<org.jsoup.nodes.Attribute> values = element.attributes().asList();
             for (org.jsoup.nodes.Attribute attribute : values) {
-                if (lowerCase(attribute.getKey()).startsWith(keyPrefix))
+                if (asciiLowerCase(attribute.getKey()).startsWith(keyPrefix))
                     return true;
             }
             return false;
@@ -387,7 +388,7 @@ public abstract class Evaluator {
         final Regex pattern;
 
         public AttributeWithValueMatching(String key, Regex pattern) {
-            this.key = normalize(key);
+            this.key = asciiLowerCase(trimAsciiWhitespace(key));
             this.pattern = pattern;
         }
 
@@ -422,7 +423,7 @@ public abstract class Evaluator {
             Validate.notEmpty(key);
             Validate.notNull(value);
 
-            this.key = normalize(key);
+            this.key = asciiLowerCase(trimAsciiWhitespace(key));
             boolean quoted = value.startsWith("'") && value.endsWith("'")
                 || value.startsWith("\"") && value.endsWith("\"");
             if (quoted) {

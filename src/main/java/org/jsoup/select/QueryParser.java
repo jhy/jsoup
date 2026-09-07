@@ -16,8 +16,9 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.jsoup.internal.Normalizer.asciiLowerCase;
+import static org.jsoup.internal.StringUtil.trimAsciiWhitespace;
 import static org.jsoup.select.StructuralEvaluator.ImmediateParentRun;
-import static org.jsoup.internal.Normalizer.normalize;
 
 /**
  * Parses a CSS selector into an Evaluator tree.
@@ -37,7 +38,7 @@ public class QueryParser implements AutoCloseable {
      */
     private QueryParser(String query) {
         Validate.notEmpty(query);
-        query = query.trim();
+        query = trimAsciiWhitespace(query);
         this.query = query;
         this.tq = new TokenQueue(query);
     }
@@ -320,7 +321,7 @@ public class QueryParser implements AutoCloseable {
         // todo - these aren't dealing perfectly with case sensitivity. For case sensitive parsers, we should also make
         // the tag in the selector case-sensitive (and also attribute names). But for now, normalize (lower-case) for
         // consistency - both the selector and the element tag
-        String tagName = normalize(tq.consumeElementSelector());
+        String tagName = asciiLowerCase(tq.consumeElementSelector());
         Validate.notEmpty(tagName);
 
         // namespaces:
@@ -348,7 +349,7 @@ public class QueryParser implements AutoCloseable {
 
     private Evaluator evaluatorForAttribute(TokenQueue cq) {
         String key = cq.consumeToAny(AttributeEvals); // eq, not, start, end, contain, match, (no val)
-        key = normalize(key);
+        key = asciiLowerCase(trimAsciiWhitespace(key));
         Validate.notEmpty(key);
         Validate.isFalse(key.equals("abs:"), "Absolute attribute key must have a name");
         cq.consumeWhitespace();
@@ -386,7 +387,7 @@ public class QueryParser implements AutoCloseable {
     private static final Pattern NthOffset = Pattern.compile("([+-])?(\\d+)");
 
     private Evaluator cssNthChild(boolean last, boolean ofType) {
-        String arg = normalize(consumeParens()); // arg is like "odd", or "-n+2", within nth-child(odd)
+        String arg = asciiLowerCase(trimAsciiWhitespace(consumeParens())); // arg is like "odd", or "-n+2", within nth-child(odd)
         final int step, offset;
         if ("odd".equals(arg)) {
             step = 2;

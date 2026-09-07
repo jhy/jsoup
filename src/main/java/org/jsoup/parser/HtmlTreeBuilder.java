@@ -301,7 +301,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
          */
         if (Parser.NamespaceMathml.equals(el.tag().namespace())
             && el.nameIs("annotation-xml")) {
-            String encoding = Normalizer.normalize(el.attr("encoding"));
+            String encoding = Normalizer.asciiLowerCase(el.attr("encoding"));
             if (encoding.equals("text/html") || encoding.equals("application/xhtml+xml"))
                 return true;
         }

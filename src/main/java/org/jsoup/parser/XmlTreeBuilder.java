@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.jsoup.internal.Normalizer.asciiLowerCase;
 import static org.jsoup.parser.Parser.NamespaceXml;
 
 /**
@@ -223,7 +224,7 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     void insertDoctypeFor(Token.Doctype token) {
-        DocumentType doctypeNode = new DocumentType(settings.normalizeTag(token.getName()), token.getPublicIdentifier(), token.getSystemIdentifier());
+        DocumentType doctypeNode = new DocumentType(settings.preserveTagCase() ? token.getName() : asciiLowerCase(token.getName()), token.getPublicIdentifier(), token.getSystemIdentifier());
         doctypeNode.setPubSysKey(token.getPubSysKey());
         if (token.hasInternalSubset())
             doctypeNode.setInternalSubset(token.getInternalSubset());
@@ -243,7 +244,7 @@ public class XmlTreeBuilder extends TreeBuilder {
      * @param endTag tag to close
      */
     protected void popStackToClose(Token.EndTag endTag) {
-        String elName = settings.normalizeTag(endTag.name());
+        String elName = settings.preserveTagCase() ? endTag.name() : asciiLowerCase(endTag.name());
         Element firstFound = null;
 
         for (int pos = stack.size() -1; pos >= 0; pos--) {

@@ -33,7 +33,7 @@ import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.jsoup.internal.Normalizer.normalize;
+import static org.jsoup.internal.Normalizer.asciiLowerCase;
 import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
 import static org.jsoup.nodes.TextNode.lastCharIsWhitespace;
 import static org.jsoup.parser.Parser.NamespaceHtml;
@@ -42,6 +42,7 @@ import static org.jsoup.select.Selector.evaluatorOf;
 
 /**
  An HTML Element consists of a tag name, attributes, and child nodes (including text nodes and other elements).
+ Case-insensitive name lookups and name trimming use ASCII rules.
  <p>
  From an Element, you can extract data, traverse the node graph, and manipulate the HTML.
 */
@@ -168,9 +169,8 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     /**
-     * Get the normalized name of this Element's tag. This will always be the lower-cased version of the tag, regardless
-     * of the tag case preserving setting of the parser. For e.g., {@code <DIV>} and {@code <div>} both have a
-     * normal name of {@code div}.
+     * Get the normalized name of this Element's tag. For e.g., {@code <DIV>} and {@code <div>} both have a
+     * normal name of {@code div}. See {@link Tag#normalName()}.
      * @return normal name
      */
     @Override
@@ -1272,12 +1272,12 @@ public class Element extends Node implements Iterable<Element> {
 
     /**
      * Finds elements, including and recursively under this element, with the specified tag name.
-     * @param tagName The tag name to search for (case insensitively).
+     * @param tagName The tag name to search for (case-insensitive; surrounding whitespace is trimmed).
      * @return a matching unmodifiable list of elements. Will be empty if this element and none of its children match.
      */
     public Elements getElementsByTag(String tagName) {
         Validate.notEmpty(tagName);
-        tagName = normalize(tagName);
+        tagName = asciiLowerCase(StringUtil.trimAsciiWhitespace(tagName));
 
         return Collector.collect(new Evaluator.Tag(tagName), this);
     }

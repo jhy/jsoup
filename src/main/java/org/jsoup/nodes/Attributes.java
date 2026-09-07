@@ -23,7 +23,8 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 
-import static org.jsoup.internal.Normalizer.lowerCase;
+import static org.jsoup.internal.Normalizer.asciiLowerCase;
+import static org.jsoup.internal.Normalizer.equalsIgnoreAsciiCase;
 import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
 import static org.jsoup.nodes.Range.AttributeRange.UntrackedAttr;
 
@@ -35,9 +36,9 @@ import static org.jsoup.nodes.Range.AttributeRange.UntrackedAttr;
  * {@link #add(String, String)} vs {@link #put(String, String)} is used.
  * </p>
  * <p>
- * Attribute name and value comparisons are generally <b>case sensitive</b>. By default for HTML, attribute names are
+ * Attribute name and value comparisons are generally <b>case-sensitive</b>. By default for HTML, attribute names are
  * normalized to lower-case on parsing. That means you should use lower-case strings when referring to attributes by
- * name.
+ * name. Case-insensitive name comparisons fold only ASCII letters; non-ASCII characters are compared as written.
  * </p>
  *
  * @author Jonathan Hedley, jonathan@hedley.net
@@ -116,7 +117,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     private int indexOfKeyIgnoreCase(String key) {
         Validate.notNull(key);
         for (int i = 0; i < size; i++) {
-            if (key.equalsIgnoreCase(keys[i]))
+            if (equalsIgnoreAsciiCase(key, keys[i]))
                 return i;
         }
         return NotFound;
@@ -598,12 +599,12 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /** Normalizes a key for the output syntax's case sensitivity. */
     private static String comparisonKey(String key, Syntax syntax) {
-        return syntax == xml ? key : lowerCase(key);
+        return syntax == xml ? key : asciiLowerCase(key);
     }
 
     /** Compares keys with the requested case sensitivity. */
     private static boolean keysEqual(String first, String second, boolean caseSensitive) {
-        return caseSensitive ? first.equals(second) : first.equalsIgnoreCase(second);
+        return caseSensitive ? first.equals(second) : equalsIgnoreAsciiCase(first, second);
     }
 
     @Override
@@ -683,7 +684,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             String key = keys[i];
             assert key != null;
             if (!isInternalKey(key))
-                keys[i] = lowerCase(key);
+                keys[i] = asciiLowerCase(key);
         }
     }
 

@@ -14,6 +14,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 
+import static org.jsoup.internal.Normalizer.asciiLowerCase;
+import static org.jsoup.internal.Normalizer.equalsIgnoreAsciiCase;
 import static org.jsoup.internal.StringUtil.inSorted;
 import static org.jsoup.parser.HtmlTreeBuilder.isSpecial;
 import static org.jsoup.parser.HtmlTreeBuilderState.Constants.*;
@@ -31,13 +33,13 @@ enum HtmlTreeBuilderState {
             } else if (t.isDoctype()) {
                 // todo: parse error check on expected doctypes
                 Token.Doctype d = t.asDoctype();
-                DocumentType doctype = new DocumentType(
-                    tb.settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier());
+                String name = tb.settings.preserveTagCase() ? d.getName() : asciiLowerCase(d.getName());
+                DocumentType doctype = new DocumentType(name, d.getPublicIdentifier(), d.getSystemIdentifier());
                 doctype.setPubSysKey(d.getPubSysKey());
                 tb.getDocument().appendChild(doctype);
                 tb.onNodeInserted(doctype);
                 // todo: quirk state check on more doctype ids, if deemed useful (most are ancient legacy and presumably irrelevant)
-                if (d.isForceQuirks() || !doctype.name().equals("html") || doctype.publicId().equalsIgnoreCase("HTML"))
+                if (d.isForceQuirks() || !doctype.name().equals("html") || equalsIgnoreAsciiCase(doctype.publicId(), "HTML"))
                     tb.getDocument().quirksMode(Document.QuirksMode.quirks);
                 tb.transition(BeforeHtml);
             } else {
@@ -422,7 +424,7 @@ enum HtmlTreeBuilderState {
                 case "input":
                     tb.reconstructFormattingElements();
                     el = tb.insertEmptyElementFor(startTag);
-                    if (!el.attr("type").equalsIgnoreCase("hidden"))
+                    if (!equalsIgnoreAsciiCase(el.attr("type"), "hidden"))
                         tb.framesetOk(false);
                     break;
                 case "hr":
@@ -1024,7 +1026,7 @@ enum HtmlTreeBuilderState {
                 } else if (name.equals("noscript")) {
                     tb.startNoscript(startTag);
                 } else if (name.equals("input")) {
-                    if (!(startTag.hasAttributes() && startTag.attributes.get("type").equalsIgnoreCase("hidden"))) {
+                    if (!(startTag.hasAttributes() && equalsIgnoreAsciiCase(startTag.attributes.get("type"), "hidden"))) {
                         return anythingElse(t, tb);
                     } else {
                         tb.insertEmptyElementFor(startTag);

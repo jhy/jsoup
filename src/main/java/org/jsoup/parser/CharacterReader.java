@@ -12,6 +12,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
 
+import static org.jsoup.internal.Normalizer.asciiLowerCase;
+
 /**
  CharacterReader consumes tokens off a string. Used internally by jsoup. API subject to changes.
  <p>If the underlying reader throws an IOException during any operation, the CharacterReader will throw an
@@ -583,7 +585,7 @@ public final class CharacterReader implements AutoCloseable {
     }
 
     /**
-     Checks if the current buffer position matches the sequence case-insensitively.
+     Checks if the current buffer position matches the sequence using ASCII case-insensitive matching.
      */
     boolean matchesIgnoreCase(String seq) {
         bufferUp();
@@ -600,8 +602,8 @@ public final class CharacterReader implements AutoCloseable {
             char target = charBuf[start + offset];
             if (scan == target) continue;
 
-            scan = Character.toUpperCase(scan);
-            target = Character.toUpperCase(target);
+            scan = asciiLowerCase(scan);
+            target = asciiLowerCase(target);
             if (scan != target) return false;
         }
         return true;

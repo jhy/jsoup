@@ -188,6 +188,14 @@ public final class StringUtil {
         return true;
     }
 
+    /** Trims leading and trailing ASCII whitespace. */
+    public static String trimAsciiWhitespace(String input) {
+        int start = 0, end = input.length();
+        while (start < end && isWhitespace(input.charAt(start))) start++;
+        while (end > start && isWhitespace(input.charAt(end - 1))) end--;
+        return input.substring(start, end);
+    }
+
     /**
      * Tests if a code point is "whitespace" as defined in the HTML spec. Used for output HTML.
      * @param c code point to test

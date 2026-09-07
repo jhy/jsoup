@@ -15,7 +15,8 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
- A single key + value attribute. (Only used for presentation.)
+ Represents one attribute as a key/value pair.
+ Keys preserve case and are trimmed of surrounding ASCII whitespace when created or changed.
  */
 public class Attribute implements Map.Entry<String, String>, Cloneable  {
     private static final String[] booleanAttributes = {
@@ -31,7 +32,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
 
     /**
      * Create a new attribute from unencoded (raw) key and value.
-     * @param key attribute key; case is preserved.
+     * @param key attribute key
      * @param value attribute value (may be null)
      * @see #createFromEncoded
      */
@@ -41,13 +42,13 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
 
     /**
      * Create a new attribute from unencoded (raw) key and value.
-     * @param key attribute key; case is preserved.
+     * @param key attribute key
      * @param val attribute value (may be null)
      * @param parent the containing Attributes (this Attribute is not automatically added to said Attributes)
      * @see #createFromEncoded*/
     public Attribute(String key, @Nullable String val, @Nullable Attributes parent) {
         Validate.notNull(key);
-        key = key.trim();
+        key = StringUtil.trimAsciiWhitespace(key);
         Validate.notEmpty(key); // trimming could potentially make empty, so validate here
         this.key = key;
         this.val = val;
@@ -64,12 +65,12 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     }
 
     /**
-     Set the attribute key; case is preserved.
+     Set the attribute key.
      @param key the new key; must not be null
      */
     public void setKey(String key) {
         Validate.notNull(key);
-        key = key.trim();
+        key = StringUtil.trimAsciiWhitespace(key);
         Validate.notEmpty(key); // trimming could potentially make empty, so validate here
         if (parent != null) {
             int i = parent.indexOfKey(this.key);
@@ -315,14 +316,14 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     // collapse unknown foo=null, known checked=null, checked="", checked=checked; write out others
     protected static boolean shouldCollapseAttribute(final String key, @Nullable final String val, final Document.OutputSettings out) {
         return (out.syntax() == Syntax.html &&
-                (val == null || (val.isEmpty() || val.equalsIgnoreCase(key)) && Attribute.isBooleanAttribute(key)));
+                (val == null || (val.isEmpty() || Normalizer.equalsIgnoreAsciiCase(val, key)) && Attribute.isBooleanAttribute(key)));
     }
 
     /**
      * Checks if this attribute name is defined as a boolean attribute in HTML5
      */
     public static boolean isBooleanAttribute(final String key) {
-        return Arrays.binarySearch(booleanAttributes, Normalizer.lowerCase(key)) >= 0;
+        return Arrays.binarySearch(booleanAttributes, Normalizer.asciiLowerCase(key)) >= 0;
     }
 
     @Override
