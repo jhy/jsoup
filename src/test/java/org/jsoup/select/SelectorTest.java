@@ -989,21 +989,10 @@ public class SelectorTest {
         assertEquals("One", doc.selectFirst("p, div").text());
     }
 
-    @Test public void matchText() {
-        String html = "<p>One<br>Two</p>";
-        Document doc = Jsoup.parse(html);
-        doc.outputSettings().prettyPrint(false);
-        String origHtml = doc.html();
-
-        Elements one = doc.select("p:matchText:first-child");
-        assertEquals("One", one.first().text());
-
-        Elements two = doc.select("p:matchText:last-child");
-        assertEquals("Two", two.first().text());
-
-        assertEquals(origHtml, doc.html());
-
-        assertEquals("Two", doc.select("p:matchText + br + *").text());
+    @Test public void rejectsMatchText() {
+        Document doc = Jsoup.parse("<p>One</p>");
+        Selector.SelectorParseException e = assertThrows(Selector.SelectorParseException.class, () -> doc.select(":matchText"));
+        assertEquals(":matchText is no longer supported. Use Element#selectNodes(String, Class) with selector ::text and class TextNode instead.", e.getMessage());
     }
 
     @Test public void nthLastChildWithNoParent() {
@@ -1012,32 +1001,17 @@ public class SelectorTest {
         assertEquals(0, els.size());
     }
 
-    @Test public void splitOnBr() {
+    @Test public void selectTextSplitByBr() {
         String html = "<div><p>One<br>Two<br>Three</p></div>";
         Document doc = Jsoup.parse(html);
+        String originalHtml = doc.html();
 
-        Elements els = doc.select("p:matchText");
-        assertEquals(3, els.size());
-        assertEquals("One", els.get(0).text());
-        assertEquals("Two", els.get(1).text());
-        assertEquals("Three", els.get(2).toString());
-    }
-
-    @Test public void matchTextAttributes() {
-        Document doc = Jsoup.parse("<div><p class=one>One<br>Two<p class=two>Three<br>Four");
-        Elements els = doc.select("p.two:matchText:last-child");
-
-        assertEquals(1, els.size());
-        assertEquals("Four", els.text());
-    }
-
-    @Test public void findBetweenSpan() {
-        Document doc = Jsoup.parse("<p><span>One</span> Two <span>Three</span>");
-        Elements els = doc.select("span ~ p:matchText"); // the Two becomes its own p, sibling of the span
-        // todo - think this should really be 'p:matchText span ~ p'. The :matchText should behave as a modifier to expand the nodes.
-
-        assertEquals(1, els.size());
-        assertEquals("Two", els.text());
+        Nodes<TextNode> text = doc.selectNodes("p ::text", TextNode.class);
+        assertEquals(3, text.size());
+        assertEquals("One", text.get(0).getWholeText());
+        assertEquals("Two", text.get(1).getWholeText());
+        assertEquals("Three", text.get(2).getWholeText());
+        assertEquals(originalHtml, doc.html());
     }
 
     @Test public void startsWithBeginsWithSpace() {

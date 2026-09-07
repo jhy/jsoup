@@ -225,13 +225,6 @@ public class HttpConnection implements Connection {
     }
 
     @Override
-    @Deprecated
-    public Connection sslSocketFactory(SSLSocketFactory sslSocketFactory) {
-        req.sslSocketFactory(sslSocketFactory);
-        return this;
-    }
-
-    @Override
     public Connection sslContext(SSLContext sslContext) {
         req.sslContext(sslContext);
         return this;
@@ -735,12 +728,6 @@ public class HttpConnection implements Connection {
             return sslSocketFactory;
         }
 
-        @Override
-        @Deprecated
-        public void sslSocketFactory(SSLSocketFactory sslSocketFactory) {
-            this.sslSocketFactory = sslSocketFactory;
-        }
-
         @Override @Nullable
         public SSLContext sslContext() {
             return sslContext;
@@ -1147,13 +1134,6 @@ public class HttpConnection implements Connection {
                 System.arraycopy(array, offset, exactArray, 0, length);
                 return exactArray;
             }
-        }
-
-        @Override
-        @Deprecated
-        public Connection.Response bufferUp() {
-            readByteDataUnchecked();
-            return this;
         }
 
         @Override

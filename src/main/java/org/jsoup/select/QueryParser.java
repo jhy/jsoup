@@ -256,9 +256,7 @@ public class QueryParser implements AutoCloseable {
             case "root":
                 return new Evaluator.IsRoot();
             case "matchText": {
-                @SuppressWarnings("deprecation") // :matchText remains supported until its scheduled removal.
-                Evaluator.MatchText matchText = new Evaluator.MatchText();
-                return matchText;
+                throw new Selector.SelectorParseException(":matchText is no longer supported. Use Element#selectNodes(String, Class) with selector ::text and class TextNode instead."); // todo remove this in 1.25.1
             }
             default:
                 throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());

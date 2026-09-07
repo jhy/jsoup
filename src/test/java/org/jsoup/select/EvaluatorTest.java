@@ -286,13 +286,6 @@ public class EvaluatorTest {
         assertEquals(":matchesWholeOwnText(example)", evaluator.toString());
     }
 
-    @Test
-    @SuppressWarnings("deprecation") // Exercises deprecated :matchText compatibility until removal.
-    public void testMatchTextToString() {
-        Evaluator.MatchText evaluator = new Evaluator.MatchText();
-        assertEquals(":matchText", evaluator.toString());
-    }
-
     @Test void nthPosition() {
         Element orphan = new Element("div");
         Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three<p>Four</p><h1>Five</h1></div>");

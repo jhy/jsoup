@@ -211,19 +211,6 @@ public interface Connection {
     Connection ignoreContentType(boolean ignoreContentType);
 
     /**
-     Set a custom SSL socket factory for HTTPS connections.
-     <p>Note: if set, the legacy <code>HttpURLConnection</code> will be used instead of the JVM's
-     <code>HttpClient</code>.</p>
-
-     @param sslSocketFactory SSL socket factory
-     @return this Connection, for chaining
-     @see #sslContext(SSLContext)
-     @deprecated use {@link #sslContext(SSLContext)} instead; will be removed in jsoup 1.24.1.
-     */
-    @Deprecated
-    Connection sslSocketFactory(SSLSocketFactory sslSocketFactory);
-
-    /**
      Set a custom SSL context for HTTPS connections.
      <p>Note: when using the legacy <code>HttpURLConnection</code>, only the <code>SSLSocketFactory</code> from the
      context will be used.</p>
@@ -791,18 +778,6 @@ public interface Connection {
         @Nullable SSLSocketFactory sslSocketFactory();
 
         /**
-         Set a custom SSL socket factory for HTTPS connections.
-         <p>Note: if set, the legacy <code>HttpURLConnection</code> will be used instead of the JVM's
-         <code>HttpClient</code>.</p>
-
-         @param sslSocketFactory SSL socket factory
-         @see #sslContext(SSLContext)
-         @deprecated use {@link #sslContext(SSLContext)} instead; will be removed in jsoup 1.24.1.
-         */
-        @Deprecated
-        void sslSocketFactory(SSLSocketFactory sslSocketFactory);
-
-        /**
          Get the current custom SSL context, if any.
 
          @return custom SSL context if set, null otherwise
@@ -1029,18 +1004,6 @@ public interface Connection {
         default Response readFully() throws IOException {
             throw new UnsupportedOperationException();
         }
-
-        /**
-         * Read the body of the response into a local buffer, so that {@link #parse()} may be called repeatedly on the
-         * same connection response. Otherwise, once the response is read, its InputStream will have been drained and
-         * may not be re-read.
-         * <p>Calling {@link #body() } or {@link #bodyAsBytes()} has the same effect.</p>
-         * @return this response, for chaining
-         * @throws UncheckedIOException if an IO exception occurs during buffering.
-         * @deprecated use {@link #readFully()} instead (for the checked exception). Will be removed in jsoup 1.24.1.
-         */
-        @Deprecated
-        Response bufferUp();
 
         /**
          Get the body of the response as a (buffered) InputStream. You should close the input stream when you're done

@@ -35,10 +35,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
         "button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
     };
 
-    /** @deprecated Not used anymore; configure parser depth via {@link Parser#setMaxDepth(int)}. Will be removed in jsoup 1.24.1. */
-    @Deprecated
-    public static final int MaxScopeSearchDepth = 100;
-
     private HtmlTreeBuilderState state; // the current state
     private HtmlTreeBuilderState originalState; // original / marked state
 
