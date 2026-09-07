@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.Authenticator;
 import java.net.MalformedURLException;
@@ -377,6 +378,14 @@ public class HttpConnectionTest {
     @Test public void handlesHeaderEncodingOnRequest() {
         Connection.Request req = new HttpConnection.Request();
         req.addHeader("xxx", "é");
+    }
+
+    @Test void storesSslContextOnRequest() throws Exception {
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        Connection.Request req = new HttpConnection.Request();
+
+        assertSame(req, req.sslContext(sslContext));
+        assertSame(sslContext, req.sslContext());
     }
 
     @Test public void supportsInternationalDomainNames() throws MalformedURLException {

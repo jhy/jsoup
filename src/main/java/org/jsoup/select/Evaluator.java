@@ -9,7 +9,6 @@ import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
-import org.jsoup.parser.ParseSettings;
 import org.jsoup.helper.Regex;
 
 import java.util.List;
@@ -433,17 +432,6 @@ public abstract class Evaluator {
 
             this.value = lowerCase(value); // case-insensitive match
         }
-
-        /**
-         @deprecated since 1.22.1, use {@link #AttributeKeyPair(String, String)}; the previous trimQuoted parameter is no longer used.
-         This constructor will be removed in jsoup 1.24.1.
-         */
-        @Deprecated
-        public AttributeKeyPair(String key, String value, boolean ignored) {
-            this(key, value);
-        }
-
-
     }
 
     /**
@@ -1042,47 +1030,6 @@ public abstract class Evaluator {
         @Override
         public String toString() {
             return String.format(":matchesWholeOwnText(%s)", pattern);
-        }
-    }
-
-    /**
-     @deprecated This selector is deprecated and will be removed in jsoup 1.24.1. Migrate to <code>::textnode</code> using the <code>Element#selectNodes()</code> method instead.
-     */
-    @Deprecated
-    @SuppressWarnings("deprecation") // Uses PseudoTextElement for deprecated :matchText support until removal.
-    public static final class MatchText extends Evaluator {
-        private static boolean loggedError = false;
-
-        public MatchText() {
-            // log a deprecated error on first use; users typically won't directly construct this Evaluator and so won't otherwise get deprecation warnings
-            if (!loggedError) {
-                loggedError = true;
-                System.err.println("WARNING: :matchText selector is deprecated and will be removed in jsoup 1.24.1. Use Element#selectNodes(String, Class) with selector ::textnode and class TextNode instead.");
-            }
-        }
-
-        @Override
-        public boolean matches(Element root, Element element) {
-            if (element instanceof org.jsoup.nodes.PseudoTextElement)
-                return true;
-
-            List<TextNode> textNodes = element.textNodes();
-            for (TextNode textNode : textNodes) {
-                org.jsoup.nodes.PseudoTextElement pel = new org.jsoup.nodes.PseudoTextElement(
-                    org.jsoup.parser.Tag.valueOf(element.tagName(), element.tag().namespace(), ParseSettings.preserveCase), element.baseUri(), element.attributes());
-                textNode.replaceWith(pel);
-                pel.appendChild(textNode);
-            }
-            return false;
-        }
-
-        @Override protected int cost() {
-            return -1; // forces first evaluation, which prepares the DOM for later evaluator matches
-        }
-
-        @Override
-        public String toString() {
-            return ":matchText";
         }
     }
 }

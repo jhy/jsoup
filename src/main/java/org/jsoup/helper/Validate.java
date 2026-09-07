@@ -43,38 +43,6 @@ public final class Validate {
     }
 
     /**
-     Verifies the input object is not null, and returns that object. Effectively this casts a nullable object to a non-
-     null object. (Works around lack of Objects.requestNonNull in Android version.)
-     * @param obj nullable object to cast to not-null
-     * @return the object, or throws an exception if it is null
-     * @throws ValidationException if the object is null
-     * @deprecated prefer to use {@link #expectNotNull(Object, String, Object...)} instead; will be removed in jsoup 1.24.1
-     */
-    @Deprecated
-    public static Object ensureNotNull(@Nullable Object obj) {
-        if (obj == null)
-            throw new ValidationException("Object must not be null");
-        else return obj;
-    }
-
-    /**
-     Verifies the input object is not null, and returns that object. Effectively this casts a nullable object to a non-
-     null object. (Works around lack of Objects.requestNonNull in Android version.)
-     * @param obj nullable object to cast to not-null
-     * @param msg the String format message to include in the validation exception when thrown
-     * @param args the arguments to the msg
-     * @return the object, or throws an exception if it is null
-     * @throws ValidationException if the object is null
-     * @deprecated prefer to use {@link #expectNotNull(Object, String, Object...)} instead; will be removed in jsoup 1.24.1
-     */
-    @Deprecated
-    public static Object ensureNotNull(@Nullable Object obj, String msg, Object... args) {
-        if (obj == null)
-            throw new ValidationException(String.format(msg, args));
-        else return obj;
-    }
-
-    /**
      Verifies the input object is not null, and returns that object, maintaining its type. Effectively this casts a
      nullable object to a non-null object.
 

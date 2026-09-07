@@ -45,32 +45,6 @@ public class Range {
     }
 
     /**
-     Deprecated parser-internal source range setup method, retained for source compatibility. The line and column values
-     in the supplied Positions are not retained; they are derived from source offsets. If either supplied Position is
-     untracked, this Range will also be untracked.
-
-     @param start the start position
-     @param end   the end position
-     @deprecated Use parser position tracking instead. Will be removed in jsoup 1.24.1.
-     */
-    @Deprecated
-    public Range(Position start, Position end) {
-        Objects.requireNonNull(start);
-        Objects.requireNonNull(end);
-        if (start.pos < -1 || end.pos < -1)
-            throw new IllegalArgumentException("Range positions must be non-negative, or -1 for untracked");
-        if (start.pos == -1 || end.pos == -1) {
-            lineMap = UnsetLineMap;
-            startPos = -1;
-            endPos = -1;
-        } else {
-            lineMap = new LineMap();
-            startPos = start.pos;
-            endPos = end.pos;
-        }
-    }
-
-    /**
      Get the start position of this range, with 1-based line and column coordinates.
      * @return the start position.
      */
@@ -191,15 +165,9 @@ public class Range {
         private final int pos, lineNumber, columnNumber;
 
         /**
-         Deprecated parser-internal position setup method, retained for source compatibility. Position objects are
-         normally derived from a Range's retained source offsets.
-         * @param pos position index
-         * @param lineNumber line number
-         * @param columnNumber column number
-         @deprecated Use parser position tracking instead. Will be removed in jsoup 1.24.1.
+         Creates a position from its source offset and coordinates.
          */
-        @Deprecated
-        public Position(int pos, int lineNumber, int columnNumber) {
+        private Position(int pos, int lineNumber, int columnNumber) {
             this.pos = pos;
             this.lineNumber = lineNumber;
             this.columnNumber = columnNumber;
@@ -298,31 +266,6 @@ public class Range {
             this.nameEndPos = nameEndPos;
             this.valueStartPos = valueStartPos;
             this.valueEndPos = valueEndPos;
-        }
-
-        /**
-         Deprecated parser-internal source range setup method, retained for source compatibility. Source ranges are
-         normally produced by enabling parser position tracking before parsing. If either supplied Range is untracked,
-         this AttributeRange will also be untracked.
-         @deprecated Use parser position tracking instead. Will be removed in jsoup 1.24.1.
-         */
-        @Deprecated
-        public AttributeRange(Range nameRange, Range valueRange) {
-            Objects.requireNonNull(nameRange);
-            Objects.requireNonNull(valueRange);
-            if (!nameRange.isTracked() || !valueRange.isTracked()) {
-                lineMap         = UnsetLineMap;
-                nameStartPos    = -1;
-                nameEndPos      = -1;
-                valueStartPos   = -1;
-                valueEndPos     = -1;
-            } else {
-                lineMap         = nameRange.lineMap;
-                nameStartPos    = nameRange.startPos;
-                nameEndPos      = nameRange.endPos;
-                valueStartPos   = valueRange.startPos;
-                valueEndPos     = valueRange.endPos;
-            }
         }
 
         /** Get the source range for the attribute's name. */

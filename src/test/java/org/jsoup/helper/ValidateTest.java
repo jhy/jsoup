@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SuppressWarnings("deprecation") // keeps tests for ensureNotNull
 public class ValidateTest {
     @Test
     public void testNotNull() {
@@ -59,72 +58,20 @@ public class ValidateTest {
         assertTrue(threw);
     }
 
-    @Test
-    public void testEnsureNotNull() {
-        // Test with a non-null object
-        Object obj = new Object();
-        assertSame(obj, Validate.ensureNotNull(obj));
-
-        // Test with a null object
-        boolean threw = false;
-        try {
-            Validate.ensureNotNull(null);
-        } catch (ValidationException e) {
-            threw = true;
-            assertEquals("Object must not be null", e.getMessage());
-        }
-        assertTrue(threw);
-    }
-
-    @Test
-    public void testEnsureNotNullWithMessage() {
-        // Test with a non-null object
-        Object obj = new Object();
-        assertSame(obj, Validate.ensureNotNull(obj, "Object must not be null"));
-
-        // Test with a null object
-        boolean threw = false;
-        try {
-            Validate.ensureNotNull(null, "Custom error message");
-        } catch (ValidationException e) {
-            threw = true;
-            assertEquals("Custom error message", e.getMessage());
-        }
-        assertTrue(threw);
-    }
-
-    @Test
-    public void testEnsureNotNullWithFormattedMessage() {
-        // Test with a non-null object
-        Object obj = new Object();
-        assertSame(obj, Validate.ensureNotNull(obj, "Object must not be null: %s", "additional info"));
-
-        // Test with a null object
-        boolean threw = false;
-        try {
-            Validate.ensureNotNull(null, "Object must not be null: %s", "additional info");
-        } catch (ValidationException e) {
-            threw = true;
-            assertEquals("Object must not be null: additional info", e.getMessage());
-        }
-        assertTrue(threw);
-    }
-
     @Test void expectNotNull() {
         String foo = "Foo";
         String foo2 = Validate.expectNotNull(foo);
         assertSame(foo, foo2);
 
-        // Test with a null object
-        String bar = null;
-        boolean threw = false;
-        try {
-            Validate.expectNotNull(bar);
-        } catch (ValidationException e) {
-            threw = true;
-            assertEquals("Object must not be null", e.getMessage());
-        }
-        assertTrue(threw);
+        ValidationException defaultError = assertThrows(ValidationException.class, () -> Validate.expectNotNull(null));
+        assertEquals("Object must not be null", defaultError.getMessage());
+
+        ValidationException customError = assertThrows(ValidationException.class, () -> Validate.expectNotNull(null, "Custom error message"));
+        assertEquals("Custom error message", customError.getMessage());
+
+        ValidationException formattedError = assertThrows(ValidationException.class, () ->
+            Validate.expectNotNull(null, "Object must not be null: %s", "additional info"));
+        assertEquals("Object must not be null: additional info", formattedError.getMessage());
     }
 
     @Test

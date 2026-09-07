@@ -311,43 +311,11 @@ public class AttributesTest {
         assertEquals(2, a.asList().size()); // excluded from lists
     }
 
-    @SuppressWarnings("deprecation")
-    @Test public void sourceRangesUseVisibleAttributeSlots() {
-        Element source = Jsoup.parse("<p one=1 two=2>", Parser.htmlParser().setTrackPosition(true)).expectFirst("p");
-        Range.AttributeRange oneRange = source.attributes().sourceRange("one");
-        Range.AttributeRange twoRange = source.attributes().sourceRange("two");
-
-        Attributes a = new Attributes();
-        a.put(Attributes.internalKey("before"), "x");
-        a.put("one", "1");
-        a.put(Attributes.internalKey("middle"), "y");
-        a.put("two", "2");
-
-        a.sourceRange("one", oneRange);
-        a.sourceRange("two", twoRange);
-
-        assertEquals(oneRange, a.sourceRange("one"));
-        assertEquals(twoRange, a.sourceRange("two"));
-
-        a.remove(Attributes.internalKey("before"));
-        assertEquals(oneRange, a.sourceRange("one"));
-        assertEquals(twoRange, a.sourceRange("two"));
-
-        a.remove(Attributes.internalKey("middle"));
-        assertEquals(oneRange, a.sourceRange("one"));
-        assertEquals(twoRange, a.sourceRange("two"));
-
-        a.remove("one");
-        assertFalse(a.sourceRange("one").isTracked());
-        assertEquals(twoRange, a.sourceRange("two"));
-    }
-
     @Test public void testBooleans() {
         // want unknown=null, and known like async=null, async="", and async=async to collapse
         String html = "<a foo bar=\"\" async=async qux=qux defer=deferring ismap inert=\"\">";
         Element el = Jsoup.parse(html).selectFirst("a");
         assertEquals(" foo bar=\"\" async qux=\"qux\" defer=\"deferring\" ismap inert", el.attributes().html());
-
     }
 
     @Test public void booleanNullAttributesConsistent() {

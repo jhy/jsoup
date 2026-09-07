@@ -465,18 +465,6 @@ public class ConnectTest {
     }
 
     @Test
-    @SuppressWarnings("deprecation") // Exercises deprecated bufferUp compatibility until removal.
-    public void multipleParsesOkAfterBufferUp() throws IOException {
-        Connection.Response res = Jsoup.connect(echoUrl).execute().bufferUp();
-
-        Document doc = res.parse();
-        assertEquals("Webserver Environment Variables", doc.title());
-
-        Document doc2 = res.parse();
-        assertEquals("Webserver Environment Variables", doc2.title());
-    }
-
-    @Test
     public void bufferedParseWorksWhenCharsetDetectionFullyReadsResponse() throws IOException {
         Connection.Response res = Jsoup.connect(origin().file.url("/htmltests/charset-base.html")).execute();
 

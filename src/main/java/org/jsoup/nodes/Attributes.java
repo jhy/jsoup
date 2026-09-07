@@ -465,24 +465,6 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         return rangeSpans != null ? rangeSpans.attributeRange(index) : UntrackedAttr;
     }
 
-    /**
-     Deprecated parser-internal source range setup method, retained for source compatibility. Source ranges are normally
-     produced by enabling parser position tracking before parsing.
-     @param key the attribute name
-     @param range the range for the attribute's name and value
-     @return these attributes, for chaining
-     @since 1.18.2
-     @deprecated Use parser position tracking instead. Will be removed in jsoup 1.24.1.
-     */
-    @Deprecated
-    public Attributes sourceRange(String key, Range.AttributeRange range) {
-        Validate.notNull(key);
-        Validate.notNull(range);
-        NodeInternals.attributeRange(this, key, range);
-        return this;
-    }
-
-
     @Override
     public Iterator<Attribute> iterator() {
         //noinspection ReturnOfInnerClass

@@ -323,13 +323,14 @@
             </dependency>
           </oldVersion>
           <parameter>
-            <!-- jsoup policy is ok to remove deprecated methods on minor but not builds. will need to temp remove on bump to 1.15.1 and manually validate -->
             <onlyModified>false</onlyModified>
             <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
             <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
             <excludes>
               <!-- Internal APIs are explicitly unsupported and may change between releases. -->
               <exclude>org.jsoup.internal.*</exclude>
+              <!-- Temporarily allow removals deprecated before 1.24.1. -->
+              <exclude>@java.lang.Deprecated</exclude>
             </excludes>
             <overrideCompatibilityChangeParameters>
               <!-- allows new default and move to default methods. compatible as long as existing binaries aren't making calls via reflection. if so, they need to catch errors anyway. -->

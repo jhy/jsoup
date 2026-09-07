@@ -280,16 +280,6 @@ public class Tag implements Cloneable {
     }
 
     /**
-     Get if this is an InlineContainer tag.
-
-     @return true if this tag has the InlineContainer pretty-print hint.
-     @deprecated internal pretty-printing flag; use {@link #isInline()} or {@link #isBlock()} to check layout intent. Will be removed in jsoup 1.24.1.
-     */
-    @Deprecated public boolean formatAsBlock() {
-        return (options & InlineContainer) != 0;
-    }
-
-    /**
      * Gets if this tag is an inline tag. Just the opposite of isBlock.
      *
      * @return if this tag is an inline tag.

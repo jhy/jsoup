@@ -316,21 +316,4 @@ public class ConnectIT {
             assertEquals(cap, cappedRead.limit());
         }
     }
-
-    @Test
-    @SuppressWarnings("deprecation") // Exercises deprecated bufferUp compatibility until removal.
-    public void bodyStreamConstrainedViaBufferUp() throws IOException {
-        int cap = 5 * 1024;
-        String url = origin().file.url("/htmltests/large.html"); // 280 K
-        try (BufferedInputStream stream = Jsoup
-            .connect(url)
-            .maxBodySize(cap)
-            .execute()
-            .bufferUp()
-            .bodyStream()) {
-
-            ByteBuffer cappedRead = DataUtil.readToByteBuffer(stream, 0);
-            assertEquals(cap, cappedRead.limit());
-        }
-    }
 }

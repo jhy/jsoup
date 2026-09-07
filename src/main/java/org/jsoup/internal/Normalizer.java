@@ -46,14 +46,4 @@ public final class Normalizer {
         }
         return true;
     }
-
-    /**
-     * Gets an XML-safe tag name.
-     * @deprecated Internal helper; use {@link Attribute#getValidKey(String, Document.OutputSettings.Syntax)}.
-     * Will be removed in jsoup 1.24.1.
-     */
-    @Deprecated
-    public static String xmlSafeTagName(final String tagName) {
-        return Attribute.getValidKey(tagName, Document.OutputSettings.Syntax.xml);
-    }
 }

@@ -8,7 +8,6 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
 import org.jspecify.annotations.Nullable;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
@@ -195,18 +194,6 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         htmlNoValidate(key, val, accum, out);
     }
 
-    /** @deprecated internal method; use {@link #html(String, String, QuietAppendable, Document.OutputSettings)} with {@link org.jsoup.internal.QuietAppendable#wrap(Appendable)} instead. Will be removed in jsoup 1.24.1. */
-    @Deprecated
-    protected void html(Appendable accum, Document.OutputSettings out) throws IOException {
-        html(key, val, accum, out);
-    }
-
-    /** @deprecated internal method; use {@link #html(String, String, QuietAppendable, Document.OutputSettings)} with {@link org.jsoup.internal.QuietAppendable#wrap(Appendable)} instead. Will be removed in jsoup 1.24.1. */
-    @Deprecated
-    protected static void html(String key, @Nullable String val, Appendable accum, Document.OutputSettings out) throws IOException {
-        html(key, val, QuietAppendable.wrap(accum), out);
-    }
-
     static void htmlNoValidate(String key, @Nullable String val, QuietAppendable accum, Document.OutputSettings out) {
         // structured like this so that Attributes can check we can write first, so it can add whitespace correctly
         accum.append(key);
@@ -299,18 +286,6 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
 
     protected static boolean isDataAttribute(String key) {
         return key.startsWith(Attributes.dataPrefix) && key.length() > Attributes.dataPrefix.length();
-    }
-
-    /**
-     * Collapsible if it's a boolean attribute and value is empty or same as name
-     * 
-     * @param out output settings
-     * @return  Returns whether collapsible or not
-     * @deprecated internal method; use {@link #shouldCollapseAttribute(String, String, Document.OutputSettings)} instead. Will be removed in jsoup 1.24.1.
-     */
-    @Deprecated
-    protected final boolean shouldCollapseAttribute(Document.OutputSettings out) {
-        return shouldCollapseAttribute(key, val, out);
     }
 
     // collapse unknown foo=null, known checked=null, checked="", checked=checked; write out others
