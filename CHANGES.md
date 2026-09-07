@@ -3,7 +3,7 @@
 ## 1.24.1 (Pending)
 
 ### Changes
-* Removed APIs previously deprecated and scheduled for removal in 1.24.1.
+* Removed APIs previously deprecated and scheduled for removal in 1.24.1. [#2597](https://github.com/jhy/jsoup/pull/2597)
 
 ### Bug Fixes
 * Standardized parser normalization of tag and attribute names so that HTML comparisons use ASCII-only case folding, and accepted control characters are preserved, aligning name handling to the HTML and XML specs. [#2594](https://github.com/jhy/jsoup/issues/2594)
