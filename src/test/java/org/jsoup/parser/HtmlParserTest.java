@@ -1311,6 +1311,39 @@ public class HtmlParserTest {
         assertEquals("&amp; \" &reg; &amp;icy &amp;hopf &icy; &hopf;", doc.body().html());
     }
 
+    @Test public void decodesAttributeEntitiesBeforePunctuation() {
+        for (String quote : new String[]{"\"", "'", ""}) {
+            String html = "<a title=" + quote + "&copy-&copy_" + quote + ">One</a>";
+            assertEquals("©-©_", Jsoup.parse(html).expectFirst("a").attr("title"), html);
+        }
+    }
+
+    @Test public void preservesAttributeEntitiesBeforeEquals() {
+        for (String quote : new String[]{"\"", "'"}) {
+            String html = "<a title=" + quote + "&copy=&copy;=" + quote + ">One</a>";
+            assertEquals("&copy=©=", Jsoup.parse(html).expectFirst("a").attr("title"), html);
+        }
+    }
+
+    @Test public void preservesAttributeEntitiesBeforeAlphanumeric() {
+        for (String quote : new String[]{"\"", "'", ""}) {
+            String value = "&copya&copyZ&copy1&copy;A&copy;1";
+            String html = "<a title=" + quote + value + quote + ">One</a>";
+            assertEquals("&copya&copyZ&copy1©A©1", Jsoup.parse(html).expectFirst("a").attr("title"), html);
+        }
+    }
+
+    @Test public void queryParametersDecodeEntitiesInTextOnly() {
+        // https://github.com/jhy/jsoup/issues/2588
+        String value = "?one=1&timestamp=2&param=3";
+        for (String quote : new String[]{"\"", "'"}) {
+            String html = "<a href=" + quote + value + quote + ">" + value + "</a>";
+            Element el = Jsoup.parse(html).expectFirst("a");
+            assertEquals(value, el.attr("href"), html);
+            assertEquals("?one=1×tamp=2¶m=3", el.text(), html);
+        }
+    }
+
     @Test public void findsBasePrefixEntity() {
         // https://github.com/jhy/jsoup/issues/2207
         String html = "a&nbspc&shyc I'm &notit; I tell you. I'm &notin; I tell you.";

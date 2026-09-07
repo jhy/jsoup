@@ -198,8 +198,8 @@ final class Tokeniser {
                 reader.matchConsume(prefix);
                 nameRef = prefix;
             }
-            if (inAttribute && (reader.matchesAsciiAlpha() || reader.matchesDigit() || reader.matchesAny('=', '-', '_'))) {
-                // don't want that to match
+            if (inAttribute && (reader.matchesAsciiAlpha() || reader.matchesDigit() || reader.matches('='))) {
+                // in attributes, don't consume semicolonless references followed by ASCII alphanumeric or equals
                 reader.rewindToMark();
                 return null;
             }
