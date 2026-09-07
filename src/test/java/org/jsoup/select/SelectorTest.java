@@ -1800,4 +1800,18 @@ public class SelectorTest {
         assertTrue(threw);
     }
 
+
+    @Test void nameMatchingUsesAsciiButTextMatchingUsesUnicode() {
+        Document doc = Jsoup.parse("<x-Ä data-Ä='VALUE'>Äpfel</x-Ä><x-ä data-ä='value'>Other</x-ä>");
+        assertEquals("Äpfel", doc.select("X-Ä").text());
+        assertEquals("Other", doc.select("x-ä").text());
+        assertEquals("Äpfel", doc.select("[DATA-Ä]").text());
+        assertEquals("Äpfel", doc.select("[DATA-Ä=value]").text());
+        assertEquals("Äpfel", doc.select("[^DATA-Ä]").text());
+        assertEquals("Äpfel", doc.select("x-Ä:contains(äPFEL)").text());
+        Element el = new Element(new org.jsoup.parser.Tag("x "), "");
+        el.text("Space");
+        assertEquals("Space", el.select("x\\ :not(p)").text());
+    }
+
 }

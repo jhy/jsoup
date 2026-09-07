@@ -96,5 +96,18 @@ public class SafelistTest {
         assertNull(safelist);
     }
 
+    @Test
+    void namesUseAsciiCaseFolding() {
+        Safelist safelist = Safelist.none()
+            .addTags("P", "X-Ä")
+            .addAttributes("P", "DATA-Ä");
+
+        assertTrue(safelist.isSafeTag("p"));
+        assertTrue(safelist.isSafeTag("x-Ä"));
+        assertFalse(safelist.isSafeTag("x-ä"));
+        assertTrue(safelist.isSafeAttribute("p", null, new Attribute("data-Ä", TEST_VALUE)));
+        assertFalse(safelist.isSafeAttribute("p", null, new Attribute("data-ä", TEST_VALUE)));
+    }
+
 
 }

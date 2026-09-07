@@ -473,4 +473,14 @@ public class AttributesTest {
         assertTrue(attrs.isEmpty());
     }
 
+
+    @Test void repairedHtmlKeysUseAsciiCollisionChecks() {
+        Attributes attrs = new Attributes();
+        attrs.add("K_", "unicode");
+        attrs.add("k\u0001", "repaired");
+        assertEquals(" K_=\"unicode\" k_=\"repaired\"", attrs.html());
+        attrs.add("K_", "original");
+        assertEquals(" K_=\"unicode\" _k_=\"repaired\" K_=\"original\"", attrs.html());
+    }
+
 }

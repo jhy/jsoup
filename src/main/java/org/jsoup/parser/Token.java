@@ -9,7 +9,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static org.jsoup.internal.Normalizer.lowerCase;
+import static org.jsoup.internal.Normalizer.asciiLowerCase;
 
 /**
  * Parse tokens for the Tokeniser.
@@ -171,9 +171,7 @@ abstract class Token {
                 attributes = new Attributes();
 
             if (attrName.hasData() && attributes.size() < MaxAttributes) {
-                // the tokeniser has skipped whitespace control chars, but trimming could collapse to empty for other control codes, so verify here
                 String name = attrName.value();
-                name = name.trim();
                 if (!name.isEmpty()) {
                     String value;
                     if (attrValue.hasData())
@@ -243,7 +241,7 @@ abstract class Token {
             attrRangeCount = 0;
             for (int i = 0; i < count; i++) {
                 String stagedName = Objects.requireNonNull(attrRangeNames[i]);
-                String rangeName = settings.normalizeAttribute(stagedName);
+                String rangeName = settings.preserveAttributeCase() ? stagedName : asciiLowerCase(stagedName);
                 Range.AttributeRange existing = attributes.sourceRange(rangeName);
                 if (!existing.isTracked()) {
                     int rangeIndex = attrRangeIndex(i);
@@ -301,7 +299,7 @@ abstract class Token {
 
         final Tag name(String name) {
             tagName.set(name);
-            normalName = lowerCase(tagName.value());
+            normalName = asciiLowerCase(tagName.value());
             return this;
         }
 
@@ -314,7 +312,7 @@ abstract class Token {
             // might have null chars - need to replace with null replacement character
             append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
             tagName.append(append);
-            normalName = lowerCase(tagName.value());
+            normalName = asciiLowerCase(tagName.value());
         }
 
         final void appendTagName(char append) {
@@ -389,7 +387,7 @@ abstract class Token {
         StartTag nameAttr(String name, Attributes attributes) {
             this.tagName.set(name);
             this.attributes = attributes;
-            normalName = lowerCase(name);
+            normalName = asciiLowerCase(name);
             return this;
         }
 

@@ -503,4 +503,18 @@ public class CharacterReaderTest {
         assertEquals('&', r.consume());
     }
 
+
+    @Test void keywordMatchingUsesAsciiCaseAcrossRefills() {
+        for (int offset : new int[]{0, CharacterReader.BufferSize - 3, CharacterReader.BufferSize + 3}) {
+            String padding = StringUtil.padding(offset, offset);
+            try (CharacterReader reader = new CharacterReader(padding + "PUBLİC PUBLIC")) {
+                for (int i = 0; i < offset; i++) reader.consume();
+                assertFalse(reader.matchesIgnoreCase("public"));
+                assertTrue(reader.matchConsumeIgnoreCase("publİc"));
+                reader.consume();
+                assertTrue(reader.matchConsumeIgnoreCase("public"));
+            }
+        }
+    }
+
 }

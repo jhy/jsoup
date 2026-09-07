@@ -1,17 +1,18 @@
 package org.jsoup.parser;
 
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attributes;
-import org.jspecify.annotations.Nullable;
 
-import static org.jsoup.internal.Normalizer.lowerCase;
-import static org.jsoup.internal.Normalizer.normalize;
+import static org.jsoup.internal.Normalizer.asciiLowerCase;
 
 /**
  * Controls parser case settings, to optionally preserve tag and/or attribute name case.
+ * Case conversion uses ASCII rules.
+ * Programmatic name normalization also trims surrounding ASCII whitespace.
  */
 public class ParseSettings {
     /**
-     * HTML default settings: both tag and attribute names are lower-cased during parsing.
+     * HTML defaults: lower-case tag and attribute names.
      */
     public static final ParseSettings htmlDefault;
     /**
@@ -56,22 +57,22 @@ public class ParseSettings {
     }
 
     /**
-     * Normalizes a tag name according to the case preservation setting.
+     * Normalizes a tag name according to these settings.
      */
     public String normalizeTag(String name) {
-        name = name.trim();
+        name = StringUtil.trimAsciiWhitespace(name);
         if (!preserveTagCase)
-            name = lowerCase(name);
+            name = asciiLowerCase(name);
         return name;
     }
 
     /**
-     * Normalizes an attribute according to the case preservation setting.
+     * Normalizes an attribute name according to these settings.
      */
     public String normalizeAttribute(String name) {
-        name = name.trim();
+        name = StringUtil.trimAsciiWhitespace(name);
         if (!preserveAttributeCase)
-            name = lowerCase(name);
+            name = asciiLowerCase(name);
         return name;
     }
 
@@ -79,10 +80,5 @@ public class ParseSettings {
         if (!preserveAttributeCase) {
             attributes.normalize();
         }
-    }
-
-    /** Returns the normal name that a Tag will have (trimmed and lower-cased) */
-    static String normalName(String name) {
-        return normalize(name);
     }
 }

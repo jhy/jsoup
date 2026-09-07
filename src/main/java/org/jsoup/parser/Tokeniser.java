@@ -8,6 +8,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 
+import static org.jsoup.internal.Normalizer.asciiLowerCase;
+
 /**
  * Readers the input stream into tokens.
  */
@@ -88,7 +90,7 @@ final class Tokeniser {
 
         if (token.type == Token.TokenType.StartTag) {
             Token.StartTag startTag = (Token.StartTag) token;
-            lastStartTag = startTag.name();
+            lastStartTag = startTag.normalName();
         } else if (token.type == Token.TokenType.EndTag) {
             Token.EndTag endTag = (Token.EndTag) token;
             if (endTag.hasAttributes())
@@ -268,7 +270,7 @@ final class Tokeniser {
 
     /** Test if the pending end tag matches the last emitted start tag. */
     boolean isAppropriateEndTagToken() {
-        return lastStartTag != null && tagPending.name().equalsIgnoreCase(lastStartTag);
+        return lastStartTag != null && tagPending.normalName().equals(lastStartTag);
     }
 
     /** Test if appending the character would keep the pending end tag a prefix of the expected name. */
@@ -278,8 +280,8 @@ final class Tokeniser {
         String candidate = tagPending.normalName();
         int length = candidate.length();
         return length < lastStartTag.length()
-            && lastStartTag.regionMatches(true, 0, candidate, 0, length)
-            && lastStartTag.charAt(length) == next;
+            && lastStartTag.startsWith(candidate)
+            && lastStartTag.charAt(length) == asciiLowerCase(next);
     }
 
     void error(TokeniserState state) {

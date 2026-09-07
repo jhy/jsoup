@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.internal.SharedConstants;
 import org.jspecify.annotations.Nullable;
 
@@ -10,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import static org.jsoup.internal.Normalizer.asciiLowerCase;
 import static org.jsoup.parser.Parser.NamespaceHtml;
 import static org.jsoup.parser.Parser.NamespaceMathml;
 import static org.jsoup.parser.Parser.NamespaceSvg;
@@ -137,13 +139,13 @@ public class TagSet {
     Tag valueOf(String tagName, @Nullable String normalName, String namespace, boolean preserveTagCase) {
         Validate.notNull(tagName);
         Validate.notNull(namespace);
-        if (normalName == null) tagName = tagName.trim(); // public API input; tokenizer names are already delimited
+        if (normalName == null) tagName = StringUtil.trimAsciiWhitespace(tagName); // public API input; tokenizer names are already delimited
         Validate.notEmpty(tagName);
         Tag tag = get(tagName, namespace);
         if (tag != null) return tag;
 
         // not found by tagName, try by normal
-        if (normalName == null) normalName = ParseSettings.normalName(tagName);
+        if (normalName == null) normalName = asciiLowerCase(tagName);
         tagName = preserveTagCase ? tagName : normalName;
         tag = get(normalName, namespace);
         if (tag != null) {

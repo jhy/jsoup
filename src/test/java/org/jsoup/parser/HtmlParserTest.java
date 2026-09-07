@@ -1542,7 +1542,12 @@ public class HtmlParserTest {
 
     @Test public void handlesControlCodeInAttributeName() {
         Document doc = Jsoup.parse("<p><a \06=foo>One</a><a/\06=bar><a foo\06=bar>Two</a></p>");
-        assertEquals("<p><a>One</a><a></a><a foo=\"bar\">Two</a></p>", doc.body().html());
+        assertEquals("foo", doc.select("a").get(0).attr("\06"));
+        assertEquals("bar", doc.select("a").get(1).attr("\06"));
+        assertEquals("bar", doc.select("a").get(2).attr("foo\06"));
+        assertFalse(doc.select("a").get(2).hasAttr("foo"));
+        // invalid names are repaired for serialization, but are not trimmed or dropped while parsing
+        assertEquals("<p><a _=\"foo\">One</a><a _=\"bar\"></a><a foo_=\"bar\">Two</a></p>", doc.body().html());
     }
 
     @Test public void caseSensitiveParseTree() {

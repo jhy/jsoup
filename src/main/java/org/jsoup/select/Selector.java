@@ -14,10 +14,9 @@ import java.util.stream.Stream;
  CSS element selector, that finds elements matching a query.
 
  <h2>Selector syntax</h2>
- <p>
- A selector is a chain of simple selectors, separated by combinators. Selectors are <b>case-insensitive</b> (including
- against elements, attributes, and attribute values).
- </p>
+ <p>A selector is a chain of simple selectors, separated by combinators.</p>
+ <p>Tag and attribute names are matched ASCII case-insensitively, so non-ASCII case variants remain distinct.
+ Attribute-value and case-insensitive text searches use Unicode case rules.</p>
  <p>
  The universal selector {@code *} is implicit when no element selector is supplied (i.e. {@code .header} and
  {@code *.header} are equivalent).

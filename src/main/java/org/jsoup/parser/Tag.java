@@ -6,11 +6,13 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 
+import static org.jsoup.internal.Normalizer.asciiLowerCase;
 import static org.jsoup.parser.Parser.NamespaceHtml;
 
 /**
  A Tag represents an Element's name and configured options, common throughout the Document. Options may affect the parse
  and output.
+ <p>A tag's normalized name uses ASCII lowercase; other characters are unchanged.</p>
 
  @see TagSet
  @see Parser#tagSet(TagSet) */
@@ -54,7 +56,7 @@ public class Tag implements Cloneable {
      @since 1.20.1
      */
     public Tag(String tagName, String namespace) {
-        this(tagName, ParseSettings.normalName(tagName), namespace);
+        this(tagName, asciiLowerCase(tagName), namespace);
     }
 
     /**
@@ -65,7 +67,7 @@ public class Tag implements Cloneable {
      @since 1.20.1
      */
     public Tag(String tagName) {
-        this(tagName, ParseSettings.normalName(tagName), NamespaceHtml);
+        this(tagName, asciiLowerCase(tagName), NamespaceHtml);
     }
 
     /** Path for TagSet defaults, no options set; normal name is already LC. */
@@ -103,7 +105,7 @@ public class Tag implements Cloneable {
     public Tag name(String tagName) {
         if (is(RcData) || is(Data)) validateTextTagName(tagName);
         this.tagName = tagName;
-        this.normalName = ParseSettings.normalName(tagName);
+        this.normalName = asciiLowerCase(tagName);
         setParserOptions();
         return this;
     }
@@ -133,7 +135,7 @@ public class Tag implements Cloneable {
     }
 
     /**
-     * Get this tag's normalized (lowercased) name.
+     * Get this tag's normalized name.
      * @return the tag's normal name.
      */
     public String normalName() {

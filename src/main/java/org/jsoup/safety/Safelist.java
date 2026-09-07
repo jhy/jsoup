@@ -256,7 +256,7 @@ public class Safelist {
 
         for (String tagName : tags) {
             Validate.notEmpty(tagName);
-            Validate.isFalse(tagName.equalsIgnoreCase("noscript"),
+            Validate.isFalse(Normalizer.equalsIgnoreAsciiCase(tagName, "noscript"),
                 "noscript is unsupported in Safelists, due to incompatibilities between parsers with and without script-mode enabled");
             tagNames.add(TagName.valueOf(tagName));
         }
@@ -632,7 +632,7 @@ public class Safelist {
         }
 
         static TagName valueOf(String value) {
-            return new TagName(Normalizer.lowerCase(value));
+            return new TagName(Normalizer.asciiLowerCase(value));
         }
     }
 
@@ -642,7 +642,7 @@ public class Safelist {
         }
 
         static AttributeKey valueOf(String value) {
-            return new AttributeKey(Normalizer.lowerCase(value));
+            return new AttributeKey(Normalizer.asciiLowerCase(value));
         }
     }
 
