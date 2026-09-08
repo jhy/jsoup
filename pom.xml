@@ -296,6 +296,9 @@
         </executions>
         <configuration>
           <excludedGroups>${failsafe.excludedGroups}</excludedGroups>
+          <systemPropertyVariables>
+            <jsoup.test.jar>${project.build.directory}/${project.build.finalName}.jar</jsoup.test.jar>
+          </systemPropertyVariables>
           <properties>
             <configurationParameters>
               junit.jupiter.execution.parallel.enabled = true

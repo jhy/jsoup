@@ -37,12 +37,6 @@ public class HttpClientExecutorTest {
         disableHttpClient();
     }
 
-    @Test void loadsMultiReleaseHttpClientExecutor() {
-        // sanity check that the test is resolving the packaged Java 11 override, not a copy on the test classpath
-        String resource = HttpClientTestAccess.executorClassResource().toExternalForm();
-        assertTrue(resource.contains("/META-INF/versions/11/"), resource);
-    }
-
     @Test void getsHttpClient() {
         enableHttpClient();
         RequestExecutor executor = RequestDispatch.get(new HttpConnection.Request(), null);
