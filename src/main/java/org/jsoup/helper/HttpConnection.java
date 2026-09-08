@@ -843,6 +843,7 @@ public class HttpConnection implements Connection {
         private @Nullable String charset;
         @Nullable String contentType;
         int contentLength;
+        private boolean truncated;
         private boolean executed = false;
         private boolean inputStreamRead = false;
         private int numRedirects = 0;
@@ -984,6 +985,7 @@ public class HttpConnection implements Connection {
                         stream, DefaultBufferSize, req.maxBodySize())
                         .timeout(startTime, req.timeout());
 
+                    // todo: for compressed responses, count transport progress before decoding so processed bytes and Content-Length use the same representation
                     if (req.responseProgress != null) // set response progress listener
                         res.bodyStream.onProgress(res.contentLength, req.responseProgress, res);
                 } else {
@@ -1048,6 +1050,7 @@ public class HttpConnection implements Connection {
         @Override public Document parse() throws IOException {
             ControllableInputStream stream = prepareParse();
             Document doc = DataUtil.parseInputStream(stream, charset, url.toExternalForm(), req.parser());
+            truncated |= stream.checkTruncated();
             doc.connection(new HttpConnection(req, this)); // because we're static, don't have the connection obj. // todo - maybe hold in the req?
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
             safeClose();
@@ -1080,6 +1083,7 @@ public class HttpConnection implements Connection {
                 Validate.isFalse(inputStreamRead, "Request has already been read (with .parse())");
                 try {
                     byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
+                    truncated |= bodyStream.checkTruncated();
                 } finally {
                     inputStreamRead = true;
                     safeClose();
@@ -1153,12 +1157,18 @@ public class HttpConnection implements Connection {
             return bodyStream.inputStream();
         }
 
+        @Override
+        public boolean isTruncated() {
+            return truncated || bodyStream != null && bodyStream.isTruncated();
+        }
+
         /**
          * Call on completion of stream read, to close the body (or error) stream. The connection.disconnect allows
          * keep-alives to work (as the underlying connection is actually held open, despite the name).
          */
         private void safeClose() {
             if (bodyStream != null) {
+                truncated |= bodyStream.isTruncated();
                 try {
                     bodyStream.close();
                 } catch (IOException e) {

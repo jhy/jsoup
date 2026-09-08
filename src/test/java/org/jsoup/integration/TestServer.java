@@ -85,8 +85,9 @@ public class TestServer {
         public final Endpoint deflate = new Endpoint("/Deflate", DeflateRoute::handle);
         public final Endpoint interrupted = new Endpoint("/Interrupted", InterruptedRoute::handle);
         public final Endpoint slowRider = new Endpoint("/SlowRider", SlowRider::handle);
+        public final Endpoint largeGzip = new Endpoint("/LargeGzip", LargeGzipRoute::handle);
         private final List<Endpoint> endpoints = Collections.unmodifiableList(Arrays.asList(
-                hello, noContentType, echo, file, redirect, cookie, deflate, interrupted, slowRider));
+                hello, noContentType, echo, file, redirect, cookie, deflate, interrupted, slowRider, largeGzip));
 
         private Origin() {
         }

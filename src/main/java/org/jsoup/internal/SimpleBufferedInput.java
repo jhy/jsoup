@@ -17,13 +17,15 @@ import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
 class SimpleBufferedInput extends FilterInputStream {
     static final int BufferSize = DefaultBufferSize;
     static final SoftPool<byte[]> BufferPool = new SoftPool<>(() -> new byte[BufferSize]);
-    private int capRemaining = Integer.MAX_VALUE; // how many bytes we are allowed to pull from the underlying stream
+    private boolean capped;                 // whether pulls from the underlying stream are capped
+    private int capRemaining;               // how many bytes we are allowed to pull from the underlying stream
+    private int lookahead = -1;             // one byte retained when probing beyond a cap
 
-    private byte @Nullable [] byteBuf; // the byte buffer; recycled via SoftPool. Created in fill if required
+    private byte @Nullable [] byteBuf;      // the byte buffer; recycled via SoftPool. Created in fill if required
     private int bufPos;
     private int bufLength;
-    private int bufMark = -1; // mark set by ControllableInputStream; -1 when unset
-    private boolean inReadFully = false; // true when the underlying inputstream has been read fully
+    private int bufMark = -1;               // mark set by ControllableInputStream; -1 when unset
+    private boolean inReadFully = false;    // true when the underlying inputstream has been read fully
 
     SimpleBufferedInput(@Nullable InputStream in) {
         super(in);
@@ -73,24 +75,31 @@ class SimpleBufferedInput extends FilterInputStream {
 
         compact();
         bufLength = bufPos;
-        int toRead = Math.min(byteBuf.length - bufPos, capRemaining);
+        if (lookahead >= 0) {
+            if (capped && capRemaining <= 0) return;
+            byteBuf[bufLength++] = (byte) lookahead;
+            lookahead = -1;
+            if (capped) capRemaining--;
+        }
+
+        int toRead = capped ? Math.min(byteBuf.length - bufLength, capRemaining) : byteBuf.length - bufLength;
         if (toRead <= 0) return;
-        int read = in.read(byteBuf, bufPos, toRead);
+        int read = in.read(byteBuf, bufLength, toRead);
         if (read > 0) {
-            bufLength = read + bufPos;
-            capRemaining -= read;
-            while (byteBuf.length - bufLength > 0 && capRemaining > 0) { // read in more if we have space, without blocking
+            bufLength += read;
+            if (capped) capRemaining -= read;
+            while (byteBuf.length - bufLength > 0 && (!capped || capRemaining > 0)) { // read in more if we have space, without blocking
                 try {
                     if (in.available() < 1) break;
                 } catch (IOException e) {
                     break; // available() is advisory; keep the bytes we've already buffered
                 }
-                toRead = Math.min(byteBuf.length - bufLength, capRemaining);
+                toRead = capped ? Math.min(byteBuf.length - bufLength, capRemaining) : byteBuf.length - bufLength;
                 if (toRead <= 0) break;
                 read = in.read(byteBuf, bufLength, toRead);
                 if (read <= 0) break;
                 bufLength += read;
-                capRemaining -= read;
+                if (capped) capRemaining -= read;
             }
         }
         if (read == -1) inReadFully = true;
@@ -117,14 +126,42 @@ class SimpleBufferedInput extends FilterInputStream {
     @Override
     public int available() throws IOException {
         int buffered = (byteBuf != null) ? (bufLength - bufPos) : 0;
+        if (lookahead >= 0 && (!capped || capRemaining > 0)) buffered++;
         if (buffered > 0) {
             return buffered; // doesn't include those in.available(), but mostly used as a block test
         }
         return inReadFully ? 0 : in.available();
     }
 
+    /**
+     Caps how many more bytes may be pulled from the underlying stream.
+     */
     void capRemaining(int newRemaining) {
+        capped = true;
         capRemaining = Math.max(0, newRemaining);
+    }
+
+    /**
+     Removes the cap on pulls from the underlying stream.
+     */
+    void uncap() {
+        capped = false;
+    }
+
+    /**
+     Look one byte beyond the current cap, retaining it in case the cap is subsequently raised.
+     */
+    boolean hasMore() throws IOException {
+        if (bufPos < bufLength || lookahead >= 0) return true;
+        if (inReadFully) return false;
+
+        int next = in.read();
+        if (next == -1) {
+            inReadFully = true;
+            return false;
+        }
+        lookahead = next;
+        return true;
     }
 
     void setMark() {

@@ -5,7 +5,8 @@ package org.jsoup;
 public interface Progress<ProgressContext> {
     /**
      Called to report progress. Note that this will be executed by the same thread that is doing the work, so either
-     don't take to long, or hand it off to another thread.
+     don't take too long, or hand it off to another thread.
+     <p>Byte counts saturate at {@link Integer#MAX_VALUE} for responses > ~ 2GB.</p>
      @param processed the number of bytes processed so far.
      @param total the total number of expected bytes, or -1 if unknown.
      @param percent the percentage of completion, 0.0..100.0. If the expected total is unknown, % will remain at zero
