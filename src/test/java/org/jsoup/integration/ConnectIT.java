@@ -281,7 +281,6 @@ public class ConnectIT {
             // reset and read again
             stream.reset();
             ByteBuffer fullRead = DataUtil.readToByteBuffer(stream, 0);
-            byte[] fullArray = fullRead.array();
 
             assertEquals(capSize, fullRead.limit());
             String fullText = new String(fullRead.array(), 0, fullRead.limit(), StandardCharsets.UTF_8);
