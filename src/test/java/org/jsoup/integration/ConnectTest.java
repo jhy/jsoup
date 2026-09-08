@@ -1071,6 +1071,11 @@ public class ConnectTest {
         assertEquals(196577, mediumRes.parse().text().length());
         assertEquals(actualDocText, largeRes.parse().text().length());
         assertEquals(actualDocText, unlimitedRes.parse().text().length());
+        assertFalse(defaultRes.isTruncated());
+        assertTrue(smallRes.isTruncated());
+        assertTrue(mediumRes.isTruncated());
+        assertFalse(largeRes.isTruncated());
+        assertFalse(unlimitedRes.isTruncated());
     }
 
     @Test public void repeatable() throws IOException {
@@ -1100,6 +1105,11 @@ public class ConnectTest {
         assertEquals(200 * 1024, mediumRes.body().length());
         assertEquals(actualDocText, largeRes.body().length());
         assertEquals(actualDocText, unlimitedRes.body().length());
+        assertFalse(defaultRes.isTruncated());
+        assertTrue(smallRes.isTruncated());
+        assertTrue(mediumRes.isTruncated());
+        assertFalse(largeRes.isTruncated());
+        assertFalse(unlimitedRes.isTruncated());
 
         assertEquals(actualDocText, defaultRes.readBody().length());
         assertEquals(50 * 1024, smallRes.readBody().length());

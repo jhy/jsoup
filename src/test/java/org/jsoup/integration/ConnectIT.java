@@ -3,6 +3,7 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.DataUtil;
+import org.jsoup.integration.routes.LargeGzipRoute;
 import org.jsoup.integration.routes.SlowRider;
 import org.jsoup.internal.SharedConstants;
 import org.jsoup.nodes.Document;
@@ -14,11 +15,13 @@ import org.junit.jupiter.api.parallel.Execution;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.jsoup.integration.TestServer.origin;
 import static org.jsoup.integration.TestServer.start;
@@ -169,6 +172,19 @@ public class ConnectIT {
 
     @Test
     @Execution(CONCURRENT)
+    void bodyStreamThrowsOnTimeout() throws IOException {
+        Connection.Response res = slowRiderTimeout().timeout(TimeoutMillis).execute();
+        try (BufferedInputStream stream = res.bodyStream()) {
+            assertThrows(IOException.class, () -> {
+                while (stream.read() != -1) {
+                    // consume until the delayed next chunk trips the timeout
+                }
+            });
+        }
+    }
+
+    @Test
+    @Execution(CONCURRENT)
     public void infiniteReadSupported() throws IOException {
         Document doc = slowRiderCompletes()
             .timeout(0)
@@ -241,14 +257,14 @@ public class ConnectIT {
     }
 
     @Test
-    public void remainingAfterFirstRead() throws IOException {
+    public void bodyStreamCapSurvivesReset() throws IOException {
         int bufferSize = 5 * 1024;
         int capSize = 100 * 1024;
 
         String url = origin().file.url("/htmltests/large.html"); // 280 K
 
-        try (BufferedInputStream stream = Jsoup.connect(url).maxBodySize(capSize)
-            .execute().bodyStream()) {
+        Connection.Response res = Jsoup.connect(url).maxBodySize(capSize).execute();
+        try (BufferedInputStream stream = res.bodyStream()) {
 
             // simulates parse which does a limited read first
             stream.mark(bufferSize);
@@ -267,22 +283,20 @@ public class ConnectIT {
             ByteBuffer fullRead = DataUtil.readToByteBuffer(stream, 0);
             byte[] fullArray = fullRead.array();
 
-            // bodyStream is not capped to body size - only for jsoup consumed stream
-            assertTrue(fullArray.length > capSize);
-
-            assertEquals(LargeHtmlSize, fullRead.limit());
+            assertEquals(capSize, fullRead.limit());
             String fullText = new String(fullRead.array(), 0, fullRead.limit(), StandardCharsets.UTF_8);
             assertTrue(fullText.startsWith(firstText));
-            assertEquals(LargeHtmlSize, fullText.length());
+            assertEquals(capSize, fullText.length());
         }
+        assertTrue(res.isTruncated());
     }
 
     @Test
-    public void noLimitAfterFirstRead() throws IOException {
+    public void unlimitedBodyStreamSurvivesReset() throws IOException {
         int firstMaxRead = 5 * 1024;
 
         String url = origin().file.url("/htmltests/large.html"); // 280 K
-        try (BufferedInputStream stream = Jsoup.connect(url).execute().bodyStream()) {
+        try (BufferedInputStream stream = Jsoup.connect(url).maxBodySize(0).execute().bodyStream()) {
             // simulates parse which does a limited read first
             stream.mark(firstMaxRead);
             ByteBuffer firstBytes = DataUtil.readToByteBuffer(stream, firstMaxRead);
@@ -302,7 +316,7 @@ public class ConnectIT {
     }
 
     @Test
-    public void bodyStreamConstrainedViaReadFully() throws IOException {
+    public void readFullyCapCarriesIntoBodyStream() throws IOException {
         int cap = 5 * 1024;
         String url = origin().file.url("/htmltests/large.html"); // 280 K
         try (BufferedInputStream stream = Jsoup
@@ -315,5 +329,66 @@ public class ConnectIT {
             ByteBuffer cappedRead = DataUtil.readToByteBuffer(stream, 0);
             assertEquals(cap, cappedRead.limit());
         }
+    }
+
+    @Test
+    void exactBodyStreamLimitIsNotTruncated() throws IOException {
+        Connection.Response res = Jsoup.connect(origin().file.url("/htmltests/large.html"))
+            .maxBodySize(LargeHtmlSize)
+            .execute();
+
+        try (BufferedInputStream stream = res.bodyStream()) {
+            assertEquals(LargeHtmlSize, readCount(stream));
+        }
+        assertFalse(res.isTruncated());
+    }
+
+    @Test
+    void bodyStreamReportsProgress() throws IOException {
+        AtomicInteger progressCalls = new AtomicInteger();
+        Connection.Response res = Jsoup.connect(origin().file.url("/htmltests/large.html"))
+            .onResponseProgress((processed, total, percent, response) -> progressCalls.incrementAndGet())
+            .execute();
+
+        try (BufferedInputStream stream = res.bodyStream()) {
+            assertEquals(LargeHtmlSize, readCount(stream));
+        }
+        assertTrue(progressCalls.get() > 1);
+        assertFalse(res.isTruncated());
+    }
+
+    @Test
+    void unlimitedBodyStreamReadsPastIntegerMax() throws IOException {
+        Connection.Response res = Jsoup.connect(origin().largeGzip.url())
+            .ignoreContentType(true)
+            .maxBodySize(0)
+            .execute();
+
+        try (BufferedInputStream stream = res.bodyStream()) {
+            assertEquals(LargeGzipRoute.DecodedBodySize, readCount(stream));
+        }
+        assertFalse(res.isTruncated());
+    }
+
+    @Test
+    void bodyStreamCapsDecodedContent() throws IOException {
+        int cap = 2 * 1024 * 1024;
+        Connection.Response res = Jsoup.connect(origin().largeGzip.url())
+            .ignoreContentType(true)
+            .maxBodySize(cap)
+            .execute();
+
+        try (BufferedInputStream stream = res.bodyStream()) {
+            assertEquals(cap, readCount(stream));
+        }
+        assertTrue(res.isTruncated());
+    }
+
+    private static long readCount(InputStream stream) throws IOException {
+        long count = 0;
+        byte[] buffer = new byte[1024 * 1024];
+        int read;
+        while ((read = stream.read(buffer)) != -1) count += read;
+        return count;
     }
 }

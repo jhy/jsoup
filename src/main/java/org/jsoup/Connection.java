@@ -1006,12 +1006,23 @@ public interface Connection {
         }
 
         /**
+         Tests whether the response body was truncated because it exceeded the configured {@link Request#maxBodySize()}.
+         <p>The result is authoritative once the body has been consumed by {@link #parse()}, {@link #readFully()}, or
+         {@link #bodyStream()} through end of stream. Before then, a {@code false} result is provisional.</p>
+         @return true if decoded response content was omitted
+         @since 1.24.1
+         */
+        default boolean isTruncated() {
+            return false;
+        }
+
+        /**
          Get the body of the response as a (buffered) InputStream. You should close the input stream when you're done
          with it.
          <p>Other body methods (like readFully, body, parse, etc) will generally not work in conjunction with this method,
          as it consumes the InputStream.</p>
-         <p>Any configured max size or maximum read timeout applied to the connection will not be applied to this stream,
-         unless {@link #readFully()} is called prior.</p>
+         <p>The configured maximum body size and request timeout apply to this stream. Set {@link #maxBodySize(int)} to
+         {@code 0} for an unlimited body size.</p>
          <p>This method is useful for writing large responses to disk, without buffering them completely into memory
          first.</p>
          @return the response body input stream

@@ -6,6 +6,8 @@ import java.io.ByteArrayInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -59,6 +61,118 @@ class ControllableInputStreamTest {
             assertEquals(data[500 + i], reread[i], "byte mismatch at " + i);
         }
         in.close();
+    }
+
+    @Test
+    void distinguishesExactLimitFromTruncation() throws IOException {
+        CountingInputStream shorterSource = new CountingInputStream(new ByteArrayInputStream(new byte[4]));
+        ControllableInputStream shorter = ControllableInputStream.wrap(shorterSource, 5);
+        assertEquals(4, readCount(shorter.inputStream()));
+        assertEquals(4, shorterSource.count);
+        assertFalse(shorter.isTruncated());
+
+        CountingInputStream exactSource = new CountingInputStream(new ByteArrayInputStream(new byte[5]));
+        ControllableInputStream exact = ControllableInputStream.wrap(exactSource, 5);
+        assertEquals(5, readCount(exact.inputStream()));
+        assertEquals(5, exactSource.count);
+        assertFalse(exact.isTruncated());
+
+        CountingInputStream longerSource = new CountingInputStream(new ByteArrayInputStream(new byte[6]));
+        ControllableInputStream longer = ControllableInputStream.wrap(longerSource, 5);
+        assertEquals(5, readCount(longer.inputStream()));
+        assertEquals(6, longerSource.count);
+        assertTrue(longer.isTruncated());
+    }
+
+    @Test
+    void retainsLookaheadWhenLimitIsRaised() throws IOException {
+        byte[] data = "abcdef".getBytes();
+        ControllableInputStream in = ControllableInputStream.wrap(new ByteArrayInputStream(data), 5);
+        in.mark(data.length);
+        assertEquals(5, readCount(in));
+        assertTrue(in.isTruncated());
+
+        in.reset();
+        in.max(0);
+        byte[] reread = new byte[data.length];
+        assertEquals(5, in.read(reread));
+        assertEquals(1, in.read(reread, 5, 1));
+        assertArrayEquals(data, reread);
+        assertFalse(in.isTruncated());
+        in.close();
+    }
+
+    @Test
+    void readAndSkipRespectLimit() throws IOException {
+        ControllableInputStream single = ControllableInputStream.wrap(
+            new ByteArrayInputStream(new byte[] {42, 43}), 1);
+        assertEquals(42, single.read());
+        assertEquals(-1, single.read());
+        assertTrue(single.isTruncated());
+        single.close();
+
+        ControllableInputStream skipped = ControllableInputStream.wrap(new ByteArrayInputStream(new byte[200]), 100);
+        try (InputStream stream = skipped.inputStream()) {
+            assertEquals(100, stream.skip(1000));
+            assertEquals(-1, stream.read());
+        }
+        assertTrue(skipped.isTruncated());
+    }
+
+    @Test
+    void largeSkipSaturatesProgress() throws IOException {
+        long size = (long) Integer.MAX_VALUE + 1;
+        ControllableInputStream in = ControllableInputStream.wrap(new VirtualInputStream(size), 0);
+        AtomicBoolean negative = new AtomicBoolean();
+        AtomicInteger lastProcessed = new AtomicInteger();
+        AtomicInteger lastTotal = new AtomicInteger();
+        AtomicInteger lastPercent = new AtomicInteger();
+        in.onProgress(-1, (processed, total, percent, context) -> {
+            if (processed < 0) negative.set(true);
+            lastProcessed.set(processed);
+            lastTotal.set(total);
+            lastPercent.set((int) percent);
+        }, in);
+
+        try (InputStream stream = in.inputStream()) {
+            assertEquals(size, stream.skip(size));
+            assertEquals(-1, stream.read());
+        }
+        assertFalse(negative.get());
+        assertEquals(Integer.MAX_VALUE, lastProcessed.get());
+        assertEquals(Integer.MAX_VALUE, lastTotal.get());
+        assertEquals(100, lastPercent.get());
+    }
+
+    private static long readCount(InputStream in) throws IOException {
+        long count = 0;
+        byte[] buffer = new byte[1024 * 1024];
+        int read;
+        while ((read = in.read(buffer)) != -1) count += read;
+        return count;
+    }
+
+    private static final class VirtualInputStream extends InputStream {
+        private long remaining;
+
+        VirtualInputStream(long size) {
+            remaining = size;
+        }
+
+        @Override
+        public int read() {
+            if (remaining == 0) return -1;
+            remaining--;
+            return 0;
+        }
+
+        @Override
+        public int read(byte[] bytes, int offset, int length) {
+            if (remaining == 0) return -1;
+            int read = (int) Math.min(remaining, length);
+            remaining -= read;
+            return read;
+        }
     }
 
     private static final class CountingInputStream extends FilterInputStream {

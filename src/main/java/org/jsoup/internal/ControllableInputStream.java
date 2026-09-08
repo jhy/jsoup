@@ -26,7 +26,9 @@ public class ControllableInputStream extends FilterInputStream {
     private int remaining;                  // how many bytes may still be returned to caller under the current cap
     private int markPos;                    // logical readPos snapshot for InputStream.mark/reset (not a buffer cursor)
     private boolean interrupted;            // true if Thread.interrupted() was detected, used to latch interrupted state
+    private boolean truncated;              // true if there is content beyond the body cap
     private boolean allowClose = true;      // for cases where we want to re-read the input, can ignore .close() from the parser
+    private final byte[] singleByte = new byte[1]; // avoids allocation when routing single-byte reads through controls
 
     // if we are tracking progress, will have the expected content length and progress callback state
     private @Nullable ProgressState<?> progress;
@@ -70,21 +72,34 @@ public class ControllableInputStream extends FilterInputStream {
     }
 
     @Override
+    public int read() throws IOException {
+        int read = read(singleByte, 0, 1);
+        return read == -1 ? -1 : singleByte[0] & 0xff;
+    }
+
+    @Override
     public int read(byte[] b, int off, int len) throws IOException {
         if (readPos == 0) emitProgress(); // emits a progress
 
         boolean capped = maxSize != 0;
-        if (interrupted || capped && remaining <= 0)
+        if (interrupted)
             return -1;
         if (Thread.currentThread().isInterrupted()) {
             // interrupted latches, because parse() may call twice
             interrupted = true;
             return -1;
         }
+        if (capped && remaining <= 0) {
+            if (checkTruncated()) return -1;
+            contentLength = readPos;
+            emitProgress();
+            return -1;
+        }
 
         if (capped && len > remaining)
             len = remaining; // don't read more than desired, even if available
-        buff.capRemaining(capped ? remaining : Integer.MAX_VALUE);
+        if (capped) buff.capRemaining(remaining);
+        else buff.uncap();
 
         while (true) { // loop trying to read until we get some data or hit the overall timeout, if we have one
             if (expired())
@@ -98,7 +113,8 @@ public class ControllableInputStream extends FilterInputStream {
                     if (capped && read > 0) {
                         remaining -= read; // track bytes returned to the caller
                     }
-                    readPos += read;
+                    // todo: use long progress values in the public API; saturate until that is available
+                    readPos = read > Integer.MAX_VALUE - readPos ? Integer.MAX_VALUE : readPos + read;
                 }
                 emitProgress();
                 return read;
@@ -106,6 +122,25 @@ public class ControllableInputStream extends FilterInputStream {
                 if (expired() || timeout == 0)
                     throw e;
             }
+        }
+    }
+
+    @Override
+    public long skip(long requested) throws IOException {
+        // implemented here so our cap accounting aligns
+        if (requested <= 0) return 0;
+
+        byte[] skipBuffer = SimpleBufferedInput.BufferPool.borrow();
+        long skipped = 0;
+        try {
+            while (skipped < requested) {
+                int read = read(skipBuffer, 0, (int) Math.min(requested - skipped, skipBuffer.length));
+                if (read == -1) break;
+                skipped += read;
+            }
+            return skipped;
+        } finally {
+            SimpleBufferedInput.BufferPool.release(skipBuffer);
         }
     }
 
@@ -155,12 +190,13 @@ public class ControllableInputStream extends FilterInputStream {
         if (markPos < 0) throw new IOException("Resetting to invalid mark");
         buff.rewindToMark();
         buff.clearMark();
+        truncated = false;
         if (maxSize != 0) {
             remaining = maxSize - markPos;
             buff.capRemaining(remaining);
         } else {
             remaining = 0;
-            buff.capRemaining(Integer.MAX_VALUE);
+            buff.uncap();
         }
         readPos = markPos; // readPos is used for progress emits
         markPos = -1;
@@ -196,8 +232,33 @@ public class ControllableInputStream extends FilterInputStream {
     public void max(int newMax) {
         remaining += newMax - maxSize; // update remaining to reflect the difference in the new maxsize
         if (remaining < 0) remaining = 0;
+        if (newMax == 0 || newMax > maxSize) truncated = false;
         maxSize = newMax;
-        buff.capRemaining(newMax == 0 ? Integer.MAX_VALUE : remaining);
+        if (newMax == 0) buff.uncap();
+        else buff.capRemaining(remaining);
+    }
+
+    /**
+     Check if content remains beyond the configured cap.
+     */
+    public boolean checkTruncated() throws IOException {
+        while (!truncated && maxSize != 0 && remaining <= 0) {
+            if (expired()) throw new SocketTimeoutException("Read timeout");
+            try {
+                truncated = buff.hasMore();
+                break;
+            } catch (SocketTimeoutException e) {
+                if (expired() || timeout == 0) throw e;
+            }
+        }
+        return truncated;
+    }
+
+    /**
+     Returns whether content was found beyond the configured cap.
+     */
+    public boolean isTruncated() {
+        return truncated;
     }
 
     public void allowClose(boolean allowClose) {
@@ -242,7 +303,7 @@ public class ControllableInputStream extends FilterInputStream {
 
     public BufferedInputStream inputStream() {
         // called via HttpConnection.Response.bodyStream(), needs an OG BufferedInputStream
-        return new BufferedInputStream(buff);
+        return new BufferedInputStream(this); // this, not buff, so that return is constrained
     }
 
     private static class ProgressState<ProgressContext> {
