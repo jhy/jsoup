@@ -61,14 +61,18 @@ public class RegexTest {
     }
 
     @Test
-    void re2jSelectorMatchComplexityThrowsValidationException() {
+    void re2jSelectorHandlesMatchComplexity() {
         Regex.wantsRe2j(true);
         assertTrue(Regex.usingRe2j());
 
         Document doc = Jsoup.parse("<p data-key>");
         Evaluator evaluator = Selector.evaluatorOf("[data-key~=((a|)){1000}]"); // max repeat and empty alternatives create deep recursion in RE2J
-        ValidationException exception = assertThrows(ValidationException.class, () -> doc.select(evaluator));
-        assertEquals("Pattern complexity error", exception.getMessage());
+        try {
+            assertEquals(1, doc.select(evaluator).size());
+        } catch (ValidationException e) {
+            // pom defines a lower stack, so this normalized ex is normally thrown
+            assertEquals("Pattern complexity error", e.getMessage());
+        }
     }
 
     @ParameterizedTest
