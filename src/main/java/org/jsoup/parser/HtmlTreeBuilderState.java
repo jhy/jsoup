@@ -165,7 +165,7 @@ enum HtmlTreeBuilderState {
                     } else if (inSorted(name, Constants.InHeadEnd)) {
                         return anythingElse(t, tb);
                     } else if (name.equals("template")) {
-                        if (!tb.onStackAboveContext(name)) {
+                        if (!tb.onStack(name)) {
                             tb.error(this);
                         } else {
                             tb.generateImpliedEndTags(true);
@@ -930,9 +930,7 @@ enum HtmlTreeBuilderState {
                 } // end inner loop # 13
 
                 // 14. Insert whatever lastNode ended up being in the previous step at the [appropriate place for inserting a node], but using commonAncestor as the _override target_.
-                // todo - impl https://html.spec.whatwg.org/multipage/parsing.html#appropriate-place-for-inserting-a-node fostering
-                // just use commonAncestor as target:
-                commonAncestor.appendChild(lastEl);
+                tb.insertNode(lastEl, commonAncestor);
                 // 15. [Create an element for the token] for which formattingElement was created, in the [HTML namespace], with furthestBlock as the intended parent.
                 Element adoptor = tb.recreateElement(formatEl);
                 // 16. Take all of the child nodes of furthestBlock and append them to the element created in the last step.
@@ -1073,9 +1071,11 @@ enum HtmlTreeBuilderState {
 
         boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             tb.error(this);
+            boolean fosterInserts = tb.isFosterInserts();
             tb.setFosterInserts(true);
             tb.process(t, InBody);
-            tb.setFosterInserts(false);
+            // synthetic end tags can reenter this handler; restore the outer token's foster flag
+            tb.setFosterInserts(fosterInserts);
             return true;
         }
     },
@@ -1189,6 +1189,9 @@ enum HtmlTreeBuilderState {
                                 tb.transition(InTable);
                             }
                             break;
+                        case "col":
+                            tb.error(this);
+                            return false;
                         case "template":
                             tb.process(t, InHead);
                             break;
@@ -1197,10 +1200,7 @@ enum HtmlTreeBuilderState {
                     }
                     break;
                 case EOF:
-                    if (tb.currentElementIs("html"))
-                        return true; // stop parsing; frag case
-                    else
-                        return anythingElse(t, tb);
+                    return tb.process(t, InBody);
                 default:
                     return anythingElse(t, tb);
             }
@@ -1579,7 +1579,7 @@ enum HtmlTreeBuilderState {
                     }
                     break;
                 case EOF:
-                    if (!tb.onStackAboveContext("template")) { // stop parsing
+                    if (!tb.onStack("template")) { // stop parsing
                         return true;
                     }
                     tb.error(this);
@@ -1775,7 +1775,7 @@ enum HtmlTreeBuilderState {
 
                     // Any other start:
                     // (whatwg says to fix up tag name and attribute case per a table - we will preserve original case instead)
-                    String namespace = tb.currentElement().tag().namespace();
+                    String namespace = tb.currentElNs();
                     tb.insertForeignElementFor(start, namespace);
                     // (self-closing handled in insert)
                     // if self-closing svg script -- level and execution elided

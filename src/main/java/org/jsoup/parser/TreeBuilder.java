@@ -223,6 +223,11 @@ abstract class TreeBuilder {
         return 512;
     }
 
+    /** The namespace used to process the current token. */
+    String currentElNs() {
+        return currentElement().tag().namespace();
+    }
+
     /**
      Gets the current open element for tree-construction decisions.
      The stack must not be empty; use {@link #hasCurrentElement()} when it may be.
