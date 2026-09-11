@@ -614,6 +614,63 @@ class StreamParserTest {
 
     // Fragments
 
+    @ParameterizedTest
+    @ValueSource(strings = {"p", "table"})
+    void fragmentSelectionKeepsLiveResultParent(String contextTag) throws IOException {
+        // block input must stay in the result container, even in p and table contexts
+        Element context = new Element(contextTag).attr("id", "context").text("Original");
+        String html = "<div id=first>One</div><div id=second>Two</div><aside id=unread>Later</aside>";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parseFragment(html, context, "")) {
+            Element first = parser.expectFirst("#first");
+            Element container = first.parent();
+            assertNotNull(container);
+            assertEquals(contextTag, container.normalName());
+            assertEquals("context", container.id());
+            assertNotSame(context, container);
+            assertSame(parser.document(), container.parent());
+            assertEquals(1, parser.document().childrenSize());
+            assertSame(first, parser.document().selectFirst("#context > #first"));
+            assertNull(parser.document().selectFirst("#unread")); // check this is the live tree, before EOF
+
+            List<Node> nodes = parser.completeFragment();
+            assertEquals(3, nodes.size());
+            assertSame(first, nodes.get(0));
+            for (Node node : nodes)
+                assertSame(container, node.parent()); // completion must not repair parentage
+            assertEquals("Original", context.html());
+            assertNull(context.parent());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"p", "table"})
+    void fragmentStreamKeepsLiveResultParent(String contextTag) throws IOException {
+        // check parentage at emission, before completeFragment could relocate nodes
+        Element context = new Element(contextTag).attr("id", "context");
+        String html = "<div id=first>One</div><div id=second>Two</div>";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parseFragment(html, context, "")) {
+            Element container = parser.document().child(0);
+            Elements emitted = new Elements();
+            parser.stream().forEachOrdered(el -> {
+                if (!el.normalName().equals("div")) return;
+                Element parent = el.parent();
+                assertNotNull(parent);
+                assertEquals(contextTag, parent.normalName());
+                assertEquals("context", parent.id());
+                assertSame(parser.document(), parent.parent());
+                assertSame(container, parent);
+                assertSame(el, parser.document().selectFirst("#context > #" + el.id()));
+                emitted.add(el);
+            });
+            assertEquals(2, emitted.size());
+            List<Node> nodes = parser.completeFragment();
+            assertEquals(2, nodes.size());
+            for (Node node : nodes)
+                assertSame(container, node.parent());
+            assertEquals("", context.html());
+        }
+    }
+
     @Test
     void canStreamFragment() {
         String html = "<tr id=1><td>One</td><tr id=2><td>Two</td></tr><tr id=3><td>Three</td></tr>";
@@ -627,6 +684,35 @@ class StreamParserTest {
             // note that we don't get a full doc, just the fragment (and the context at the end of the stack)
 
             assertTrue(isClosed(parser)); // as read to completion
+        }
+    }
+
+    @Test void fragmentContainerSelectionWaitsForCompletion() throws IOException {
+        // the visible container stays open until the internal root closes
+        Element context = new Element("p").attr("id", "context");
+        try (StreamParser parser = new StreamParser(Parser.htmlParser())
+            .parseFragment("<div>One</div><div>Two</div>", context, "")) {
+            Element container = parser.expectFirst("#context");
+            assertEquals("One Two", container.text());
+            assertFalse(parser.document().parser().getTreeBuilder().isOpen(container));
+            assertSame(parser.document().child(0), container);
+            assertEquals(container.childNodes(), parser.completeFragment());
+        }
+    }
+
+    @Test void stoppedFragmentDoesNotExposeUnfinishedContainer() throws IOException {
+        // stopping must defer the visible container, not the hidden stack root
+        Element context = new Element("p").attr("id", "context");
+        try (StreamParser parser = new StreamParser(Parser.htmlParser())
+            .parseFragment("<div id=first>One</div><div>Two</div><div>Three</div>", context, "")) {
+            Element first = parser.expectFirst("#first");
+            Element container = first.parent();
+            parser.stop();
+            assertNull(parser.selectFirst("#context"));
+            assertSame(container, parser.document().child(0));
+            List<Node> nodes = parser.completeFragment();
+            assertSame(container, nodes.get(0).parent());
+            assertSame(first, nodes.get(0));
         }
     }
 

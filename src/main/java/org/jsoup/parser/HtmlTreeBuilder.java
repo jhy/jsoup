@@ -17,6 +17,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static org.jsoup.internal.StringUtil.inSorted;
@@ -41,7 +42,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private boolean baseUriSetFromDoc;
     private @Nullable Element headElement; // the current head element
     private @Nullable FormElement formElement; // the current form element
-    private @Nullable Element contextElement; // fragment parse root; shallow copy of context, may be null during fragment parsing
+    private @Nullable Element contextElement; // context copy and fragment output container; not on the stack
+    private @Nullable Element fragmentRoot; // internal stack root; contextElement receives fragment nodes
     ArrayList<Element> formattingElements; // active (open) formatting elements
     private ArrayList<HtmlTreeBuilderState> tmplInsertMode; // stack of Template Insertion modes
     private @Nullable NoscriptState noscriptState; // active noscript island state
@@ -72,6 +74,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         headElement = null;
         formElement = null;
         contextElement = null;
+        fragmentRoot = null;
         formattingElements = new ArrayList<>();
         tmplInsertMode = new ArrayList<>();
         noscriptState = null;
@@ -120,8 +123,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
                     break;
             }
             tokeniser.transition(contextState);
+            fragmentRoot = new Element(tagFor("html", "html", NamespaceHtml, settings), baseUri);
             doc.appendChild(contextElement);
-            push(contextElement);
+            push(fragmentRoot);
             resetInsertionMode();
 
             // setup form element to nearest form on context (up ancestor chain). ensures form controls are associated
@@ -135,21 +139,12 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 formSearch = formSearch.parent();
             }
 
-            if (htmlContext && contextName.equals("noscript")) enterNoscript(contextElement);
+            if (htmlContext && contextName.equals("noscript")) enterNoscript(fragmentRoot);
         }
     }
 
     @Override List<Node> completeParseFragment() {
-        if (contextElement != null) {
-            // depending on context and the input html, content may have been added outside of the root el
-            // e.g. context=p, input=div, the div will have been pushed out.
-            List<Node> nodes = contextElement.siblingNodes();
-            if (!nodes.isEmpty())
-                contextElement.insertChildren(-1, nodes);
-            return contextElement.childNodes();
-        }
-        else
-            return doc.childNodes();
+        return (contextElement != null ? contextElement : doc).childNodes();
     }
 
     @Override
@@ -220,7 +215,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private boolean closeNoscriptEndTag(Token.EndTag end) {
         String name = end.normalName();
         NoscriptState island = Validate.expectNotNull(noscriptState, "Bug: noscript end tag processed with no island state");
-        if (name.equals("noscript") && island.boundary != contextElement) {
+        if (name.equals("noscript") && island.boundary != fragmentRoot) {
             endNoscript();
             return true;
         }
@@ -239,7 +234,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         // If the stack of open elements is empty
         if (stack.isEmpty())
             return true;
-        final Element el = currentElement();
+        final Element el = adjustedCurrentElement();
         final String ns = el.tag().namespace();
 
         // If the adjusted current node is an element in the HTML namespace
@@ -462,13 +457,16 @@ public class HtmlTreeBuilder extends TreeBuilder {
         if (parser.getErrors().canAddError() && el.hasAttr("xmlns") && !el.attr("xmlns").equals(el.tag().namespace()))
             error("Invalid xmlns attribute [%s] on tag [%s]", el.attr("xmlns"), el.tagName());
 
-        Element target = currentElOrDoc();
-        if (isFosterInserts() && StringUtil.inSorted(target.normalName(), InTableFoster))
-            insertInFosterParent(el);
-        else
-            target.appendChild(el);
-
+        insertNode(el, currentElOrDoc());
         push(el);
+    }
+
+    /** Inserts a node at the appropriate location for the target. */
+    void insertNode(Node node, Element target) {
+        if (isFosterInserts() && target.tag().namespace().equals(NamespaceHtml) && inSorted(target.normalName(), InTableFoster))
+            insertInFosterParent(node);
+        else
+            insertionTarget(target).appendChild(node);
     }
 
     /** Inserts a comment into the current element, or the document when there is none. */
@@ -479,7 +477,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     /** Inserts a comment into the supplied target. */
     void insertCommentNode(Token.Comment token, Element target) {
         Comment node = new Comment(token.getData());
-        target.appendChild(node);
+        insertionTarget(target).appendChild(node);
         onNodeInserted(node);
     }
 
@@ -506,6 +504,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void insertCharacterToElement(Token.Character characterToken, Element el) {
         final Node node;
         final String data = characterToken.getData();
+        el = insertionTarget(el);
 
         if (characterToken.isCData())
             node = new CDataNode(data);
@@ -521,6 +520,36 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return stack;
     }
 
+    /** Gets the insertion target for fragment content. */
+    private Element insertionTarget(Element target) {
+        // the html root is only used by the tree builder; content belongs in the context copy
+        return target == fragmentRoot && contextElement != null ? contextElement : target;
+    }
+
+    /** Notifies listeners that a node was inserted. */
+    @Override void onNodeInserted(Node node) {
+        // listeners observe the fragment's context copy, not its parser-only html root
+        super.onNodeInserted(node == fragmentRoot && contextElement != null ? contextElement : node);
+    }
+
+    /** Notifies listeners that a node was closed. */
+    @Override void onNodeClosed(Node node) {
+        super.onNodeClosed(node == fragmentRoot && contextElement != null ? contextElement : node);
+    }
+
+    /** Tests whether an element is open. */
+    @Override boolean isOpen(Element element) {
+        // the context copy remains open for streaming while its parser root is open
+        return super.isOpen(element == contextElement && fragmentRoot != null ? fragmentRoot : element);
+    }
+
+    /** Copies the open elements. */
+    @Override void copyOpenElementsTo(Collection<? super Element> elements) {
+        // streaming tracks the context copy in place of the parser-only root
+        for (Element element : stack)
+            elements.add(insertionTarget(element));
+    }
+
     boolean onStack(Element el) {
         return stack.contains(el);
     }
@@ -530,10 +559,15 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return getFromStack(elName) != null;
     }
 
-    /** Checks if there is an HTML element with the given name above the synthetic fragment context. */
-    boolean onStackAboveContext(String elName) {
-        Element el = getFromStack(elName);
-        return el != null && el != contextElement;
+    /** Gets the adjusted current element for foreign-content dispatch. */
+    private Element adjustedCurrentElement() {
+        // fragment parsing uses the context at the parser root
+        return fragmentParsing && stack.size() == 1 && contextElement != null ? contextElement : currentElement();
+    }
+
+    /** Gets the namespace used to process the current token. */
+    @Override String currentElNs() {
+        return adjustedCurrentElement().tag().namespace();
     }
 
     /** Gets the nearest (lowest) HTML element with the given name from the stack. */
@@ -1135,26 +1169,24 @@ public class HtmlTreeBuilder extends TreeBuilder {
         formattingElements.add(null);
     }
 
-    void insertInFosterParent(Node in) {
-        Element fosterParent;
-        Element lastTable = getFromStack("table");
-        boolean isLastTableParent = false;
-        if (lastTable != null) {
-            if (lastTable.parent() != null) {
-                fosterParent = lastTable.parent();
-                isLastTableParent = true;
-            } else
-                fosterParent = aboveOnStack(lastTable);
-        } else { // no table == frag
-            fosterParent = stack.get(0);
+    /** Inserts a foster-parented node. */
+    private void insertInFosterParent(Node in) {
+        for (int pos = stack.size() - 1; pos >= 0; pos--) {
+            Element el = stack.get(pos);
+            if (el.elementIs("template", NamespaceHtml)) {
+                // template contents are stored directly on the element
+                el.appendChild(in);
+                return;
+            }
+            if (el.elementIs("table", NamespaceHtml)) {
+                if (el.parent() != null)
+                    el.before(in);
+                else
+                    insertionTarget(stack.get(pos - 1)).appendChild(in);
+                return;
+            }
         }
-
-        if (isLastTableParent) {
-            Validate.notNull(lastTable); // last table cannot be null by this point.
-            lastTable.before(in);
-        }
-        else
-            fosterParent.appendChild(in);
+        insertionTarget(stack.get(0)).appendChild(in);
     }
 
     // Template Insertion Mode stack

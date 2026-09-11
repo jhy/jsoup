@@ -1043,6 +1043,48 @@ public class HtmlParserTest {
         assertEquals("<b>1</b>\n<p><b>2</b>3</p>", doc.body().html());
     }
 
+    @ParameterizedTest
+    @MethodSource("adoptionTableCases")
+    void fostersAdoptedFormattingInDocument(String input, String expected) {
+        // the formatting end tag reparents its block using the common ancestor as the override target
+        Document doc = Jsoup.parse("<body>" + input);
+        doc.outputSettings().prettyPrint(false);
+        assertEquals(expected, doc.body().html());
+    }
+
+    @ParameterizedTest
+    @MethodSource("adoptionTableCases")
+    void fostersAdoptedFormattingInFragment(String input, String expected) {
+        Element context = new Element("div");
+        List<Node> nodes = Parser.parseFragment(input, context, "");
+        Element container = (Element) nodes.get(0).parent();
+        assertNotNull(container);
+        container.ownerDocument().outputSettings().prettyPrint(false);
+        assertEquals(expected, container.html());
+        for (Node node : nodes)
+            assertSame(container, node.parent());
+    }
+
+    /** Covers table override targets and template/table stack ordering during adoption. */
+    static Stream<Arguments> adoptionTableCases() {
+        return Stream.of(
+            Arguments.of("<table><b><p>X</b>",
+                "<b></b><p><b>X</b></p><table></table>"),
+            Arguments.of("<table><tbody><b><p>X</b>",
+                "<b></b><p><b>X</b></p><table><tbody></tbody></table>"),
+            Arguments.of("<table><thead><b><p>X</b>",
+                "<b></b><p><b>X</b></p><table><thead></thead></table>"),
+            Arguments.of("<table><tfoot><b><p>X</b>",
+                "<b></b><p><b>X</b></p><table><tfoot></tfoot></table>"),
+            Arguments.of("<table><tr><b><p>X</b>",
+                "<b></b><p><b>X</b></p><table><tbody><tr></tr></tbody></table>"),
+            Arguments.of("<table><template><tr><b><p>X</b>",
+                "<table><template><tr></tr><b></b><p><b>X</b></p></template></table>"),
+            Arguments.of("<template><table><b><p>X</b>",
+                "<template><b></b><p><b>X</b></p><table></table></template>")
+        );
+    }
+
     @Test public void handlesMisnestedAInDivs() {
         String h = "<a 1><div 2><div 3><a 4>child</a></div></div></a>";
         String w = "<a 1></a> <div 2> <a 1></a> <div 3> <a 1></a><a 4>child</a> </div> </div>";
@@ -1920,7 +1962,8 @@ public class HtmlParserTest {
         // https://github.com/jhy/jsoup/issues/1603
         Element element = new Element("tr");
         element.html("<tr><td>One</td></tr>");
-        assertEquals("<tr>\n <tr>\n  <td>One</td>\n </tr>\n</tr>", element.outerHtml());
+        // the context is not an open tr; the redundant start and end tags are ignored
+        assertEquals("<tr>\n <td>One</td>\n</tr>", element.outerHtml());
     }
 
     @Test public void parseFragmentOnCreatedDocument() {
@@ -1931,6 +1974,23 @@ public class HtmlParserTest {
         Node node = nodes.get(0);
         assertEquals("h2", node.nodeName());
         assertEquals("<p>\n <h2>text</h2>\n</p>", node.parent().outerHtml());
+    }
+
+    @Test void fragmentRootReceivesTextCommentsAndReparentedFormatting() {
+        // adoption recovery and ordinary insertion both redirect the stack root to the result container
+        Element context = new Element("div").attr("id", "context");
+        List<Node> nodes = Parser.parseFragment("Before<!--comment--><b>One<p>Two</b>Three", context, "");
+        Element container = (Element) nodes.get(0).parent();
+        assertNotNull(container);
+        assertEquals("div", container.normalName());
+        assertEquals("context", container.id());
+        container.ownerDocument().outputSettings().prettyPrint(false);
+        assertEquals("Before<!--comment--><b>One</b><p><b>Two</b>Three</p>", container.html());
+        assertEquals(4, nodes.size());
+        for (Node node : nodes)
+            assertSame(container, node.parent());
+        assertEquals(1, container.ownerDocument().childrenSize());
+        assertEquals("", context.html());
     }
 
     @Test public void nestedPFragments() {
@@ -2043,6 +2103,66 @@ public class HtmlParserTest {
         assertEquals(want, TextUtil.stripNewlines(table.html()));
         want = "<table><tbody><tr><td><img></td></tr></tbody></table>";
         assertEquals(want, TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test void fostersParagraphsAfterImplicitCloseInTableFragment() {
+        Document doc = Jsoup.parse("<table></table>");
+        doc.outputSettings().prettyPrint(false);
+        Element table = doc.expectFirst("table");
+        // closing the first paragraph must preserve foster insertion for the second
+        table.html("<tr><p id=first><p id=second>");
+        assertEquals("<tbody><tr></tr></tbody><p id=\"first\"></p><p id=\"second\"></p>", table.html());
+    }
+
+    @Test void fostersParagraphsAfterImplicitCloseInDocument() {
+        // both paragraphs belong before the table, in input order
+        Document doc = Jsoup.parse("<table><tr><p id=first><p id=second>");
+        doc.outputSettings().prettyPrint(false);
+        assertEquals("<p id=\"first\"></p><p id=\"second\"></p><table><tbody><tr></tr></tbody></table>", doc.body().html());
+    }
+
+    @Test void colgroupFragmentIgnoresRowStart() {
+        Document doc = Jsoup.parse("<table><colgroup></colgroup></table>");
+        doc.outputSettings().prettyPrint(false);
+        Element colgroup = doc.expectFirst("colgroup");
+        // an incompatible token must not pop the fragment context or change its insertion mode
+        colgroup.html("<tr><col id=kept>");
+        assertEquals("<col id=\"kept\">", colgroup.html());
+    }
+
+    @Test void colgroupFragmentIgnoresContextEndTag() {
+        Document doc = Jsoup.parse("<table><colgroup></colgroup></table>");
+        doc.outputSettings().prettyPrint(false);
+        Element colgroup = doc.expectFirst("colgroup");
+        // an explicit closing tag cannot close the external fragment context either
+        colgroup.html("</colgroup><col id=kept>");
+        assertEquals("<col id=\"kept\">", colgroup.html());
+    }
+
+    @Test void colEndTagDoesNotCloseColumnGroup() {
+        Document doc = Jsoup.parse("<table><colgroup><col id=first></col><col id=second></table>");
+        doc.outputSettings().prettyPrint(false);
+        assertEquals("<colgroup><col id=\"first\"><col id=\"second\"></colgroup>", doc.expectFirst("table").html());
+    }
+
+    @Test void inputColumnGroupsStillClose() {
+        // actual col groups can close explicitly or implicitly, including inside templates
+        for (String input : new String[]{"<colgroup><col></colgroup><colgroup><col>", "<colgroup><col><colgroup><col>"}) {
+            for (String context : new String[]{"table", "template"}) {
+                Document doc = Jsoup.parse("<body><" + context + "></" + context + ">");
+                doc.outputSettings().prettyPrint(false);
+                Element el = doc.expectFirst(context);
+                el.html(input);
+                assertEquals("<colgroup><col></colgroup><colgroup><col></colgroup>", el.html(), context + ": " + input);
+            }
+        }
+    }
+
+    @Test void columnGroupEofProcessesUnclosedTemplate() {
+        // An EOF in column-group mode must reach the template cleanup and report its unclosed element
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        parser.parseInput("<!doctype html><html><head></head><body><template><col>", "");
+        assertFalse(parser.getErrors().isEmpty());
     }
 
     @Test void templateTableRowFragment() {

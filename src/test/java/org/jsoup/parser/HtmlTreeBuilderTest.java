@@ -16,6 +16,23 @@ import static org.jsoup.parser.Parser.NamespaceHtml;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HtmlTreeBuilderTest {
+    @Test void fosterInsertionUsesStackParentForRemovedTable() {
+        // a table removed while still open uses the element above it on the stack
+        Parser parser = Parser.htmlParser();
+        try (StreamParser stream = new StreamParser(parser).parseFragment("", new Element("div"), "")) {
+            HtmlTreeBuilder tb = (HtmlTreeBuilder) parser.getTreeBuilder();
+            Element container = stream.document().child(0);
+            Element table = container.appendElement("table");
+            tb.push(table);
+            table.remove();
+            Element paragraph = new Element("p");
+            tb.setFosterInserts(true);
+            tb.insertNode(paragraph, table);
+            assertSame(container, paragraph.parent());
+            assertEquals(1, container.childrenSize());
+        }
+    }
+
     @Test
     public void ensureSearchArraysAreSorted() {
         List<Object[]> treeBuilderArrays = HtmlTreeBuilderStateTest.findConstantArrays(HtmlTreeBuilder.class);
