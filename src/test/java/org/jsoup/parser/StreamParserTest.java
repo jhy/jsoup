@@ -96,6 +96,72 @@ class StreamParserTest {
         assertEquals("", seen3.toString());
     }
 
+    @Test void streamsAfterParserReuse() throws IOException {
+        Parser parser = Parser.htmlParser();
+        try (StreamParser streamer = new StreamParser(parser).parse("<p>One</p><p>Two</p>", "")) {
+            Document doc = streamer.document();
+            assertSame(parser, doc.parser());
+            assertEquals("One", streamer.expectFirst("p").text());
+
+            Document ordinary = parser.parseInput("<div>Other</div>", "");
+            assertEquals("Other", ordinary.body().text());
+
+            assertSame(doc, streamer.document());
+            assertEquals("Two", streamer.selectNext("p").text());
+            assertEquals("<p>One</p>\n<p>Two</p>", streamer.complete().body().html());
+        }
+    }
+
+    @Test void streamsAfterHtmlAppend() throws IOException {
+        Parser parser = Parser.htmlParser();
+        try (StreamParser streamer = new StreamParser(parser).parse("<p>One</p><p>Two</p>", "")) {
+            Document doc = streamer.document();
+            assertSame(parser, doc.parser());
+            Element first = streamer.expectFirst("p");
+            assertEquals("One", first.text());
+
+            first.append("<b>Added</b>");
+            assertEquals("One<b>Added</b>", first.html());
+
+            assertSame(doc, streamer.document());
+            assertEquals("Two", streamer.selectNext("p").text());
+            assertEquals("<p>One<b>Added</b></p>\n<p>Two</p>", streamer.complete().body().html());
+        }
+    }
+
+    @Test void sharesParserSettingsAndErrors() throws IOException {
+        Parser parser = Parser.htmlParser();
+        try (StreamParser streamer = new StreamParser(parser)) {
+            parser.settings(ParseSettings.preserveCase).setTrackPosition(true).setTrackErrors(10);
+            Document doc = streamer.parse("<P ID=one>One</P></span>", "").complete();
+
+            assertSame(parser, doc.parser());
+            Element p = doc.expectFirst("P");
+            assertEquals("P", p.tagName());
+            assertTrue(p.attributes().hasKey("ID"));
+            assertTrue(p.sourceRange().isTracked());
+            assertFalse(parser.getErrors().isEmpty());
+        }
+    }
+
+    @Test void iteratorEmptyBeforeParse() {
+        try (StreamParser streamer = new StreamParser(Parser.htmlParser())) {
+            Iterator<Element> iterator = streamer.iterator();
+            assertFalse(iterator.hasNext());
+            assertThrows(NoSuchElementException.class, iterator::next);
+        }
+    }
+
+    @Test void parserReuseDoesNotStartStream() {
+        Parser parser = Parser.htmlParser();
+        try (StreamParser streamer = new StreamParser(parser)) {
+            parser.parseInput("<p>Other</p>", "");
+
+            assertThrows(IllegalArgumentException.class, streamer::document);
+            assertFalse(streamer.iterator().hasNext());
+        }
+    }
+
     @Test void canStopAndCompleteAndReuse() throws IOException {
         StreamParser parser = new StreamParser(Parser.htmlParser());
         String html1 = "<p id=one>One<p id=two>Two";
@@ -526,12 +592,11 @@ class StreamParserTest {
     }
 
     static boolean isClosed(StreamParser streamer) {
-        // a bit of a back door in!
         return getReader(streamer) == null;
     }
 
-     private static CharacterReader getReader(StreamParser streamer) {
-        return streamer.document().parser().getTreeBuilder().reader;
+    private static CharacterReader getReader(StreamParser streamer) {
+        return streamer.treeBuilder.reader;
     }
 
     @Test void doesNotReadPastParse() throws IOException {
@@ -694,7 +759,7 @@ class StreamParserTest {
             .parseFragment("<div>One</div><div>Two</div>", context, "")) {
             Element container = parser.expectFirst("#context");
             assertEquals("One Two", container.text());
-            assertFalse(parser.document().parser().getTreeBuilder().isOpen(container));
+            assertFalse(parser.treeBuilder.isOpen(container));
             assertSame(parser.document().child(0), container);
             assertEquals(container.childNodes(), parser.completeFragment());
         }

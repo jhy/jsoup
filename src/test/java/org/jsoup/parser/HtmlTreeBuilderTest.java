@@ -8,6 +8,7 @@ import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -130,11 +131,16 @@ public class HtmlTreeBuilderTest {
     // exercise an adoption error, then verify that the parser can consume the remaining input
     private static void assertAdoptionRecovery(HtmlTreeBuilder tb, Consumer<HtmlTreeBuilder> exercise, String message) throws IOException {
         Parser parser = new Parser(tb).setTrackErrors(20);
-        try (StreamParser stream = new StreamParser(parser).parseFragment("<p>After</p>", new Element("div"), "")) {
+        tb.initialiseParse(new StringReader("<p>After</p>"), "", parser);
+        tb.initialiseParseFragment(new Element("div"));
+        try {
             exercise.accept(tb);
             assertTrue(parser.getErrors().stream().anyMatch(error -> error.getErrorMessage().equals(message)),
                 () -> "Expected error: " + message + "; got: " + parser.getErrors());
-            assertEquals("After", stream.complete().text());
+            tb.runParser();
+            assertEquals("After", tb.doc.text());
+        } finally {
+            tb.closeParse();
         }
     }
 
@@ -185,7 +191,7 @@ public class HtmlTreeBuilderTest {
         // a table removed while still open uses the element above it on the stack
         Parser parser = Parser.htmlParser();
         try (StreamParser stream = new StreamParser(parser).parseFragment("", new Element("div"), "")) {
-            HtmlTreeBuilder tb = (HtmlTreeBuilder) parser.getTreeBuilder();
+            HtmlTreeBuilder tb = (HtmlTreeBuilder) stream.treeBuilder;
             Element container = stream.document().child(0);
             Element table = container.appendElement("table");
             tb.push(table);
@@ -239,10 +245,9 @@ public class HtmlTreeBuilderTest {
 
     @Test void tracksParseLifecycle() throws IOException {
         Parser parser = Parser.htmlParser();
-        TreeBuilder treeBuilder = parser.getTreeBuilder();
-        assertFalse(treeBuilder.isComplete());
-
         try (StreamParser streamParser = new StreamParser(parser).parse("<title>One</title><p id=hit>Full</p>", "")) {
+            TreeBuilder treeBuilder = streamParser.treeBuilder;
+            assertFalse(treeBuilder.isComplete());
             streamParser.expectFirst("title");
             Element open = streamParser.document().expectFirst("#hit");
             assertTrue(treeBuilder.isOpen(open));

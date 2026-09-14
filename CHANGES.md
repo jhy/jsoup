@@ -11,6 +11,7 @@
 * Named character references without a semicolon before `-` or `_` now decode correctly in attribute values, matching HTML and browser behavior (e.g., `&copy-` becomes `©-`). [#2588](https://github.com/jhy/jsoup/issues/2588)
 * Support downloads > 2GB via `Response.bodyStream()` when `maxBodySize(0)` is configured. [#2593](https://github.com/jhy/jsoup/issues/2593)
 * Updated table and table-fragment parsing to place misnested content correctly per the HTML5 spec. For example, `<table><b><p>X</b>` places the paragraph before the table. [#2601](https://github.com/jhy/jsoup/issues/2601)
+* `StreamParser` now preserves its progress if you use the same `Parser` to parse another document, or call `Element.append(String)` on a streamed element. Previously, these operations replaced the active parse state and prevented streaming from continuing correctly. [#2605](https://github.com/jhy/jsoup/issues/2605)
 * Updated the adoption-agency algorithm to match the current HTML5 spec and to preserve formatting order when recovering misnested elements. [#2604](https://github.com/jhy/jsoup/pull/2604)
 
 ## 1.23.2 (2026-Aug-26)

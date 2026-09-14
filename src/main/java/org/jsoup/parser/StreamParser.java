@@ -57,18 +57,19 @@ import java.util.stream.StreamSupport;
  @since 1.18.1 */
 public class StreamParser implements Closeable {
     final private Parser parser;
-    final private TreeBuilder treeBuilder;
+    final TreeBuilder treeBuilder;
     final private ElementIterator it = new ElementIterator();
     @Nullable private Document document;
-    private boolean stopped = false;
+    private boolean stopped = true;
 
     /**
      Construct a new StreamParser, using the supplied base Parser.
+     The supplied parser provides configuration and collects parse errors; streaming uses an independent tree builder.
      @param parser the configured base parser
      */
     public StreamParser(Parser parser) {
         this.parser = parser;
-        treeBuilder = parser.getTreeBuilder();
+        treeBuilder = parser.getTreeBuilder().newInstance();
         treeBuilder.nodeListener(it);
     }
 
@@ -180,7 +181,6 @@ public class StreamParser implements Closeable {
      @return the (partial) Document
      */
     public Document document() {
-        document = treeBuilder.doc;
         Validate.notNull(document, "Must run parse() before calling.");
         return document;
     }
