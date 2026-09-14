@@ -11,11 +11,176 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.jsoup.parser.Parser.NamespaceHtml;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HtmlTreeBuilderTest {
+    @Test void missingStackEntryReportsErrorAndAppends() throws IOException {
+        assertAdoptionRecovery(new HtmlTreeBuilder(), tb -> {
+            Element replacement = tb.doc.child(0).appendElement("b");
+            tb.insertOnStackAfter(new Element("p"), replacement);
+            assertSame(replacement, tb.currentElement());
+        }, "Unable to place <b> after <p> while recovering misnested formatting");
+    }
+
+    @Test void missingBookmarkReportsErrorAndAppends() throws IOException {
+        assertAdoptionRecovery(new HtmlTreeBuilder(), tb -> {
+            Element original = new Element("b");
+            Element replacement = new Element("b");
+            tb.formattingElements.add(original);
+            tb.replaceFormattingElement(original, replacement, new Element("i"));
+            assertEquals(1, tb.formattingElements.size());
+            assertSame(replacement, tb.lastFormattingElement());
+        }, "Unable to restore formatting order for <b>");
+    }
+
+    @Test void missingOriginalBookmarkReportsErrorAndAppends() throws IOException {
+        assertAdoptionRecovery(new HtmlTreeBuilder(), tb -> {
+            Element original = new Element("b");
+            Element replacement = new Element("b");
+            tb.replaceFormattingElement(original, replacement, original);
+            assertSame(replacement, tb.lastFormattingElement());
+        }, "Unable to restore formatting order for <b>");
+    }
+
+    @Test void missingCommonAncestorReportsErrorAndStopsAdoption() throws IOException {
+        assertAdoptionRecovery(new HtmlTreeBuilder(), tb -> {
+            Element root = tb.stack.get(0);
+            Element formatting = tb.doc.child(0).appendElement("b");
+            Element block = formatting.appendElement("p");
+            tb.stack.clear(); // omit the root to exercise recovery from a missing common ancestor
+            tb.stack.add(formatting);
+            tb.stack.add(block);
+            tb.formattingElements.add(formatting);
+            tb.currentToken = new Token.EndTag(tb).name("b");
+            tb.process(tb.currentToken);
+            assertSame(formatting, block.parent()); // leave the block in place when adoption cannot continue
+            tb.stack.add(0, root); // restore the root before continuing the parse
+        }, "No open parent element for misnested <b>");
+    }
+
+    @Test void missingFormattingElementDuringTraversalReportsError() throws IOException {
+        HtmlTreeBuilder tb = new HtmlTreeBuilder() {
+            @Override boolean removeFromStack(Element el) {
+                boolean removed = super.removeFromStack(el);
+                if (el.normalName().equals("span"))
+                    stack.clear(); // simulate losing the remaining stack during the inner loop
+                return removed;
+            }
+        };
+        assertAdoptionRecovery(tb, builder -> {
+            Element root = builder.stack.get(0);
+            Element formatting = builder.doc.child(0).appendElement("b");
+            Element span = formatting.appendElement("span");
+            Element block = span.appendElement("p");
+            builder.stack.add(formatting);
+            builder.stack.add(span);
+            builder.stack.add(block);
+            builder.formattingElements.add(formatting);
+            builder.currentToken = new Token.EndTag(builder).name("b");
+            builder.process(builder.currentToken);
+            assertSame(span, block.parent());
+            builder.stack.add(root); // restore the root before continuing the parse
+        }, "Formatting element <b> is no longer open during recovery");
+    }
+
+    @Test void adoptionReportsFormattingElementMissingFromStack() throws IOException {
+        assertAdoptionRecovery(new HtmlTreeBuilder(), tb -> {
+            // 4.4: remove a formatting entry whose element is no longer on the stack
+            Element formatting = new Element("b");
+            tb.formattingElements.add(formatting);
+            tb.currentToken = new Token.EndTag(tb).name("b");
+            tb.process(tb.currentToken);
+            assertFalse(tb.isInActiveFormattingElements(formatting));
+        }, "Unexpected EndTag token [</b>] when in state [InBody]");
+    }
+
+    @Test void adoptionReportsFormattingElementOutsideScope() throws IOException {
+        assertAdoptionRecovery(new HtmlTreeBuilder(), tb -> {
+            // 4.5: an element outside scope stays on both lists
+            Element formatting = tb.doc.child(0).appendElement("b");
+            tb.stack.add(formatting);
+            tb.stack.add(formatting.appendElement("table"));
+            tb.formattingElements.add(formatting);
+            tb.currentToken = new Token.EndTag(tb).name("b");
+            tb.process(tb.currentToken);
+            assertTrue(tb.onStack(formatting));
+            assertTrue(tb.isInActiveFormattingElements(formatting));
+        }, "Unexpected EndTag token [</b>] when in state [InBody]");
+    }
+
+    @Test void adoptionReportsNonCurrentFormattingElementAndContinues() throws IOException {
+        assertAdoptionRecovery(new HtmlTreeBuilder(), tb -> {
+            // 4.6: report the error but continue through 4.8, popping both elements
+            Element formatting = new Element("b");
+            Element span = new Element("span");
+            tb.stack.add(formatting);
+            tb.stack.add(span);
+            tb.formattingElements.add(formatting);
+            tb.currentToken = new Token.EndTag(tb).name("b");
+            tb.process(tb.currentToken);
+            assertFalse(tb.onStack(formatting));
+            assertFalse(tb.onStack(span));
+            assertFalse(tb.isInActiveFormattingElements(formatting));
+        }, "Unexpected EndTag token [</b>] when in state [InBody]");
+    }
+
+    // exercise an adoption error, then verify that the parser can consume the remaining input
+    private static void assertAdoptionRecovery(HtmlTreeBuilder tb, Consumer<HtmlTreeBuilder> exercise, String message) throws IOException {
+        Parser parser = new Parser(tb).setTrackErrors(20);
+        try (StreamParser stream = new StreamParser(parser).parseFragment("<p>After</p>", new Element("div"), "")) {
+            exercise.accept(tb);
+            assertTrue(parser.getErrors().stream().anyMatch(error -> error.getErrorMessage().equals(message)),
+                () -> "Expected error: " + message + "; got: " + parser.getErrors());
+            assertEquals("After", stream.complete().text());
+        }
+    }
+
+    @Test void scopeChecksTheSpecificFormattingElement() {
+        HtmlTreeBuilder tb = new HtmlTreeBuilder();
+        Element outer = new Element("b");
+        Element inner = new Element("b");
+        tb.stack.add(outer);
+        tb.stack.add(new Element("template"));
+        tb.stack.add(inner);
+
+        assertTrue(tb.inScope("b"));
+        assertTrue(tb.inScope(inner));
+        assertFalse(tb.inScope(outer)); // the same tag inside the template does not put outer in scope
+    }
+
+    @Test void adoptionDropsNodeThatWouldCreateCycle() {
+        Element body = new Element("body");
+        Element formatting = body.appendElement("b");
+        Element block = formatting.appendElement("p");
+        // adoption steps 4.15–4.16 detach the node, but do not insert an ancestor into its descendant
+        new HtmlTreeBuilder.InsertionLocation(block, null).insertAdopted(formatting);
+        assertNull(formatting.parent());
+        assertSame(formatting, block.parent());
+        assertEquals("", body.html());
+    }
+
+    @Test void adoptionDropsNodeWhenItsReferenceIsRemoved() {
+        Element body = new Element("body");
+        Element table = body.appendElement("table");
+        // step 4.15 removes lastNode; step 4.16 rejects the now-detached reference node
+        new HtmlTreeBuilder.InsertionLocation(body, table).insertAdopted(table);
+        assertNull(table.parent());
+        assertEquals("", body.html());
+    }
+
+    @Test void adoptionDoesNotAddSecondDocumentElement() {
+        Document doc = Document.createShell("");
+        Element formatting = doc.body().appendElement("b");
+        // step 4.16 rejects insertion into a Document that already has an element child
+        new HtmlTreeBuilder.InsertionLocation(doc, null).insertAdopted(formatting);
+        assertNull(formatting.parent());
+        assertEquals(1, doc.childrenSize());
+        assertEquals("html", doc.child(0).normalName());
+    }
+
     @Test void fosterInsertionUsesStackParentForRemovedTable() {
         // a table removed while still open uses the element above it on the stack
         Parser parser = Parser.htmlParser();

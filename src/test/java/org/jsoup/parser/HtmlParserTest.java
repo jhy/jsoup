@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -1041,6 +1042,84 @@ public class HtmlParserTest {
         String h = "<b>1<p>2</b>3</p>";
         Document doc = Jsoup.parse(h);
         assertEquals("<b>1</b>\n<p><b>2</b>3</p>", doc.body().html());
+    }
+
+    @ParameterizedTest(name = "fragment={0}")
+    @ValueSource(booleans = {false, true})
+    void preservesAdoptionBookmarkAfterRemovingFormattingElement(boolean fragment) {
+        // https://html.spec.whatwg.org/multipage/parsing.html#adoption-agency-algorithm
+        // step 4.1 limits to 8 passes; each pass moves the replacement b one div deeper. 9th div leaves b on the formatting list when </b> finishes
+        int adoptionPassLimit = 8;
+        int nestedBlocks = adoptionPassLimit + 1;
+        StringBuilder input = new StringBuilder("<b><i>");
+        for (int i = 0; i < nestedBlocks; i++)
+            input.append("<div>");
+        input.append("<u></b></div>X");
+
+        // steps 4.10 and 4.13.7 mark the position where the replacement b belongs
+        // removing the old b must not move that position past u (step 4.20) after </div>, reconstructing the formatting elements must underline X again
+        StringBuilder expected = new StringBuilder("<b><i></i></b><i>");
+        for (int i = 0; i < adoptionPassLimit - 1; i++) expected.append("<div><b></b>");
+        // the last replacement b still contains the ninth div, followed by the reconstructed u:
+        expected.append("<div><b><div><u></u></div><u>X</u></b>");
+        // the innermost div is already closed; close the remaining outer divs
+        for (int i = 0; i < nestedBlocks - 1; i++)
+            expected.append("</div>");
+        expected.append("</i>");
+
+        Document doc = fragment ? Jsoup.parseBodyFragment(input.toString()) : Jsoup.parse(input.toString());
+        doc.outputSettings().prettyPrint(false);
+        assertEquals("u", doc.expectFirst(":containsOwn(X)").normalName(), "X should remain underlined");
+        assertEquals(expected.toString(), doc.body().html());
+    }
+
+    @ParameterizedTest(name = "fragment={0}")
+    @ValueSource(booleans = {false, true})
+    void adoptionKeepsBlockInsideNestedTemplate(boolean fragment) {
+        // step 4.13.2 follows the stack predecessor even after removing a node. here an i has a b before it on the stack, but a template as its DOM parent
+        String input = "<template><b><template><tr>" +
+            "<a><b><b><c><l><i><dl>" +
+            "<i><i><a><i></b>";
+        // step 4.13.4 removes formatting entries after the third inner iteration
+        // the dl remains inside the inner template, under the reconstructed i
+        String expected = "<template><b><template>" +
+            "<tr></tr>" +
+            "<a><b><b><c><l><i></i></l></c></b></b></a>" +
+            "<i><dl><a><i><i></i></i></a><i><i><a><i></i></a></i></i></dl></i>" +
+            "</template></b></template>";
+
+        Document doc = fragment ? Jsoup.parseBodyFragment(input) : Jsoup.parse("<body>" + input);
+        doc.outputSettings().prettyPrint(false);
+        Element innerTemplate = doc.expectFirst("template > b > template");
+        Element block = doc.expectFirst("dl");
+        assertEquals("i", block.parent().normalName(), "the recovered block should be inside the reconstructed i");
+        assertSame(innerTemplate, block.parent().parent(), "the block should remain inside the inner template");
+        assertEquals(expected, doc.body().html());
+    }
+
+    @ParameterizedTest(name = "fragment={0}")
+    @ValueSource(booleans = {false, true})
+    void adoptionKeepsNestedTableInsideTemplate(boolean fragment) {
+        // step 4.13.2 must follow stack order: foster parenting has changed DOM ancestry
+        String input = "<table><v><template><b><table>" +
+            "<a><b><b><d><i><i><dl>" +
+            "<a><i><i></b></b>";
+        // step 4.14 uses adjusted insertion location to place recovered content before the inner table
+        String expected = "<v><template><b>" +
+            "<a><b><b><d><i><i></i></i></d></b></b></a>" +
+            "<i><i><dl><a></a><a><i><i></i></i></a></dl></i></i>" +
+            "<table></table>" +
+            "</b></template></v><table></table>";
+
+        Document doc = fragment ? Jsoup.parseBodyFragment(input) : Jsoup.parse("<body>" + input);
+        doc.outputSettings().prettyPrint(false);
+        Element formatting = doc.expectFirst("template > b");
+        Element innerTable = doc.expectFirst("template table");
+        Element block = doc.expectFirst("dl");
+        assertSame(doc.expectFirst("template > b > i > i"), block.parent(), "the recovered block should be inside the reconstructed i");
+        assertSame(formatting, innerTable.parent(), "the inner table should remain inside the template's b");
+        assertSame(innerTable, block.parent().parent().nextElementSibling(), "the recovered formatting should precede the inner table");
+        assertEquals(expected, doc.body().html());
     }
 
     @ParameterizedTest

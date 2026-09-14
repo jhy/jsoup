@@ -463,10 +463,61 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     /** Inserts a node at the appropriate location for the target. */
     void insertNode(Node node, Element target) {
-        if (isFosterInserts() && target.tag().namespace().equals(NamespaceHtml) && inSorted(target.normalName(), InTableFoster))
-            insertInFosterParent(node);
-        else
-            insertionTarget(target).appendChild(node);
+        insertionLocation(target).insert(node);
+    }
+
+    /** Finds the parent and reference node for an insertion. */
+    InsertionLocation insertionLocation(Element target) {
+        if (isFosterInserts() && target.tag().namespace().equals(NamespaceHtml) && inSorted(target.normalName(), InTableFoster)) {
+            for (int pos = stack.size() - 1; pos >= 0; pos--) {
+                Element el = stack.get(pos);
+                if (el.elementIs("template", NamespaceHtml))
+                    return new InsertionLocation(el, null); // template contents are stored on the element
+                if (el.elementIs("table", NamespaceHtml)) {
+                    Element parent = el.parent();
+                    return parent != null ? new InsertionLocation(parent, el) :
+                        new InsertionLocation(insertionTarget(stack.get(pos - 1)), null);
+                }
+            }
+            target = stack.get(0);
+        }
+        return new InsertionLocation(insertionTarget(target), null);
+    }
+
+    /**
+     An insertion position saved before moving a node. Adoption agency recovery checks that this position remains valid
+     after detaching the node.
+     */
+    static class InsertionLocation {
+        final Element parent;
+        final @Nullable Node before;
+
+        InsertionLocation(Element parent, @Nullable Node before) {
+            this.parent = parent;
+            this.before = before;
+        }
+
+        /** Inserts a node at this position. */
+        void insert(Node node) {
+            if (before == null)
+                parent.appendChild(node);
+            else
+                before.before(node);
+        }
+
+        /** Moves an adopted node here if the position remains valid after removal. */
+        void insertAdopted(Node node) {
+            // https://html.spec.whatwg.org/multipage/parsing.html#adoption-agency-algorithm
+            // 4.15: If lastNode's parent is non-null, then remove lastNode.
+            if (node.parent() != null) node.remove();
+            // 4.16: Insert lastNode into target before refNode only if pre-insert validity holds.
+            if (node.parent() != null || (before != null && before.parent() != parent)) return;
+            if (parent instanceof Document && parent.childrenSize() != 0) return;
+            for (Node ancestor = parent; ancestor != null; ancestor = ancestor.parent()) {
+                if (ancestor == node) return;
+            }
+            insert(node);
+        }
     }
 
     /** Inserts a comment into the current element, or the document when there is none. */
@@ -686,19 +737,15 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return null;
     }
 
+    /** Inserts an element immediately after an existing stack entry. */
     void insertOnStackAfter(Element after, Element in) {
         int i = stack.lastIndexOf(after);
         if (i == -1) {
-            error("Did not find element on stack to insert after");
+            error("Unable to place <%s> after <%s> while recovering misnested formatting", in.tagName(), after.tagName());
             stack.add(in);
-            // may happen on particularly malformed inputs during adoption
         } else {
-            stack.add(i+1, in);
+            stack.add(i + 1, in);
         }
-    }
-
-    void replaceOnStack(Element out, Element in) {
-        replaceInQueue(stack, out, in);
     }
 
     private static void replaceInQueue(ArrayList<Element> queue, Element out, Element in) {
@@ -820,6 +867,16 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     boolean inScope(String targetName) {
         return inSpecificScope(targetName, HtmlTagOptions.Scope);
+    }
+
+    /** Tests whether this element is on the stack before a scope boundary. */
+    boolean inScope(Element target) {
+        for (int pos = stack.size() - 1; pos >= 0; pos--) {
+            Element el = stack.get(pos);
+            if (el == target) return true;
+            if (el.tag().hasParserOption(HtmlTagOptions.Scope)) return false;
+        }
+        return false;
     }
 
     boolean inListItemScope(String targetName) {
@@ -1020,14 +1077,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return formattingElements.size() > 0 ? formattingElements.get(formattingElements.size()-1) : null;
     }
 
-    int positionOfElement(Element el){
-        for (int i = 0; i < formattingElements.size(); i++){
-            if (el == formattingElements.get(i))
-                return i;
-        }
-        return -1;
-    }
-
     Element removeLastFormattingElement() {
         int size = formattingElements.size();
         if (size > 0)
@@ -1042,13 +1091,18 @@ public class HtmlTreeBuilder extends TreeBuilder {
         formattingElements.add(in);
     }
 
-    void pushWithBookmark(Element in, int bookmark){
-        checkActiveFormattingElements(in);
-        // catch any range errors and assume bookmark is incorrect - saves a redundant range check.
-        try {
-            formattingElements.add(bookmark, in);
-        } catch (IndexOutOfBoundsException e) {
+    /** Replaces a formatting entry at its original position or after a moved bookmark. */
+    void replaceFormattingElement(Element out, Element in, Element bookmark) {
+        int pos = formattingElements.indexOf(bookmark);
+        if (pos == -1) {
+            error("Unable to restore formatting order for <%s>", out.tagName());
+            removeFromActiveFormattingElements(out);
             formattingElements.add(in);
+        } else if (bookmark == out) {
+            formattingElements.set(pos, in);
+        } else {
+            removeFromActiveFormattingElements(out);
+            formattingElements.add(formattingElements.indexOf(bookmark) + 1, in);
         }
     }
 
@@ -1167,26 +1221,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     void insertMarkerToFormattingElements() {
         formattingElements.add(null);
-    }
-
-    /** Inserts a foster-parented node. */
-    private void insertInFosterParent(Node in) {
-        for (int pos = stack.size() - 1; pos >= 0; pos--) {
-            Element el = stack.get(pos);
-            if (el.elementIs("template", NamespaceHtml)) {
-                // template contents are stored directly on the element
-                el.appendChild(in);
-                return;
-            }
-            if (el.elementIs("table", NamespaceHtml)) {
-                if (el.parent() != null)
-                    el.before(in);
-                else
-                    insertionTarget(stack.get(pos - 1)).appendChild(in);
-                return;
-            }
-        }
-        insertionTarget(stack.get(0)).appendChild(in);
     }
 
     // Template Insertion Mode stack
