@@ -3,7 +3,7 @@
 ## 1.24.1 (Pending)
 
 ### Improvements
-* Optimized `:has()` query execution for speed: direct-child queries such as `:has(> a)` and `:has(> a, > span)` now only examine immediate children, and sibling queries search only following siblings, with simple adjacent-sibling queries such as `:has(+ dd)` checking only the next element sibling.
+* Optimized `:has()` query execution for speed: direct-child queries such as `:has(> a)` and `:has(> a, > span)` now only examine immediate children, and sibling queries search only following siblings, with simple adjacent-sibling queries such as `:has(+ dd)` checking only the next element sibling. [#2610](https://github.com/jhy/jsoup/pull/2610)
 
 ### Changes
 * Removed APIs previously deprecated and scheduled for removal in 1.24.1. [#2597](https://github.com/jhy/jsoup/pull/2597)
@@ -16,7 +16,7 @@
 * Updated table and table-fragment parsing to place misnested content correctly per the HTML5 spec. For example, `<table><b><p>X</b>` places the paragraph before the table. [#2601](https://github.com/jhy/jsoup/issues/2601)
 * `StreamParser` now preserves its progress if you use the same `Parser` to parse another document, or call `Element.append(String)` on a streamed element. Previously, these operations replaced the active parse state and prevented streaming from continuing correctly. [#2605](https://github.com/jhy/jsoup/issues/2605)
 * Updated the adoption-agency algorithm to match the current HTML5 spec and to preserve formatting order when recovering misnested elements. [#2604](https://github.com/jhy/jsoup/pull/2604)
-* `:has()` incorrectly returned no match when a sibling selector was combined with another alternative, or continued into that sibling's descendants. Given `<div id=a></div><div><span></span></div>`, `#a:has(+ div, > span)` and `#a:has(+ div span)` now correctly select `#a`.
+* `:has()` incorrectly returned no match when a sibling selector was combined with another alternative, or continued into that sibling's descendants. Given `<div id=a></div><div><span></span></div>`, `#a:has(+ div, > span)` and `#a:has(+ div span)` now correctly select `#a`. [#2610](https://github.com/jhy/jsoup/pull/2610)
 
 ## 1.23.2 (2026-Aug-26)
 
