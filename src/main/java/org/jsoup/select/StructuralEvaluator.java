@@ -1,12 +1,9 @@
 package org.jsoup.select;
 
-import org.jsoup.internal.SoftPool;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
-import org.jsoup.nodes.NodeIterator;
-import org.jsoup.nodes.TextNode;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -69,70 +66,6 @@ abstract class StructuralEvaluator extends Evaluator {
 
         @Override public String toString() {
             return ">";
-        }
-    }
-
-    static class Has extends StructuralEvaluator {
-        static final SoftPool<NodeIterator<Node>> NodeIterPool =
-            new SoftPool<>(() -> new NodeIterator<>(new TextNode(""), Node.class));
-        // the element here is just a placeholder so this can be final - gets set in restart()
-
-        private final boolean checkSiblings; // evaluating against siblings (or children)
-
-        public Has(Evaluator evaluator) {
-            super(evaluator);
-            checkSiblings = evalWantsSiblings(evaluator);
-        }
-
-        @Override public boolean matches(Element root, Element element) {
-            if (checkSiblings) { // evaluating against siblings
-                for (Element sib = element.firstElementSibling(); sib != null; sib = sib.nextElementSibling()) {
-                    if (sib != element && evaluator.matches(element, sib)) { // don't match against self
-                        return true;
-                    }
-                }
-            }
-            // otherwise we only want to match children (or below), and not the input element. And we want to minimize GCs so reusing the Iterator obj
-            NodeIterator<Node> it = NodeIterPool.borrow();
-            it.restart(element);
-            try {
-                while (it.hasNext()) {
-                    Node node = it.next();
-                    if (node == element) continue; // don't match self, only descendants
-                    if (evaluator.matches(element, node)) {
-                        return true;
-                    }
-                }
-            } finally {
-                NodeIterPool.release(it);
-            }
-            return false;
-        }
-
-        @Override
-        boolean evaluateMatch(Element root, Node node) {
-            return false; // unused; :has(::comment)) goes via implicit root combinator
-        }
-
-        /* Test if the :has sub-clause wants sibling elements (vs nested elements) - will be a Combining eval */
-        private static boolean evalWantsSiblings(Evaluator eval) {
-            if (eval instanceof CombiningEvaluator) {
-                CombiningEvaluator ce = (CombiningEvaluator) eval;
-                for (Evaluator innerEval : ce.evaluators) {
-                    if (innerEval instanceof PreviousSibling || innerEval instanceof ImmediatePreviousSibling)
-                        return true;
-                }
-            }
-            return false;
-        }
-
-        @Override protected int cost() {
-            return 10 * evaluator.cost();
-        }
-
-        @Override
-        public String toString() {
-            return String.format(":has(%s)", evaluator);
         }
     }
 

@@ -5,7 +5,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 
-import static org.jsoup.select.EvaluatorDebug.asElement;
 import static org.jsoup.select.EvaluatorDebug.sexpr;
 import static org.jsoup.select.Selector.SelectorParseException;
 import static org.junit.jupiter.api.Assertions.*;
@@ -234,5 +233,28 @@ public class QueryParserTest {
         Evaluator e = QueryParser.parse(q);
         assertEquals("(And (Tag 'p')(Has (And (InstanceType '::comment')(ContainsValue ':contains(some text)'))))", sexpr(e));
         assertEquals(q, e.toString());
+    }
+
+    @Test void hasNestedCombinators() {
+        // only the outer combinators determine each branch's search scope
+        HasEvaluator has = (HasEvaluator) QueryParser.parse(":has(> div:is(section > div), + div:has(> p + span), + div:is(section > div) span, div:is(section > div))");
+        assertEquals(4, has.searches.size());
+        assertEquals(HasEvaluator.SearchScope.Children, has.searches.get(0).scope);
+        assertEquals(HasEvaluator.SearchScope.NextSibling, has.searches.get(1).scope);
+        assertEquals(HasEvaluator.SearchScope.FollowingSiblingSubtrees, has.searches.get(2).scope);
+        assertEquals(HasEvaluator.SearchScope.Descendants, has.searches.get(3).scope);
+    }
+
+    @Test void hasBranchScopes() {
+        HasEvaluator has = (HasEvaluator) QueryParser.parse(":has(> a, > span, + div, ~ p, + div span, p)");
+        assertEquals(5, has.searches.size());
+        assertEquals(HasEvaluator.SearchScope.Children, has.searches.get(0).scope);
+        assertEquals(HasEvaluator.SearchScope.NextSibling, has.searches.get(1).scope);
+        assertEquals(HasEvaluator.SearchScope.FollowingSiblings, has.searches.get(2).scope);
+        assertEquals(HasEvaluator.SearchScope.FollowingSiblingSubtrees, has.searches.get(3).scope);
+        assertEquals(HasEvaluator.SearchScope.Descendants, has.searches.get(4).scope);
+        assertInstanceOf(CombiningEvaluator.Or.class, has.searches.get(0).evaluator);
+        // search grouping must preserve the rendering of the original matching predicates
+        assertEquals(":has(" + QueryParser.parse("> a, > span, + div, ~ p, + div span, p") + ")", has.toString());
     }
 }

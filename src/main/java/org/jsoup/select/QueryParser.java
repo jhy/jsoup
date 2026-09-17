@@ -10,8 +10,12 @@ import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.TokenQueue;
+import org.jsoup.select.HasEvaluator.Search;
+import org.jsoup.select.HasEvaluator.SearchScope;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -85,20 +89,24 @@ public class QueryParser implements AutoCloseable {
 
     Evaluator parseSelectorGroup() {
         // SelectorGroup. Into an Or if > 1 Selector
-        Evaluator left = parseSelector();
+        Evaluator left = parseSelector().evaluator;
         while (tq.matchChomp(',')) {
-            Evaluator right = parseSelector();
+            Evaluator right = parseSelector().evaluator;
             left = or(left, right);
         }
         return left;
     }
 
-    Evaluator parseSelector() {
+    /** Parses a selector and records its leading combinator and total combinator count. */
+    ParsedSelector parseSelector() {
         // Selector ::= [ Combinator ] SimpleSequence ( Combinator SimpleSequence )*
         tq.consumeWhitespace();
 
         Evaluator left;
-        if (tq.matchesAny(Combinators)) {
+        char leading = 0;
+        int combinators = 0;
+        boolean relative = tq.matchesAny(Combinators);
+        if (relative) {
             // e.g. query is "> div"; left side is root element
             left = new StructuralEvaluator.Root();
         } else {
@@ -115,13 +123,32 @@ public class QueryParser implements AutoCloseable {
                 break;
 
             if (combinator != 0) {
+                if (relative && combinators == 0) leading = combinator;
                 Evaluator right = parseSimpleSequence();
                 left = combinator(left, combinator, right);
+                combinators++;
             } else {
                 break;
             }
         }
-        return left;
+        return new ParsedSelector(left, leading, combinators);
+    }
+
+    /** The evaluator and combinators parsed for a selector. */
+    static final class ParsedSelector {
+        final Evaluator evaluator;
+        final char leadingCombinator;
+        final int combinatorCount;
+
+        /**
+         Stores the selector's leading combinator and total combinator count.
+         Nested selectors are parsed independently.
+         */
+        ParsedSelector(Evaluator evaluator, char leadingCombinator, int combinatorCount) {
+            this.evaluator = evaluator;
+            this.leadingCombinator = leadingCombinator;
+            this.combinatorCount = combinatorCount;
+        }
     }
 
     Evaluator parseSimpleSequence() {
@@ -425,9 +452,41 @@ public class QueryParser implements AutoCloseable {
         return Integer.parseInt(index);
     }
 
-    // pseudo selector :has(el)
+    /** Parses {@code :has()}, grouping consecutive alternatives that can share a traversal. */
     private Evaluator has() {
-        return parseNested(StructuralEvaluator.Has::new, ":has() must have a selector");
+        String err = ":has() must have a selector";
+        Validate.isTrue(tq.matchChomp('('), err);
+        List<Search> searches = new ArrayList<>();
+        do {
+            ParsedSelector parsed = parseSelector();
+            Search search = new Search(parsed.evaluator, hasSearchScope(parsed));
+            int last = searches.size() - 1;
+            Search previous = last >= 0 ? searches.get(last) : null;
+            // adjacent alternatives with the same scope can share a traversal, e.g. :has(> a, > span)
+            if (previous != null && previous.scope == search.scope) {
+                Evaluator combined = or(previous.evaluator, search.evaluator);
+                searches.set(last, new Search(combined, search.scope));
+            } else {
+                searches.add(search);
+            }
+        } while (tq.matchChomp(','));
+        Validate.isTrue(tq.matchChomp(')'), err);
+        return new HasEvaluator(searches);
+    }
+
+    /** Chooses where to look for candidates for a {@code :has()} alternative. */
+    private static SearchScope hasSearchScope(ParsedSelector selector) {
+        char leading = selector.leadingCombinator;
+        if (leading == '>' && selector.combinatorCount == 1)
+            return SearchScope.Children;
+        if (leading == '+' || leading == '~') {
+            if (selector.combinatorCount > 1)
+                return SearchScope.FollowingSiblingSubtrees;
+            if (leading == '+' && !selector.evaluator.wantsNodes())
+                return SearchScope.NextSibling;
+            return SearchScope.FollowingSiblings;
+        }
+        return SearchScope.Descendants;
     }
 
     // pseudo selector :is()

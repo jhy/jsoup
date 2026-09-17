@@ -44,7 +44,7 @@ class StructuralEvaluatorTest {
 
         // use Collector.stream vs Selector.select(), as the later is able to reset after executing
         Collector.stream(evaluator, doc).count(); // consume stream to populate memos
-        assertFalse(structuralEvals.isEmpty());
+        if (expectMemos) assertFalse(structuralEvals.isEmpty());
 
         boolean hadMemos = false;
         for (StructuralEvaluator se : structuralEvals) {
@@ -71,7 +71,10 @@ class StructuralEvaluatorTest {
             Arguments.of("span ~ a", true),          // PreviousSibling
             Arguments.of("span + a", true),          // ImmediatePreviousSibling
             Arguments.of("div > span > a", false),   // ImmediateParentRun does not use memoMatches
-            Arguments.of("div:has(p)", false)        // Has (coverage; does not use memo for these inputs)
+            Arguments.of("div:has(p)", false),       // HasEvaluator itself has no memo state
+            Arguments.of("div:has(p:not(.missing))", true),
+            Arguments.of(".a:has(+ div span, > p:not(.missing))", true),
+            Arguments.of("div:has(> p, > span)", false)
         );
     }
 
@@ -81,6 +84,13 @@ class StructuralEvaluatorTest {
             CombiningEvaluator ce = (CombiningEvaluator) evaluator;
             for (Evaluator inner : ce.evaluators) {
                 collectEvals(inner, out);
+            }
+            return;
+        }
+
+        if (evaluator instanceof HasEvaluator) {
+            for (HasEvaluator.Search search : ((HasEvaluator) evaluator).searches) {
+                collectEvals(search.evaluator, out);
             }
             return;
         }

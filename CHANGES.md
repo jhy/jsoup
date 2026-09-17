@@ -2,6 +2,9 @@
 
 ## 1.24.1 (Pending)
 
+### Improvements
+* Optimized `:has()` query execution for speed: direct-child queries such as `:has(> a)` and `:has(> a, > span)` now only examine immediate children, and sibling queries search only following siblings, with simple adjacent-sibling queries such as `:has(+ dd)` checking only the next element sibling.
+
 ### Changes
 * Removed APIs previously deprecated and scheduled for removal in 1.24.1. [#2597](https://github.com/jhy/jsoup/pull/2597)
 * `Response.bodyStream()` now observes the configured max body size and request timeout, consistent with the other response body methods. The default max size is 2 MB. You can configure that with `maxBodySize(0)` before executing the request to disable the cap. `Response.isTruncated()` reports when the decoded response content exceeded the configured limit. [#2598](https://github.com/jhy/jsoup/pull/2598)
@@ -13,6 +16,7 @@
 * Updated table and table-fragment parsing to place misnested content correctly per the HTML5 spec. For example, `<table><b><p>X</b>` places the paragraph before the table. [#2601](https://github.com/jhy/jsoup/issues/2601)
 * `StreamParser` now preserves its progress if you use the same `Parser` to parse another document, or call `Element.append(String)` on a streamed element. Previously, these operations replaced the active parse state and prevented streaming from continuing correctly. [#2605](https://github.com/jhy/jsoup/issues/2605)
 * Updated the adoption-agency algorithm to match the current HTML5 spec and to preserve formatting order when recovering misnested elements. [#2604](https://github.com/jhy/jsoup/pull/2604)
+* `:has()` incorrectly returned no match when a sibling selector was combined with another alternative, or continued into that sibling's descendants. Given `<div id=a></div><div><span></span></div>`, `#a:has(+ div, > span)` and `#a:has(+ div span)` now correctly select `#a`.
 
 ## 1.23.2 (2026-Aug-26)
 
