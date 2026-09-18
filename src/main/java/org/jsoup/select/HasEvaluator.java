@@ -22,13 +22,13 @@ final class HasEvaluator extends Evaluator {
         this.selector = selector;
         this.traversals = Collections.unmodifiableList(new ArrayList<>(traversals));
         boolean wantsNodes = false;
-        int cost = 0;
+        int evaluatorCost = 0;
         for (Traversal traversal : traversals) {
             wantsNodes |= traversal.evaluator.wantsNodes();
-            cost += traversal.evaluator.cost();
+            evaluatorCost += traversal.evaluator.cost();
         }
         this.wantsNodes = wantsNodes;
-        this.cost = 10 * cost;
+        this.cost = 10 * evaluatorCost;
     }
 
     @Override public boolean matches(Element root, Element element) {
