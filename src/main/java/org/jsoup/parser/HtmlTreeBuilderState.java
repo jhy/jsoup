@@ -422,6 +422,14 @@ enum HtmlTreeBuilderState {
                     tb.transition(InTable);
                     break;
                 case "input":
+                    if (tb.fragmentContextIs("select")) {
+                        tb.error(this);
+                        return false;
+                    }
+                    if (tb.inScope("select")) {
+                        tb.error(this);
+                        tb.popStackToClose("select");
+                    }
                     tb.reconstructFormattingElements();
                     el = tb.insertEmptyElementFor(startTag);
                     if (!equalsIgnoreAsciiCase(el.attr("type"), "hidden"))
@@ -430,6 +438,11 @@ enum HtmlTreeBuilderState {
                 case "hr":
                     if (tb.inButtonScope("p")) {
                         tb.processEndTag("p");
+                    }
+                    if (tb.inScope("select")) {
+                        tb.generateImpliedEndTags();
+                        if (tb.inScope("option") || tb.inScope("optgroup"))
+                            tb.error(this);
                     }
                     tb.insertEmptyElementFor(startTag);
                     tb.framesetOk(false);
@@ -464,16 +477,18 @@ enum HtmlTreeBuilderState {
                     tb.startNoscript(startTag);
                     break;
                 case "select":
+                    if (tb.fragmentContextIs("select")) {
+                        tb.error(this);
+                        return false;
+                    }
+                    if (tb.inScope("select")) {
+                        tb.error(this);
+                        tb.popStackToClose("select");
+                        break;
+                    }
                     tb.reconstructFormattingElements();
                     tb.insertElementFor(startTag);
                     tb.framesetOk(false);
-                    if (startTag.selfClosing) break; // don't change states if not added to the stack
-
-                    HtmlTreeBuilderState state = tb.state();
-                    if (state.equals(InTable) || state.equals(InCaption) || state.equals(InTableBody) || state.equals(InRow) || state.equals(InCell))
-                        tb.transition(InSelectInTable);
-                    else
-                        tb.transition(InSelect);
                     break;
                 case "math":
                     tb.reconstructFormattingElements();
@@ -531,10 +546,26 @@ enum HtmlTreeBuilderState {
                     tb.insertElementFor(startTag);
                     break;
 
-                case "optgroup":
                 case "option":
-                    if (tb.currentElementIs("option"))
+                    if (tb.inScope("select")) {
+                        tb.generateImpliedEndTags("optgroup");
+                        if (tb.inScope("option"))
+                            tb.error(this);
+                    } else if (tb.currentElementIs("option")) {
                         tb.processEndTag("option");
+                    }
+                    tb.reconstructFormattingElements();
+                    tb.insertElementFor(startTag);
+                    break;
+
+                case "optgroup":
+                    if (tb.inScope("select")) {
+                        tb.generateImpliedEndTags();
+                        if (tb.inScope("option") || tb.inScope("optgroup"))
+                            tb.error(this);
+                    } else if (tb.currentElementIs("option")) {
+                        tb.processEndTag("option");
+                    }
                     tb.reconstructFormattingElements();
                     tb.insertElementFor(startTag);
                     break;
@@ -1380,124 +1411,6 @@ enum HtmlTreeBuilderState {
                 tb.processEndTag("th"); // only here if th or td in scope
         }
     },
-    InSelect {
-        @Override boolean process(Token t, HtmlTreeBuilder tb) {
-            final String name;
-
-            switch (t.type) {
-                case Character:
-                    tb.insertCharacterNode(t.asCharacter());
-                    break;
-                case Comment:
-                    tb.insertCommentNode(t.asComment());
-                    break;
-                case Doctype:
-                    tb.error(this);
-                    return false;
-                case StartTag:
-                    Token.StartTag start = t.asStartTag();
-                    name = start.normalName();
-                    if (name.equals("html"))
-                        return tb.process(start, InBody);
-                    else if (name.equals("option")) {
-                        if (tb.currentElementIs("option"))
-                            tb.processEndTag("option");
-                        tb.insertElementFor(start);
-                    } else if (name.equals("optgroup")) {
-                        if (tb.currentElementIs("option"))
-                            tb.processEndTag("option"); // pop option and flow to pop optgroup
-                        if (tb.currentElementIs("optgroup"))
-                            tb.processEndTag("optgroup");
-                        tb.insertElementFor(start);
-                    } else if (name.equals("select")) {
-                        tb.error(this);
-                        return tb.processEndTag("select");
-                    } else if (inSorted(name, InSelectEnd)) {
-                        tb.error(this);
-                        if (!tb.inSelectScope("select"))
-                            return false; // frag
-                        // spec says close select then reprocess; leads to recursion. iter directly:
-                        do {
-                            tb.popStackToClose("select");
-                            tb.resetInsertionMode();
-                        } while (tb.inSelectScope("select")); // collapse invalid nested selects
-                        return tb.process(start);
-                    } else if (name.equals("script") || name.equals("template")) {
-                        return tb.process(t, InHead);
-                    } else if (name.equals("noscript")) {
-                        tb.startNoscript(start);
-                    } else {
-                        return anythingElse(t, tb);
-                    }
-                    break;
-                case EndTag:
-                    Token.EndTag end = t.asEndTag();
-                    name = end.normalName();
-                    switch (name) {
-                        case "optgroup":
-                            if (tb.currentElementIs("option") && tb.aboveOnStack(tb.currentElement()) != null && tb.aboveOnStack(tb.currentElement()).nameIs("optgroup"))
-                                tb.processEndTag("option");
-                            if (tb.currentElementIs("optgroup"))
-                                tb.pop();
-                            else
-                                tb.error(this);
-                            break;
-                        case "option":
-                            if (tb.currentElementIs("option"))
-                                tb.pop();
-                            else
-                                tb.error(this);
-                            break;
-                        case "select":
-                            if (!tb.inSelectScope(name)) {
-                                tb.error(this);
-                                return false;
-                            } else {
-                                tb.popStackToClose(name);
-                                tb.resetInsertionMode();
-                            }
-                            break;
-                        case "template":
-                            return tb.process(t, InHead);
-                        default:
-                            return anythingElse(t, tb);
-                    }
-                    break;
-                case EOF:
-                    if (!tb.currentElementIs("html"))
-                        tb.error(this);
-                    break;
-                default:
-                    return anythingElse(t, tb);
-            }
-            return true;
-        }
-
-        private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
-            tb.error(this);
-            return false;
-        }
-    },
-    InSelectInTable {
-        @Override boolean process(Token t, HtmlTreeBuilder tb) {
-            if (t.isStartTag() && inSorted(t.asStartTag().normalName(), InSelectTableEnd)) {
-                tb.error(this);
-                tb.popStackToClose("select");
-                tb.resetInsertionMode();
-                return tb.process(t);
-            } else if (t.isEndTag() && inSorted(t.asEndTag().normalName(), InSelectTableEnd)) {
-                tb.error(this);
-                if (tb.inTableScope(t.asEndTag().normalName())) {
-                    tb.popStackToClose("select");
-                    tb.resetInsertionMode();
-                    return (tb.process(t));
-                } else
-                    return false;
-            } else {
-                return tb.process(t, InSelect);
-            }
-        }
-    },
     InTemplate {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
             final String name;
@@ -1876,7 +1789,7 @@ enum HtmlTreeBuilderState {
         static final String[] InBodyStartDrop = new String[]{"caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"};
         static final String[] InBodyEndClosers = new String[]{"address", "article", "aside", "blockquote", "button", "center", "details", "dir", "div",
             "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "menu",
-            "nav", "ol", "pre", "section", "summary", "ul"};
+            "nav", "ol", "pre", "section", "select", "summary", "ul"};
         static final String[] InBodyEndOtherErrors = new String[] {"body", "dd", "dt", "html", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc", "tbody", "td", "tfoot", "th", "thead", "tr"};
         static final String[] InBodyEndAdoptionFormatters = new String[]{"a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u"};
         static final String[] InTableToBody = new String[]{"tbody", "tfoot", "thead"};
@@ -1892,8 +1805,6 @@ enum HtmlTreeBuilderState {
         static final String[] InTableBodyEndIgnore = new String[]{"body", "caption", "col", "colgroup", "html", "td", "th", "tr"};
         static final String[] InRowMissing = new String[]{"caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr"};
         static final String[] InRowIgnore = new String[]{"body", "caption", "col", "colgroup", "html", "td", "th"};
-        static final String[] InSelectEnd = new String[]{"input", "keygen", "textarea"};
-        static final String[] InSelectTableEnd = new String[]{"caption", "table", "tbody", "td", "tfoot", "th", "thead", "tr"};
         static final String[] InTableEndIgnore = new String[]{"tbody", "tfoot", "thead"};
         static final String[] InCaptionIgnore = new String[]{"body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"};
         static final String[] InTemplateToHead = new String[] {"base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title"};

@@ -18,6 +18,7 @@
 * Updated the adoption-agency algorithm to match the current HTML5 spec and to preserve formatting order when recovering misnested elements. [#2604](https://github.com/jhy/jsoup/pull/2604)
 * `:has()` now correctly matches sibling alternatives and descendants of siblings. Given `<div id=a></div><div><span></span></div>`, both `#a:has(+ div, > span)` and `#a:has(+ div span)` select `#a`. [#2610](https://github.com/jhy/jsoup/pull/2610)
 * Within node selectors, `:not()` now correctly applies `:contains()` and `:matches()` to the node value. For example, `::comment:not(:contains(foo))` excludes comments containing `foo`. [#2610](https://github.com/jhy/jsoup/pull/2610)
+* Updated `<select>` parsing to the current HTML spec, retaining elements such as buttons and other markup that the previous rules discarded. [#2611](https://github.com/jhy/jsoup/issues/2611)
 
 ## 1.23.2 (2026-Aug-26)
 
