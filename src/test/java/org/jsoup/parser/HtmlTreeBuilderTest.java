@@ -212,7 +212,7 @@ public class HtmlTreeBuilderTest {
 
         List<Object[]> tagOptionArrays = HtmlTreeBuilderStateTest.findConstantArrays(HtmlTagOptions.class);
         HtmlTreeBuilderStateTest.ensureSorted(tagOptionArrays);
-        assertEquals(10, tagOptionArrays.size());
+        assertEquals(9, tagOptionArrays.size());
     }
 
     @Test
@@ -316,11 +316,9 @@ public class HtmlTreeBuilderTest {
     @Test void parserOptionsAreNamespaceAware() {
         Tag htmlOption = Tag.valueOf("option", NamespaceHtml, ParseSettings.htmlDefault);
         assertTrue(htmlOption.hasParserOption(HtmlTagOptions.ImpliedEnd));
-        assertTrue(htmlOption.hasParserOption(HtmlTagOptions.SelectScopeMember));
 
         Tag svgOption = Tag.valueOf("option", Parser.NamespaceSvg, ParseSettings.htmlDefault);
         assertFalse(svgOption.hasParserOption(HtmlTagOptions.ImpliedEnd));
-        assertFalse(svgOption.hasParserOption(HtmlTagOptions.SelectScopeMember));
     }
 
     @Test void impliedEndTagsOnlyPopHtmlElements() {

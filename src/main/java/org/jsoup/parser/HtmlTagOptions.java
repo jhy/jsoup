@@ -14,10 +14,9 @@ final class HtmlTagOptions {
     static final int ListScope          = 1 << 1;
     static final int ButtonScope        = 1 << 2;
     static final int TableScope         = 1 << 3;
-    static final int SelectScopeMember  = 1 << 4;
-    static final int ImpliedEnd         = 1 << 5;
-    static final int ThoroughImpliedEnd = 1 << 6;
-    static final int Special            = 1 << 7;
+    static final int ImpliedEnd         = 1 << 4;
+    static final int ThoroughImpliedEnd = 1 << 5;
+    static final int Special            = 1 << 6;
 
     static final String[] ScopeTags = new String[]{ // a particular element in scope
             "applet", "caption", "html", "marquee", "object", "select", "table", "td", "template", "th"};
@@ -26,7 +25,6 @@ final class HtmlTagOptions {
     static final String[] ListScopeTags = new String[]{"ol", "ul"};
     static final String[] ButtonScopeTags = new String[]{"button"};
     static final String[] TableScopeTags = new String[]{"html", "table", "template"};
-    static final String[] SelectScopeMemberTags = new String[]{"optgroup", "option"};
     static final String[] ImpliedEndTags = new String[]{
             "dd", "dt", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc"};
     static final String[] ThoroughImpliedEndTags = new String[]{
@@ -53,7 +51,6 @@ final class HtmlTagOptions {
             case NamespaceHtml:
                 if (StringUtil.inSorted(normalName, ImpliedEndTags))         options |= ImpliedEnd;
                 if (StringUtil.inSorted(normalName, ThoroughImpliedEndTags)) options |= ThoroughImpliedEnd;
-                if (StringUtil.inSorted(normalName, SelectScopeMemberTags))  options |= SelectScopeMember;
                 if (StringUtil.inSorted(normalName, ScopeTags))              options |= Scope;
                 if (StringUtil.inSorted(normalName, ListScopeTags))          options |= ListScope;
                 if (StringUtil.inSorted(normalName, ButtonScopeTags))        options |= ButtonScope;

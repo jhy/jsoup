@@ -352,6 +352,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return fragmentParsing;
     }
 
+    /** Tests whether this fragment was created with the named HTML context element. */
+    boolean fragmentContextIs(String normalName) {
+        return fragmentParsing && contextElement != null && contextElement.elementIs(normalName, NamespaceHtml);
+    }
+
     void error(HtmlTreeBuilderState state) {
         if (parser.getErrors().canAddError())
             parser.getErrors().add(new ParseError(reader, "Unexpected %s token [%s] when in state [%s]",
@@ -769,10 +774,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
             String name = node != null && NamespaceHtml.equals(node.tag().namespace()) ? node.normalName() : "";
 
             switch (name) {
-                case "select":
-                    transition(HtmlTreeBuilderState.InSelect);
-                    // todo - should loop up (with some limit) and check for table or template hits
-                    break LOOP;
                 case "td":
                 case "th":
                     if (!last) {
@@ -889,19 +890,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     boolean inTableScope(String targetName) {
         return inSpecificScope(targetName, HtmlTagOptions.TableScope);
-    }
-
-    boolean inSelectScope(String targetName) {
-        for (int pos = stack.size() -1; pos >= 0; pos--) {
-            Element el = stack.get(pos);
-            String elName = el.normalName();
-            if (elName.equals(targetName))
-                return true;
-            // Select scope stops at the first element that is not option / optgroup.
-            if (!el.tag().hasParserOption(HtmlTagOptions.SelectScopeMember))
-                return false;
-        }
-        return false; // nothing left on stack
     }
 
     /** Tests if there is some element on the stack that is not in the provided set. */

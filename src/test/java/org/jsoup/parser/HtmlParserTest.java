@@ -155,12 +155,33 @@ public class HtmlParserTest {
     }
 
     @Test public void parsesUnterminatedOption() {
-        // bit weird this -- browsers and spec get stuck in select until there's a </select>
         Document doc = Jsoup.parse("<body><p><select><option>One<option>Two</p><p>Three</p>");
         Elements options = doc.select("option");
         assertEquals(2, options.size());
         assertEquals("One", options.first().text());
-        assertEquals("TwoThree", options.last().text());
+        assertEquals("Two Three", options.last().text());
+    }
+
+    @Test void parsesSelectContentUsingInBodyRules() {
+        Document doc = Jsoup.parse("<select><div>One</div><button>Two</button><datalist><option>Three</option></datalist></select>");
+        Element select = doc.expectFirst("select");
+
+        assertEquals("<div>One</div><button>Two</button><datalist><option>Three</option></datalist>",
+            TextUtil.stripNewlines(select.html()));
+    }
+
+    @Test void hrClosesOpenOptionAndOptgroup() {
+        Document doc = Jsoup.parse("<select><optgroup><option>One<hr>");
+
+        assertEquals("<select><optgroup><option>One</option></optgroup><hr></select>",
+            TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test void inputClosesOpenSelect() {
+        Document doc = Jsoup.parse("<select><option>One<input>");
+
+        assertEquals("<select><option>One</option></select><input>",
+            TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testSelectWithOption() {
