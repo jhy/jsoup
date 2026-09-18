@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.jsoup.select.EvaluatorDebug.sexpr;
 import static org.junit.jupiter.api.Assertions.*;
@@ -629,6 +630,46 @@ public class SelectorTest {
         assertEquals("1", els2.get(1).id());
     }
 
+    @Test public void hasDirectChildren() {
+        Document doc = Jsoup.parse("<div id=empty></div>"
+            + "<div id=child><a href=x></a></div>"
+            + "<div id=deep><section><a href=x></a></section></div>");
+        assertSelectedIds(doc.select("div:has(> a[href])"), "child");
+        assertSelectedIds(doc.select("div:has(> missing)"));
+        // a leading child combinator does not restrict the final candidate to that depth
+        assertSelectedIds(doc.select("div:has(> section a)"), "deep");
+        assertSelectedIds(doc.select("div:has(> section > a)"), "deep");
+    }
+
+    @Test public void hasDirectChildAlternatives() {
+        Document doc = Jsoup.parse("<div id=early><a href=x></a><span></span></div>"
+            + "<div id=late><section></section><span></span></div>"
+            + "<div id=deep><section><span></span></section></div>");
+        String query = "div:has(> a[href], > span)";
+        assertSelectedIds(doc.select(query), "early", "late");
+        assertEquals(doc.getElementById("early"), doc.selectFirst(query));
+        // the unrestricted alternative must still reach deeper descendants
+        assertSelectedIds(doc.select("div:has(> a[href], span)"), "early", "late", "deep");
+    }
+
+    @Test public void hasDirectChildWithNestedHas() {
+        Document doc = Jsoup.parse("<article id=nested><div><section><a></a></section></div></article>"
+            + "<article id=span><span></span></article>"
+            + "<article id=deep><section><span></span></section></article>");
+        // the outer candidate is a child, but its nested predicate searches deeper
+        assertSelectedIds(doc.select("article:has(> div:has(a), > span)"), "nested", "span");
+    }
+
+    @Test public void hasDirectChildNodes() {
+        Document doc = Jsoup.parse("<article id=span><span></span></article>"
+            + "<article id=comment>text<!--direct--></article>"
+            + "<article id=deepComment><section><!--deep--></section></article>");
+        assertSelectedIds(doc.select("article:has(> ::comment)"), "comment");
+        assertSelectedIds(doc.select("article:has(> span, > ::comment)"), "span", "comment");
+        // mixing child and descendant alternatives must include the nested comment
+        assertSelectedIds(doc.select("article:has(> ::comment, section ::comment)"), "comment", "deepComment");
+    }
+
     @Test public void testNestedHas() {
         Document doc = Jsoup.parse("<div><p><span>One</span></p></div> <div><p>Two</p></div>");
         Elements divs = doc.select("div:has(p:has(span))");
@@ -661,6 +702,104 @@ public class SelectorTest {
         doc = Jsoup.parse("<div id=1><p><i>One</i><i>Two</p><p><i>Three</p></div> <div><p><i>Four</div>");
         els = doc.select("div:has(p:has(i:has(~i)))");
         assertSelectedIds(els, "1");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"#a:has(+ div, > missing)", "#a:has(> missing, + div)"})
+    void hasSiblingAlternatives(String query) {
+        Document doc = Jsoup.parse("<div id=a></div><div><span></span></div>");
+        assertSelectedIds(doc.select("#a:has(+ div)"), "a");
+        // adding an alternative must not lose the existing sibling match
+        assertSelectedIds(doc.select(query), "a");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"#a:has(+ div span)", "#a:has(+ div > span)", "#a:has(~ div span)"})
+    void hasSiblingDescendant(String query) {
+        Document doc = Jsoup.parse("<div id=a></div><div><span></span></div>");
+        // the matching span is a descendant of the next sibling, not of a
+        assertSelectedIds(doc.select(query), "a");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"#a:has(+ div span)", "#a:has(~ div span)"})
+    void hasSiblingDeepDescendant(String query) {
+        Document doc = Jsoup.parse("<div id=a></div><div><section><span></span></section></div>");
+        assertSelectedIds(doc.select(query), "a");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"#a:has(+ div > span)", "#a:has(~ div > span)"})
+    void hasSiblingChildNotGrandchild(String query) {
+        Document doc = Jsoup.parse("<div id=a></div><div><section><span></span></section></div>");
+        assertSelectedIds(doc.select(query));
+    }
+
+    @Test public void hasAdjacentSiblingNotLaterSibling() {
+        Document doc = Jsoup.parse("<div id=a></div><section></section><div><span></span></div>");
+        assertSelectedIds(doc.select("#a:has(+ div span)"));
+    }
+
+    @Test public void hasLaterSiblingDescendant() {
+        Document doc = Jsoup.parse("<div id=a></div><section></section><div><span></span></div>");
+        assertSelectedIds(doc.select("#a:has(~ div span)"), "a");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "<div><span></span></div><div id=a></div><div></div>",
+        "<div id=a><span></span></div><div></div>"
+    })
+    void hasSiblingDescendantNotSelfOrPrevious(String html) {
+        Document doc = Jsoup.parse(html);
+        // a span in a preceding sibling or in a itself cannot satisfy a following-sibling query
+        assertSelectedIds(doc.select("#a:has(+ div span)"));
+        assertSelectedIds(doc.select("#a:has(+ div > span)"));
+        assertSelectedIds(doc.select("#a:has(~ div span)"));
+    }
+
+    @Test public void hasSeparateBranchScopes() {
+        Document doc = Jsoup.parse("<div id=a></div><div><span></span></div>");
+        // the span alternative cannot borrow candidates from the sibling alternative
+        assertSelectedIds(doc.select("#a:has(+ div.missing, span)"));
+        assertSelectedIds(doc.select("#a:has(span, + div.missing)"));
+        assertSelectedIds(doc.select("#a:has(+ div:is(:has(span)), > missing)"), "a");
+        assertSelectedIds(doc.select("#a:has(+ div:not(:has(missing)), > missing)"), "a");
+        assertSelectedIds(doc.select("#a:has(div:has(+ span))"));
+    }
+
+    @Test public void hasSiblingContinuation() {
+        Document doc = Jsoup.parse("<div id=a></div><div></div><section><span></span></section>");
+        assertSelectedIds(doc.select("#a:has(+ div + section)"), "a");
+        assertSelectedIds(doc.select("#a:has(+ div + section span)"), "a");
+        assertSelectedIds(doc.select("#a:has(+ div span)"));
+    }
+
+    @Test public void hasSiblingNodes() {
+        Document doc = Jsoup.parse("<div id=a></div>text<!--between--><div><!--inside--></div>");
+        assertSelectedIds(doc.select("#a:has(+ div)"), "a");
+        assertSelectedIds(doc.select("#a:has(+ ::comment)"), "a");
+        assertSelectedIds(doc.select("#a:has(~ ::comment)"), "a");
+        assertSelectedIds(doc.select("#a:has(+ div ::comment)"), "a");
+        assertSelectedIds(doc.select("#a:has(+ div > ::comment)"), "a");
+        assertSelectedIds(doc.select("#a:has(> ::comment)"));
+    }
+
+    @Test public void hasCompiledBranches() {
+        String query = "div:has(+ div span, > a)";
+        Evaluator evaluator = Selector.evaluatorOf(query);
+        Evaluator combined = new CombiningEvaluator.And(new Evaluator.Id("a"), evaluator);
+        // share compiled searches across threads, with independent documents and repeated selections
+        IntStream.range(0, 8).parallel().forEach(i -> {
+            Document doc = Jsoup.parse("<div id=a></div><div><span></span></div><div id=b><a></a></div>");
+            assertEquals(doc.select(query), doc.select(evaluator));
+            assertSelectedIds(doc.select(evaluator), "a", "b");
+            assertEquals(doc.selectFirst(query), doc.selectFirst(evaluator));
+            assertSelectedIds(doc.select(combined), "a");
+            assertTrue(doc.getElementById("a").is(combined));
+            assertEquals(doc.getElementById("a"), doc.getElementById("a").closest(combined));
+            assertSelectedIds(Jsoup.parse("<div id=a></div>").select(evaluator));
+        });
     }
 
     @MultiLocaleTest
@@ -1505,12 +1644,12 @@ public class SelectorTest {
         assertSelectedIds(els1, "2", "3");
 
         String q2 = "div div:has(>::comment:contains(comment3))";
-        assertEquals("(And (Ancestor (Tag 'div'))(And (Tag 'div')(Has (ImmediateParentRun (Root '>')(And (InstanceType '::comment')(ContainsValue ':contains(comment3)'))))))", sexpr(q2));
+        assertEquals("(And (Ancestor (Tag 'div'))(And (Tag 'div')(Has (And (InstanceType '::comment')(ContainsValue ':contains(comment3)')))))", sexpr(q2));
         Elements els2 = doc.select(q2);
         assertSelectedIds(els2, "3");
 
         String q3 = "div:has(>::comment) div";
-        assertEquals("(And (Tag 'div')(Ancestor (And (Tag 'div')(Has (ImmediateParentRun (Root '>')(InstanceType '::comment'))))))", sexpr(q3));
+        assertEquals("(And (Tag 'div')(Ancestor (And (Tag 'div')(Has (InstanceType '::comment')))))", sexpr(q3));
         Elements els3 = doc.select(q3);
         assertSelectedIds(els3, "3");
     }
@@ -1668,6 +1807,30 @@ public class SelectorTest {
         assertEquals("123", nodes.get(1).nodeValue());
         assertEquals("4321", nodes.get(2).nodeValue());
         assertEquals("432", nodes.get(3).nodeValue());
+    }
+
+    @Test void notMatchesNodeValues() {
+        Document doc = Jsoup.parse("<p><!--foo--><!--bar--><!--baz--></p>");
+
+        Nodes<Comment> notFoo = doc.selectNodes("::comment:not(:contains(foo))", Comment.class);
+        assertEquals(2, notFoo.size());
+        assertEquals("bar", notFoo.get(0).getData());
+        assertEquals("baz", notFoo.get(1).getData());
+
+        Nodes<Comment> notBa = doc.selectNodes("::comment:not(:matches(^ba))", Comment.class);
+        assertEquals(1, notBa.size());
+        assertEquals("foo", notBa.get(0).getData());
+
+        Nodes<Comment> neither = doc.selectNodes("::comment:not(:contains(foo), :contains(bar))", Comment.class);
+        assertEquals(1, neither.size());
+        assertEquals("baz", neither.get(0).getData());
+    }
+
+    @Test void nestedNodeSelectorKeepsOuterContext() {
+        Document doc = Jsoup.parse("<p><!--foo--><!--bar--></p>");
+        Nodes<Comment> comments = doc.selectNodes("::comment:not(::text):contains(foo)", Comment.class);
+        assertEquals(1, comments.size());
+        assertEquals("foo", comments.get(0).getData());
     }
 
     @Test void cdataNodes() {

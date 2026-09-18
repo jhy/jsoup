@@ -27,13 +27,18 @@ public class EvaluatorDebug {
 
     public static Element asElement(Evaluator eval) {
         Class<? extends Evaluator> evalClass = eval.getClass();
-        Element el = new Element(evalClass.getSimpleName());
+        String name = eval instanceof HasEvaluator ? "Has" : evalClass.getSimpleName();
+        Element el = new Element(name);
         el.attr("css", eval.toString());
         el.attr("cost", Integer.toString(eval.cost()));
 
         if (eval instanceof CombiningEvaluator) {
             for (Evaluator inner : ((CombiningEvaluator) eval).sortedEvaluators) {
                 el.appendChild(asElement(inner));
+            }
+        } else if (eval instanceof HasEvaluator) {
+            for (HasEvaluator.Traversal traversal : ((HasEvaluator) eval).traversals) {
+                el.appendChild(asElement(traversal.evaluator));
             }
         } else if (eval instanceof StructuralEvaluator.ImmediateParentRun) {
             for (Evaluator inner : ((StructuralEvaluator.ImmediateParentRun) eval).evaluators) {
