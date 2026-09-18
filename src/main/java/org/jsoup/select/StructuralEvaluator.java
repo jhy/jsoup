@@ -173,7 +173,8 @@ abstract class StructuralEvaluator extends Evaluator {
                 Evaluator eval = evaluators.get(i);
                 if (!eval.matches(root, node))
                     return false;
-                node = node.parent();
+                if (i > 0)
+                    node = node.parent();
             }
             return true;
         }

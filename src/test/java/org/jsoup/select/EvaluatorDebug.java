@@ -37,8 +37,8 @@ public class EvaluatorDebug {
                 el.appendChild(asElement(inner));
             }
         } else if (eval instanceof HasEvaluator) {
-            for (HasEvaluator.Search search : ((HasEvaluator) eval).searches) {
-                el.appendChild(asElement(search.evaluator));
+            for (HasEvaluator.Traversal traversal : ((HasEvaluator) eval).traversals) {
+                el.appendChild(asElement(traversal.evaluator));
             }
         } else if (eval instanceof StructuralEvaluator.ImmediateParentRun) {
             for (Evaluator inner : ((StructuralEvaluator.ImmediateParentRun) eval).evaluators) {

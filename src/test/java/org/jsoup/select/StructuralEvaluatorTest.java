@@ -89,8 +89,8 @@ class StructuralEvaluatorTest {
         }
 
         if (evaluator instanceof HasEvaluator) {
-            for (HasEvaluator.Search search : ((HasEvaluator) evaluator).searches) {
-                collectEvals(search.evaluator, out);
+            for (HasEvaluator.Traversal traversal : ((HasEvaluator) evaluator).traversals) {
+                collectEvals(traversal.evaluator, out);
             }
             return;
         }

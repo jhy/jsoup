@@ -10,8 +10,8 @@ import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.TokenQueue;
-import org.jsoup.select.HasEvaluator.Search;
-import org.jsoup.select.HasEvaluator.SearchScope;
+import org.jsoup.select.HasEvaluator.Scope;
+import org.jsoup.select.HasEvaluator.Traversal;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -80,38 +80,39 @@ public class QueryParser implements AutoCloseable {
      See <a href="https://www.w3.org/TR/selectors-4/#grammar">selectors-4</a> for the real thing
      */
     Evaluator parse() {
-        Evaluator eval = parseSelectorGroup();
+        Evaluator eval = parseSelectorGroup().evaluator();
         tq.consumeWhitespace();
         if (!tq.isEmpty())
             throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
         return eval;
     }
 
-    Evaluator parseSelectorGroup() {
-        // SelectorGroup. Into an Or if > 1 Selector
-        Evaluator left = parseSelector().evaluator;
-        while (tq.matchChomp(',')) {
-            Evaluator right = parseSelector().evaluator;
-            left = or(left, right);
-        }
-        return left;
+    /** Parses an ordered group of comma-separated selectors. */
+    private SelectorGroup parseSelectorGroup() {
+        List<ComplexSelector> selectors = new ArrayList<>();
+        do {
+            selectors.add(parseSelector());
+        } while (tq.matchChomp(','));
+        return new SelectorGroup(selectors);
     }
 
-    /** Parses a selector and records its leading combinator and total combinator count. */
-    ParsedSelector parseSelector() {
+    /** Parses a selector into an evaluator and records its top-level combinators. */
+    private ComplexSelector parseSelector() {
         // Selector ::= [ Combinator ] SimpleSequence ( Combinator SimpleSequence )*
         tq.consumeWhitespace();
 
         Evaluator left;
         char leading = 0;
         int combinators = 0;
+        boolean continuesToSibling = false; // the continuation has a + or ~ combinator, so it may leave the first sibling tree
         boolean relative = tq.matchesAny(Combinators);
         if (relative) {
-            // e.g. query is "> div"; left side is root element
+            // e.g. query is "> div"; left side is the root element
             left = new StructuralEvaluator.Root();
         } else {
             left = parseSimpleSequence();
         }
+        Evaluator rightmost = left; // keep each right side before it is folded into left
 
         while (true) {
             char combinator = 0;
@@ -124,30 +125,64 @@ public class QueryParser implements AutoCloseable {
 
             if (combinator != 0) {
                 if (relative && combinators == 0) leading = combinator;
+                else if (relative && (combinator == '+' || combinator == '~')) continuesToSibling = true;
                 Evaluator right = parseSimpleSequence();
+                rightmost = right;
                 left = combinator(left, combinator, right);
                 combinators++;
             } else {
                 break;
             }
         }
-        return new ParsedSelector(left, leading, combinators);
+        return new ComplexSelector(left, rightmost, leading, combinators, continuesToSibling);
     }
 
-    /** The evaluator and combinators parsed for a selector. */
-    static final class ParsedSelector {
-        final Evaluator evaluator;
+    /**
+     A complex selector compiled with details of its top-level combinators.
+     Nested selectors are parsed separately and do not affect these details.
+     */
+    private static final class ComplexSelector {
+        final Evaluator evaluator; // complete compiled selector
+        final Evaluator rightmost; // evaluator for the final simple sequence
         final char leadingCombinator;
         final int combinatorCount;
+        final boolean continuesToSibling; // the continuation has a top-level + or ~ combinator
 
-        /**
-         Stores the selector's leading combinator and total combinator count.
-         Nested selectors are parsed independently.
-         */
-        ParsedSelector(Evaluator evaluator, char leadingCombinator, int combinatorCount) {
+        /** Creates a complex selector from its evaluator and top-level combinator details. */
+        ComplexSelector(Evaluator evaluator, Evaluator rightmost, char leadingCombinator, int combinatorCount,
+                        boolean continuesToSibling) {
             this.evaluator = evaluator;
+            this.rightmost = rightmost;
             this.leadingCombinator = leadingCombinator;
             this.combinatorCount = combinatorCount;
+            this.continuesToSibling = continuesToSibling;
+        }
+    }
+
+    /** A parsed selector group that can be compiled or rendered in source order. */
+    private static final class SelectorGroup {
+        final List<ComplexSelector> selectors;
+
+        /** Creates a group from its selectors in source order. */
+        SelectorGroup(List<ComplexSelector> selectors) {
+            this.selectors = selectors;
+        }
+
+        /** Build the selectors into a single evaluator. */
+        Evaluator evaluator() {
+            Evaluator evaluator = selectors.get(0).evaluator;
+            for (int i = 1; i < selectors.size(); i++)
+                evaluator = or(evaluator, selectors.get(i).evaluator);
+            return evaluator;
+        }
+
+        @Override public String toString() {
+            StringBuilder out = new StringBuilder();
+            for (ComplexSelector selector : selectors) {
+                if (out.length() > 0) out.append(", ");
+                out.append(selector.evaluator);
+            }
+            return out.toString();
         }
     }
 
@@ -290,11 +325,9 @@ public class QueryParser implements AutoCloseable {
         }
     }
 
-    // ::comment etc
+    /** Parses a node selector and its subclasses in node-value context. */
     private Evaluator parseNodeSelector() {
         final String pseudo = tq.consumeCssIdentifier();
-        inNodeContext = true;  // Enter node context
-
         Evaluator left;
         switch (pseudo) {
             case "node":
@@ -320,14 +353,19 @@ public class QueryParser implements AutoCloseable {
                     "Could not parse query '%s': unknown node type '::%s'", query, pseudo);
         }
 
-        // Handle following subclasses in node context (like ::comment:contains())
-        Evaluator right;
-        while ((right = parseSubclass()) != null) {
-            left = and(left, right);
+        // nested selectors can enter node context again, e.g. ::comment:not(::text):contains(foo)
+        // restore the caller's context even if parsing a subclass throws
+        boolean previousNodeContext = inNodeContext;
+        inNodeContext = true;
+        try {
+            Evaluator right;
+            while ((right = parseSubclass()) != null) {
+                left = and(left, right);
+            }
+            return left;
+        } finally {
+            inNodeContext = previousNodeContext;
         }
-
-        inNodeContext = false;
-        return left;
     }
 
     private Evaluator byId() {
@@ -455,38 +493,57 @@ public class QueryParser implements AutoCloseable {
     /** Parses {@code :has()}, grouping consecutive alternatives that can share a traversal. */
     private Evaluator has() {
         String err = ":has() must have a selector";
-        Validate.isTrue(tq.matchChomp('('), err);
-        List<Search> searches = new ArrayList<>();
-        do {
-            ParsedSelector parsed = parseSelector();
-            Search search = new Search(parsed.evaluator, hasSearchScope(parsed));
-            int last = searches.size() - 1;
-            Search previous = last >= 0 ? searches.get(last) : null;
-            // adjacent alternatives with the same scope can share a traversal, e.g. :has(> a, > span)
-            if (previous != null && previous.scope == search.scope) {
-                Evaluator combined = or(previous.evaluator, search.evaluator);
-                searches.set(last, new Search(combined, search.scope));
-            } else {
-                searches.add(search);
-            }
-        } while (tq.matchChomp(','));
-        Validate.isTrue(tq.matchChomp(')'), err);
-        return new HasEvaluator(searches);
+        SelectorGroup group = parseNestedSelectorGroup(err);
+        return new HasEvaluator(group.toString(), planTraversals(group));
     }
 
-    /** Chooses where to look for candidates for a {@code :has()} alternative. */
-    private static SearchScope hasSearchScope(ParsedSelector selector) {
+    /**
+     Chooses where to look and what to test for each {@code :has()} alternative.
+     Alternatives with the same scope share one traversal, so {@code :has(> a, > span)} visits the subject's children once.
+     */
+    private static List<Traversal> planTraversals(SelectorGroup group) {
+        List<Traversal> traversals = new ArrayList<>();
+        for (ComplexSelector selector : group.selectors) {
+            Scope scope = traversalScope(selector); // top-level combinators determine how far :has() must traverse
+            Evaluator evaluator = traversalEvaluator(selector, scope);
+            int last = traversals.size() - 1;
+            Traversal previous = last >= 0 ? traversals.get(last) : null;
+            if (previous != null && previous.scope == scope) {
+                traversals.set(last, new Traversal(or(previous.evaluator, evaluator), scope));
+            } else {
+                traversals.add(new Traversal(evaluator, scope));
+            }
+        }
+        return traversals;
+    }
+
+    /** Uses the rightmost evaluator when the traversal scope already guarantees the leading relationship. */
+    private static Evaluator traversalEvaluator(ComplexSelector selector, Scope scope) {
+        if (selector.combinatorCount != 1)
+            return selector.evaluator;
+
+        char leading = selector.leadingCombinator;
+        if (leading == '>' || leading == '~' || (leading == '+' && scope == Scope.NextSibling))
+            return selector.rightmost;
+        return selector.evaluator;
+    }
+
+    /** Chooses where to traverse for a {@code :has()} alternative. */
+    private static Scope traversalScope(ComplexSelector selector) {
         char leading = selector.leadingCombinator;
         if (leading == '>' && selector.combinatorCount == 1)
-            return SearchScope.Children;
+            return Scope.Children;
         if (leading == '+' || leading == '~') {
-            if (selector.combinatorCount > 1)
-                return SearchScope.FollowingSiblingSubtrees;
+            if (selector.combinatorCount > 1) {
+                if (leading == '+' && !selector.continuesToSibling && !selector.evaluator.wantsNodes())
+                    return Scope.NextSiblingTree;
+                return Scope.FollowingSiblingTrees;
+            }
             if (leading == '+' && !selector.evaluator.wantsNodes())
-                return SearchScope.NextSibling;
-            return SearchScope.FollowingSiblings;
+                return Scope.NextSibling;
+            return Scope.FollowingSiblings;
         }
-        return SearchScope.Descendants;
+        return Scope.Descendants;
     }
 
     // pseudo selector :is()
@@ -494,11 +551,19 @@ public class QueryParser implements AutoCloseable {
         return parseNested(StructuralEvaluator.Is::new, ":is() must have a selector");
     }
 
+    /** Parses a nested selector group and applies its compiled evaluator. */
     private Evaluator parseNested(Function<Evaluator, Evaluator> func, String err) {
+        return func.apply(parseNestedSelectorGroup(err).evaluator());
+    }
+
+    /** Parses a non-empty selector group enclosed in parentheses. */
+    private SelectorGroup parseNestedSelectorGroup(String err) {
         Validate.isTrue(tq.matchChomp('('), err);
-        Evaluator eval = parseSelectorGroup();
+        tq.consumeWhitespace();
+        Validate.isTrue(!tq.isEmpty() && !tq.matches(')'), err);
+        SelectorGroup group = parseSelectorGroup();
         Validate.isTrue(tq.matchChomp(')'), err);
-        return func.apply(eval);
+        return group;
     }
 
     // pseudo selector :contains(text), containsOwn(text)
@@ -558,12 +623,9 @@ public class QueryParser implements AutoCloseable {
             : new Evaluator.MatchesWholeText(pattern);
     }
 
-    // :not(selector)
+    /** Parses the selector group negated by {@code :not()}. */
     private Evaluator not() {
-        String subQuery = consumeParens();
-        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
-
-        return new StructuralEvaluator.Not(parse(subQuery));
+        return parseNested(StructuralEvaluator.Not::new, ":not(selector) subselect must not be empty");
     }
 
     @Override

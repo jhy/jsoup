@@ -717,7 +717,7 @@ public class SelectorTest {
     @ValueSource(strings = {"#a:has(+ div span)", "#a:has(+ div > span)", "#a:has(~ div span)"})
     void hasSiblingDescendant(String query) {
         Document doc = Jsoup.parse("<div id=a></div><div><span></span></div>");
-        // the matching span is inside the next sibling, outside a's subtree
+        // the matching span is a descendant of the next sibling, not of a
         assertSelectedIds(doc.select(query), "a");
     }
 
@@ -1644,12 +1644,12 @@ public class SelectorTest {
         assertSelectedIds(els1, "2", "3");
 
         String q2 = "div div:has(>::comment:contains(comment3))";
-        assertEquals("(And (Ancestor (Tag 'div'))(And (Tag 'div')(Has (ImmediateParentRun (Root '>')(And (InstanceType '::comment')(ContainsValue ':contains(comment3)'))))))", sexpr(q2));
+        assertEquals("(And (Ancestor (Tag 'div'))(And (Tag 'div')(Has (And (InstanceType '::comment')(ContainsValue ':contains(comment3)')))))", sexpr(q2));
         Elements els2 = doc.select(q2);
         assertSelectedIds(els2, "3");
 
         String q3 = "div:has(>::comment) div";
-        assertEquals("(And (Tag 'div')(Ancestor (And (Tag 'div')(Has (ImmediateParentRun (Root '>')(InstanceType '::comment'))))))", sexpr(q3));
+        assertEquals("(And (Tag 'div')(Ancestor (And (Tag 'div')(Has (InstanceType '::comment')))))", sexpr(q3));
         Elements els3 = doc.select(q3);
         assertSelectedIds(els3, "3");
     }
@@ -1807,6 +1807,30 @@ public class SelectorTest {
         assertEquals("123", nodes.get(1).nodeValue());
         assertEquals("4321", nodes.get(2).nodeValue());
         assertEquals("432", nodes.get(3).nodeValue());
+    }
+
+    @Test void notMatchesNodeValues() {
+        Document doc = Jsoup.parse("<p><!--foo--><!--bar--><!--baz--></p>");
+
+        Nodes<Comment> notFoo = doc.selectNodes("::comment:not(:contains(foo))", Comment.class);
+        assertEquals(2, notFoo.size());
+        assertEquals("bar", notFoo.get(0).getData());
+        assertEquals("baz", notFoo.get(1).getData());
+
+        Nodes<Comment> notBa = doc.selectNodes("::comment:not(:matches(^ba))", Comment.class);
+        assertEquals(1, notBa.size());
+        assertEquals("foo", notBa.get(0).getData());
+
+        Nodes<Comment> neither = doc.selectNodes("::comment:not(:contains(foo), :contains(bar))", Comment.class);
+        assertEquals(1, neither.size());
+        assertEquals("baz", neither.get(0).getData());
+    }
+
+    @Test void nestedNodeSelectorKeepsOuterContext() {
+        Document doc = Jsoup.parse("<p><!--foo--><!--bar--></p>");
+        Nodes<Comment> comments = doc.selectNodes("::comment:not(::text):contains(foo)", Comment.class);
+        assertEquals(1, comments.size());
+        assertEquals("foo", comments.get(0).getData());
     }
 
     @Test void cdataNodes() {
