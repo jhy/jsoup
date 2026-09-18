@@ -22,15 +22,14 @@ public abstract class CombiningEvaluator extends Evaluator {
     int cost = 0;
     boolean wantsNodes;
 
-    CombiningEvaluator() {
-        super();
-        evaluators = new ArrayList<>();
-        sortedEvaluators = new ArrayList<>();
+    CombiningEvaluator(Collection<Evaluator> evaluators) {
+        this(new ArrayList<>(evaluators));
     }
 
-    CombiningEvaluator(Collection<Evaluator> evaluators) {
-        this();
-        this.evaluators.addAll(evaluators);
+    /** Creates a combined evaluator from the supplied evaluators. */
+    CombiningEvaluator(ArrayList<Evaluator> evaluators) {
+        this.evaluators = evaluators;
+        sortedEvaluators = new ArrayList<>(evaluators.size());
         updateEvaluators();
     }
 
@@ -78,7 +77,13 @@ public abstract class CombiningEvaluator extends Evaluator {
     }
 
     public static final class And extends CombiningEvaluator {
+        /** Creates an evaluator that requires every supplied evaluator to match. */
         public And(Collection<Evaluator> evaluators) {
+            super(evaluators);
+        }
+
+        /** Creates an evaluator that requires every supplied evaluator to match. */
+        And(ArrayList<Evaluator> evaluators) {
             super(evaluators);
         }
 
@@ -114,23 +119,19 @@ public abstract class CombiningEvaluator extends Evaluator {
 
     public static final class Or extends CombiningEvaluator {
         /**
-         * Create a new Or evaluator. The initial evaluators are ANDed together and used as the first clause of the OR.
-         * @param evaluators initial OR clause (these are wrapped into an AND evaluator).
+         * Creates an evaluator that requires at least one supplied evaluator to match.
+         * @param evaluators alternative evaluators
          */
         public Or(Collection<Evaluator> evaluators) {
-            super();
-            if (num > 1)
-                this.evaluators.add(new And(evaluators));
-            else // 0 or 1
-                this.evaluators.addAll(evaluators);
-            updateEvaluators();
+            super(evaluators);
+        }
+
+        /** Creates an evaluator that requires at least one supplied evaluator to match. */
+        Or(ArrayList<Evaluator> evaluators) {
+            super(evaluators);
         }
 
         Or(Evaluator... evaluators) { this(Arrays.asList(evaluators)); }
-
-        Or() {
-            super();
-        }
 
         @Override
         public boolean matches(Element root, Element element) {

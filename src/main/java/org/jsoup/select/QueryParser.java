@@ -170,10 +170,19 @@ public class QueryParser implements AutoCloseable {
 
         /** Build the selectors into a single evaluator. */
         Evaluator evaluator() {
-            Evaluator evaluator = selectors.get(0).evaluator;
+            Evaluator first = selectors.get(0).evaluator;
+            if (selectors.size() == 1)
+                return first;
+
+            ArrayList<Evaluator> evaluators = new ArrayList<>(selectors.size());
+            // preserve a leading Or's flat evaluation order, e.g. the two alternatives compiled for *|tag
+            if (first instanceof CombiningEvaluator.Or)
+                evaluators.addAll(((CombiningEvaluator.Or) first).evaluators);
+            else
+                evaluators.add(first);
             for (int i = 1; i < selectors.size(); i++)
-                evaluator = or(evaluator, selectors.get(i).evaluator);
-            return evaluator;
+                evaluators.add(selectors.get(i).evaluator);
+            return new CombiningEvaluator.Or(evaluators);
         }
 
         @Override public String toString() {
@@ -188,27 +197,37 @@ public class QueryParser implements AutoCloseable {
 
     Evaluator parseSimpleSequence() {
         // SimpleSequence ::= TypeSelector? ( Hash | Class | Pseudo )*
-        Evaluator left = null;
+        Evaluator first = null;
         tq.consumeWhitespace();
 
         // one optional type selector
         if (tq.matchesWord() || tq.matches("*|"))
-            left = byTag();
+            first = byTag();
         else if (tq.matchChomp('*'))
-            left = new Evaluator.AllElements();
+            first = new Evaluator.AllElements();
 
-        // zero or more subclasses (#, ., [)
-        while(true) {
-            Evaluator right = parseSubclass();
-            if (right != null) {
-                left = and(left, right);
-            }
-            else break; // no more simple tokens
-        }
+        // use the first subclass when there is no type selector
+        if (first == null)
+            first = parseSubclass();
 
-        if (left == null)
+        if (first == null)
             throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
-        return left;
+
+        return parseRemainingSubclasses(first);
+    }
+
+    /** Parses and combines any subclasses that follow the first evaluator. */
+    private Evaluator parseRemainingSubclasses(Evaluator first) {
+        Evaluator next = parseSubclass();
+        if (next == null)
+            return first;
+
+        ArrayList<Evaluator> evaluators = new ArrayList<>(4);
+        evaluators.add(first);
+        do {
+            evaluators.add(next);
+        } while ((next = parseSubclass()) != null);
+        return new CombiningEvaluator.And(evaluators);
     }
 
     static Evaluator combinator(Evaluator left, char combinator, Evaluator right) {
@@ -219,11 +238,11 @@ public class QueryParser implements AutoCloseable {
                 run.add(right);
                 return run;
             case ' ':
-                return and(new StructuralEvaluator.Ancestor(left), right);
+                return new CombiningEvaluator.And(new StructuralEvaluator.Ancestor(left), right);
             case '+':
-                return and(new StructuralEvaluator.ImmediatePreviousSibling(left), right);
+                return new CombiningEvaluator.And(new StructuralEvaluator.ImmediatePreviousSibling(left), right);
             case '~':
-                return and(new StructuralEvaluator.PreviousSibling(left), right);
+                return new CombiningEvaluator.And(new StructuralEvaluator.PreviousSibling(left), right);
             default:
                 throw new Selector.SelectorParseException("Unknown combinator '%s'", combinator);
         }
@@ -239,23 +258,13 @@ public class QueryParser implements AutoCloseable {
         else                            return null;
     }
 
-    /** Merge two evals into an Or. */
-    static Evaluator or(Evaluator left, Evaluator right) {
+    /** Adds an alternative to an existing Or, or creates one for the first pair. */
+    private static Evaluator addAlternative(Evaluator left, Evaluator right) {
         if (left instanceof CombiningEvaluator.Or) {
             ((CombiningEvaluator.Or) left).add(right);
             return left;
         }
         return new CombiningEvaluator.Or(left, right);
-    }
-
-    /** Merge two evals into an And. */
-    static Evaluator and(@Nullable Evaluator left, Evaluator right) {
-        if (left == null) return right;
-        if (left instanceof CombiningEvaluator.And) {
-            ((CombiningEvaluator.And) left).add(right);
-            return left;
-        }
-        return new CombiningEvaluator.And(left, right);
     }
 
     private Evaluator parsePseudoSelector() {
@@ -328,25 +337,25 @@ public class QueryParser implements AutoCloseable {
     /** Parses a node selector and its subclasses in node-value context. */
     private Evaluator parseNodeSelector() {
         final String pseudo = tq.consumeCssIdentifier();
-        Evaluator left;
+        Evaluator nodeType;
         switch (pseudo) {
             case "node":
-                left = new NodeEvaluator.InstanceType(Node.class, pseudo);
+                nodeType = new NodeEvaluator.InstanceType(Node.class, pseudo);
                 break;
             case "leafnode":
-                left = new NodeEvaluator.InstanceType(LeafNode.class, pseudo);
+                nodeType = new NodeEvaluator.InstanceType(LeafNode.class, pseudo);
                 break;
             case "text":
-                left = new NodeEvaluator.InstanceType(TextNode.class, pseudo);
+                nodeType = new NodeEvaluator.InstanceType(TextNode.class, pseudo);
                 break;
             case "comment":
-                left = new NodeEvaluator.InstanceType(Comment.class, pseudo);
+                nodeType = new NodeEvaluator.InstanceType(Comment.class, pseudo);
                 break;
             case "data":
-                left = new NodeEvaluator.InstanceType(DataNode.class, pseudo);
+                nodeType = new NodeEvaluator.InstanceType(DataNode.class, pseudo);
                 break;
             case "cdata":
-                left = new NodeEvaluator.InstanceType(CDataNode.class, pseudo);
+                nodeType = new NodeEvaluator.InstanceType(CDataNode.class, pseudo);
                 break;
             default:
                 throw new Selector.SelectorParseException(
@@ -358,11 +367,7 @@ public class QueryParser implements AutoCloseable {
         boolean previousNodeContext = inNodeContext;
         inNodeContext = true;
         try {
-            Evaluator right;
-            while ((right = parseSubclass()) != null) {
-                left = and(left, right);
-            }
-            return left;
+            return parseRemainingSubclasses(nodeType);
         } finally {
             inNodeContext = previousNodeContext;
         }
@@ -509,7 +514,7 @@ public class QueryParser implements AutoCloseable {
             int last = traversals.size() - 1;
             Traversal previous = last >= 0 ? traversals.get(last) : null;
             if (previous != null && previous.scope == scope) {
-                traversals.set(last, new Traversal(or(previous.evaluator, evaluator), scope));
+                traversals.set(last, new Traversal(addAlternative(previous.evaluator, evaluator), scope));
             } else {
                 traversals.add(new Traversal(evaluator, scope));
             }
