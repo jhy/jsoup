@@ -12,6 +12,7 @@ import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.ProcessingInstruction;
 import org.jsoup.nodes.Range;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
@@ -311,8 +312,51 @@ class PositionTest {
 
         Document multiline = Jsoup.parse("One\n<?xml", TrackingHtmlParser);
         assertEquals("2,6:9-2,6:9", multiline.endSourceRange().toString());
-        Comment comment = multiline.nodeStream(Comment.class).findFirst().orElseThrow(() -> new AssertionError("comment missing"));
-        assertEquals("2,1:4-2,6:9", comment.sourceRange().toString());
+    }
+
+    @Test void tracksProcessingInstructionAttributeRanges() {
+        String html = "<body>\n<?target One='1' two=2>";
+        Document htmlDoc = Jsoup.parse(html, TrackingHtmlParser);
+        ProcessingInstruction htmlInstruction = htmlDoc.nodeStream(ProcessingInstruction.class).findFirst()
+            .orElseThrow(() -> new AssertionError("processing instruction missing"));
+        assertEquals("2,1:7-2,24:30", htmlInstruction.sourceRange().toString());
+        assertEquals("2,10:16-2,13:19=2,15:21-2,16:22", htmlInstruction.attributes().sourceRange("one").toString());
+        assertEquals("2,18:24-2,21:27=2,22:28-2,23:29", htmlInstruction.attributes().sourceRange("two").toString());
+        assertEquals("2,1:7-2,24:30", htmlInstruction.sourceRange().toString());
+
+        String xml = "<root>\n<?target One='1' two=2?>\n</root>";
+        Document xmlDoc = Jsoup.parse(xml, TrackingXmlParser);
+        ProcessingInstruction xmlInstruction = xmlDoc.nodeStream(ProcessingInstruction.class).findFirst()
+            .orElseThrow(() -> new AssertionError("processing instruction missing"));
+        assertEquals("2,1:7-2,25:31", xmlInstruction.sourceRange().toString());
+        assertEquals("2,10:16-2,13:19=2,15:21-2,16:22", xmlInstruction.attributes().sourceRange("One").toString());
+        assertEquals("2,18:24-2,21:27=2,22:28-2,23:29", xmlInstruction.attributes().sourceRange("two").toString());
+        assertEquals("2,1:7-2,25:31", xmlInstruction.sourceRange().toString());
+
+        htmlInstruction.data("fresh='3'");
+        assertFalse(htmlInstruction.attributes().sourceRange("fresh").isTracked());
+        assertEquals("2,1:7-2,24:30", htmlInstruction.sourceRange().toString());
+    }
+
+    @Test void retainsRangesWhenMovingOutOfOrderTemplateContent() {
+        String html = "<select id=countries><?marker name=country-options?></select>\n" +
+            "<template for=country-options><option>Antigua</option><option>Barbuda</option></template>";
+        Document document = Jsoup.parse(html, TrackingHtmlParser);
+        Element select = document.expectFirst("select");
+        Element template = document.expectFirst("template[for]");
+        ProcessingInstruction marker = (ProcessingInstruction) select.childNode(0);
+
+        assertEquals("1,22:21-1,53:52", marker.sourceRange().toString());
+        assertEquals("1,31:30-1,35:34=1,36:35-1,51:50", marker.attributes().sourceRange("name").toString());
+        assertEquals("1,53:52-1,62:61", select.endSourceRange().toString());
+
+        Node firstOption = template.childNode(0);
+        assertEquals("2,31:92-2,39:100", firstOption.sourceRange().toString());
+        marker.replaceWith(template);
+        template.unwrap();
+
+        assertSame(firstOption, select.childNode(0));
+        assertEquals("2,31:92-2,39:100", firstOption.sourceRange().toString());
     }
 
     private static void assertRangeWithinSource(Range range, String source) {

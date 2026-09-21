@@ -412,7 +412,7 @@ abstract class Token {
         }
     }
 
-    final static class Comment extends Token {
+    static class Comment extends Token {
         private final TokenData data = new TokenData();
         boolean bogus = false;
 
@@ -518,11 +518,34 @@ abstract class Token {
 
     }
 
-    /**
-     XmlDeclaration - extends Tag for pseudo attribute support
-     */
+    /** A processing instruction. Extends Comment to reuse its data buffer and tree-builder handling. */
+    final static class PI extends Comment {
+        final TokenData target = new TokenData();
+        int dataStartPos = UnsetPos;
+
+        /** Resets this token for reuse. */
+        @Override PI reset() {
+            super.reset();
+            target.reset();
+            dataStartPos = UnsetPos;
+            return this;
+        }
+
+        /** Returns the instruction target. */
+        String target() {
+            return target.value();
+        }
+
+        /** Formats this token as a processing instruction. */
+        @Override public String toString() {
+            String data = getData();
+            return "<?" + target() + (data.isEmpty() ? "" : " " + data) + "?>";
+        }
+    }
+
+    /** An XML or markup declaration. Extends Tag to reuse its name and attributes during tokenization. */
     final static class XmlDecl extends Tag {
-        boolean isDeclaration = true; // <!..>, or <?...?> if false (a processing instruction)
+        boolean isDeclaration = true; // <!name ...>, or <?xml ...?> if false
 
         public XmlDecl(TreeBuilder treeBuilder) {
             super(TokenType.XmlDecl, treeBuilder);
@@ -609,6 +632,16 @@ abstract class Token {
 
     final XmlDecl asXmlDecl() {
         return (XmlDecl) this;
+    }
+
+    /** Returns whether this token is a processing instruction. */
+    final boolean isPI() {
+        return this instanceof PI;
+    }
+
+    /** Returns this token as a processing instruction. */
+    final PI asPI() {
+        return (PI) this;
     }
 
     final boolean isEOF() {

@@ -40,6 +40,7 @@ final class Tokeniser {
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
     @Nullable private Token emitPending = null; // the token we are about to emit on next read
     private boolean isEmitPending = false;
+    boolean attributeFragment; // parsing attributes without a surrounding tag
     final TokenData dataBuffer = new TokenData(); // buffers data looking for </script>
 
     final Document.OutputSettings.Syntax syntax; // html or xml syntax; affects processing of xml declarations vs as bogus comments
@@ -49,6 +50,7 @@ final class Tokeniser {
     final Token.Character charPending = new Token.Character();
     final Token.Doctype doctypePending = new Token.Doctype(); // doctype building up
     final Token.Comment commentPending = new Token.Comment(); // comment building up
+    final Token.PI piPending = new Token.PI(); // processing instruction building up
     final Token.XmlDecl xmlDeclPending; // xml decl building up
     @Nullable private String lastStartTag; // the last start tag emitted, to test appropriate end tag
 
@@ -233,8 +235,14 @@ final class Tokeniser {
     }
 
     void emitTagPending() {
-        tagPending.finaliseTag();
-        emit(tagPending);
+        if (attributeFragment) {
+            if (state != TokeniserState.BeforeAttributeValue) // that state already reported the missing value
+                error("Unexpected tag closer in attribute input");
+            emit(new Token.EOF());
+        } else {
+            tagPending.finaliseTag();
+            emit(tagPending);
+        }
     }
 
     void createCommentPending() {
@@ -248,6 +256,16 @@ final class Tokeniser {
     void createBogusCommentPending() {
         commentPending.reset();
         commentPending.bogus = true;
+    }
+
+    /** Creates a reusable processing instruction token. */
+    Token.PI createPiPending() {
+        return piPending.reset();
+    }
+
+    /** Emits the completed processing instruction token. */
+    void emitPiPending() {
+        emit(piPending);
     }
 
     void createDoctypePending() {
@@ -290,8 +308,19 @@ final class Tokeniser {
     }
 
     void eofError(TokeniserState state) {
+        if (isAttributeFragmentEnd(state)) return;
         if (errors.canAddError())
             errors.add(new ParseError(reader, "Unexpectedly reached end of file (EOF) in input state [%s]", state));
+    }
+
+    /** Tests whether EOF completes an attribute fragment in this state. */
+    private boolean isAttributeFragmentEnd(TokeniserState state) {
+        if (!attributeFragment) return false;
+        return state == TokeniserState.BeforeAttributeName ||
+            state == TokeniserState.AttributeName ||
+            state == TokeniserState.AfterAttributeName ||
+            state == TokeniserState.AttributeValue_unquoted ||
+            state == TokeniserState.AfterAttributeValue_quoted;
     }
 
     private void characterReferenceError(String message, Object... args) {

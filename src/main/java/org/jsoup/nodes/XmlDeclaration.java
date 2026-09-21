@@ -5,24 +5,23 @@ import org.jsoup.internal.StringUtil;
 
 
 /**
- * An XML Declaration. Includes support for treating the declaration contents as pseudo attributes.
+ * An XML declaration, such as {@code <?xml version="1.0"?>}, or a markup declaration, such as {@code <!ELEMENT ...>}.
+ * Use {@link ProcessingInstruction} for other {@code <?target data?>} nodes.
+ * Declaration values are available through {@link #attributes()} and {@link #attr(String)}.
  */
 public class XmlDeclaration extends LeafNode {
 
-    /**
-     First char is `!` if isDeclaration, like in {@code  <!ENTITY ...>}.
-     Otherwise, is `?`, a processing instruction, like {@code <?xml .... ?>} (and note trailing `?`).
-     */
-    private final boolean isDeclaration;
+    /** Whether this is a markup declaration. */
+    private final boolean isMarkupDeclaration;
 
     /**
-     * Create a new XML declaration
-     * @param name of declaration
-     * @param isDeclaration {@code true} if a declaration (first char is `!`), otherwise a processing instruction (first char is `?`).
+     * Creates an XML declaration or markup declaration.
+     * @param name the declaration name, such as {@code xml} or {@code ELEMENT}
+     * @param isMarkupDeclaration {@code true} to create {@code <!name ...>}; {@code false} to create {@code <?name ...?>}
      */
-    public XmlDeclaration(String name, boolean isDeclaration) {
+    public XmlDeclaration(String name, boolean isMarkupDeclaration) {
         super(name);
-        this.isDeclaration = isDeclaration;
+        this.isMarkupDeclaration = isMarkupDeclaration;
     }
 
     @Override public String nodeName() {
@@ -30,16 +29,16 @@ public class XmlDeclaration extends LeafNode {
     }
 
     /**
-     * Get the name of this declaration.
-     * @return name of this declaration.
+     * Gets the declaration name.
+     * @return the declaration name
      */
     public String name() {
         return coreValue();
     }
 
     /**
-     * Get the unencoded XML declaration.
-     * @return XML declaration
+     * Gets the declaration data, without its name or delimiters.
+     * @return the declaration data
      */
     public String getWholeDeclaration() {
         StringBuilder sb = StringUtil.borrowBuilder();
@@ -68,11 +67,11 @@ public class XmlDeclaration extends LeafNode {
     void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
         accum
             .append("<")
-            .append(isDeclaration ? "!" : "?")
+            .append(isMarkupDeclaration ? "!" : "?")
             .append(coreValue());
         getWholeDeclaration(accum, out);
         accum
-            .append(isDeclaration ? "" : "?")
+            .append(isMarkupDeclaration ? "" : "?")
             .append(">");
     }
 

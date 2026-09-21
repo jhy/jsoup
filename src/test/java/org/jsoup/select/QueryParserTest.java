@@ -235,6 +235,26 @@ public class QueryParserTest {
         assertEquals(q, e.toString());
     }
 
+    @Test void processingInstructionNodeSelector() {
+        assertEquals("::pi", QueryParser.parse("::pi").toString());
+        assertEquals("::pi(marker)", QueryParser.parse("::pi( marker )").toString());
+        assertEquals(
+            "::pi(marker)[name=country-options]",
+            QueryParser.parse("::pi(marker)[name=country-options]").toString()
+        );
+    }
+
+    @Test void processingInstructionTargetErrors() {
+        SelectorParseException empty = assertThrows(SelectorParseException.class, () -> QueryParser.parse("::pi()"));
+        assertEquals("::pi target must not be empty", empty.getMessage());
+
+        SelectorParseException trailing = assertThrows(
+            SelectorParseException.class,
+            () -> QueryParser.parse("::pi(marker other)")
+        );
+        assertEquals("::pi target must be a CSS identifier", trailing.getMessage());
+    }
+
     @Test void choosesHasTraversalScope() {
         assertHasScope("> a", HasEvaluator.Scope.Children);
         assertHasScope("+ div", HasEvaluator.Scope.NextSibling);

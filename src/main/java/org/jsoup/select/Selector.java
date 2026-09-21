@@ -93,6 +93,9 @@ import java.util.stream.Stream;
  <tr><td>::text</td><td>Matches a TextNode</td><td></td></tr>
  <tr><td>::data</td><td>Matches a DataNode (e.g. the content of a <code>script</code> or a <code>style</code> element)</td><td></td></tr>
  <tr><td>::cdata</td><td>Matches a CDataNode (which are only present in XML)</td><td></td></tr>
+ <tr><td>::pi</td><td>Matches any ProcessingInstruction node.</td><td><code>::pi</code></td></tr>
+ <tr><td>::pi(<i>target</i>)</td><td>Matches a ProcessingInstruction node with the specified case-sensitive target.</td><td><code>::pi(marker)</code></td></tr>
+ <tr><td>::pi[...]</td><td>Matches processing instructions by attributes parsed from their data.</td><td><code>::pi(marker)[name=country-options]</code></td></tr>
  <tr><td>::node:contains(text)</td><td>Matches a node that has a (normalized, case-insensitive) value containing <i>text</i>.</td><td><code>::comment:contains(foo bar)</code></td></tr>
  <tr><td>::node:matches(regex)</td><td>Matches a node that has a value matching the regex.</td><td><code>::comment:matches(\\d+)</code></td></tr>
  <tr><td>::node:blank</td><td>Matches a node that has either no value, or a value of only whitespace.</td><td><code>::comment:not(:blank)</code></td></tr>

@@ -91,6 +91,28 @@ abstract class TreeBuilder {
         return completeParseFragment();
     }
 
+    /** Parses an attribute fragment with this builder's tokenizer. */
+    Attributes parseAttributes(Reader input, Parser parser) {
+        initialiseParse(input, "", parser);
+        try {
+            tokeniser.attributeFragment = true;
+            Token.Tag tag = tokeniser.createTagPending(true);
+            tokeniser.transition(TokeniserState.BeforeAttributeName);
+            tokeniser.read();
+            tag.finaliseTag();
+
+            Attributes attributes = tag.attributes;
+            if (attributes == null)
+                return new Attributes();
+            settings.normalizeAttributes(attributes);
+            attributes.deduplicate(settings);
+            tag.finaliseAttributeRanges(settings);
+            return attributes;
+        } finally {
+            closeParse();
+        }
+    }
+
     void initialiseParseFragment(@Nullable Element context) {
         // in Html, sets up context; no-op in XML
     }

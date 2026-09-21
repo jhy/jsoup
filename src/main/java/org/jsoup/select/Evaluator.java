@@ -7,6 +7,7 @@ import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.ProcessingInstruction;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.helper.Regex;
@@ -204,19 +205,34 @@ public abstract class Evaluator {
 
     }
 
+    /** Shares attribute matching between elements and processing instructions. */
+    private abstract static class AttributeEvaluator extends Evaluator {
+        @Override public boolean matches(Element root, Element element) {
+            return matchesNode(element);
+        }
+
+        @Override boolean matches(Element root, LeafNode leafNode) {
+            return leafNode instanceof ProcessingInstruction && matchesNode(leafNode);
+        }
+
+        /** Tests this evaluator against a node's attributes. */
+        boolean matchesNode(Node node) {
+            return false;
+        }
+    }
+
     /**
      * Evaluator for attribute name matching
      */
-    public static final class Attribute extends Evaluator {
+    public static final class Attribute extends AttributeEvaluator {
         private final String key;
 
         public Attribute(String key) {
             this.key = key;
         }
 
-        @Override
-        public boolean matches(Element root, Element element) {
-            return element.hasAttr(key);
+        @Override boolean matchesNode(Node node) {
+            return node.hasAttr(key);
         }
 
         @Override protected int cost() {
@@ -232,7 +248,7 @@ public abstract class Evaluator {
     /**
      * Evaluator for attribute name prefix matching
      */
-    public static final class AttributeStarting extends Evaluator {
+    public static final class AttributeStarting extends AttributeEvaluator {
         private final String keyPrefix;
 
         public AttributeStarting(String keyPrefix) {
@@ -240,9 +256,8 @@ public abstract class Evaluator {
             this.keyPrefix = asciiLowerCase(keyPrefix);
         }
 
-        @Override
-        public boolean matches(Element root, Element element) {
-            List<org.jsoup.nodes.Attribute> values = element.attributes().asList();
+        @Override boolean matchesNode(Node node) {
+            List<org.jsoup.nodes.Attribute> values = node.attributes().asList();
             for (org.jsoup.nodes.Attribute attribute : values) {
                 if (asciiLowerCase(attribute.getKey()).startsWith(keyPrefix))
                     return true;
@@ -269,9 +284,8 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        @Override
-        public boolean matches(Element root, Element element) {
-            return element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key));
+        @Override boolean matchesNode(Node node) {
+            return node.hasAttr(key) && value.equalsIgnoreCase(node.attr(key));
         }
 
         @Override protected int cost() {
@@ -293,9 +307,8 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        @Override
-        public boolean matches(Element root, Element element) {
-            return !value.equalsIgnoreCase(element.attr(key));
+        @Override boolean matchesNode(Node node) {
+            return !value.equalsIgnoreCase(node.attr(key));
         }
 
         @Override protected int cost() {
@@ -317,9 +330,8 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        @Override
-        public boolean matches(Element root, Element element) {
-            return element.hasAttr(key) && lowerCase(element.attr(key)).startsWith(value); // value is lower case already
+        @Override boolean matchesNode(Node node) {
+            return node.hasAttr(key) && lowerCase(node.attr(key)).startsWith(value); // value is lower case already
         }
 
         @Override protected int cost() {
@@ -340,9 +352,8 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        @Override
-        public boolean matches(Element root, Element element) {
-            return element.hasAttr(key) && lowerCase(element.attr(key)).endsWith(value); // value is lower case
+        @Override boolean matchesNode(Node node) {
+            return node.hasAttr(key) && lowerCase(node.attr(key)).endsWith(value); // value is lower case
         }
 
         @Override protected int cost() {
@@ -363,9 +374,8 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        @Override
-        public boolean matches(Element root, Element element) {
-            return element.hasAttr(key) && lowerCase(element.attr(key)).contains(value); // value is lower case
+        @Override boolean matchesNode(Node node) {
+            return node.hasAttr(key) && lowerCase(node.attr(key)).contains(value); // value is lower case
         }
 
         @Override protected int cost() {
@@ -382,7 +392,7 @@ public abstract class Evaluator {
     /**
      * Evaluator for attribute name/value matching (value regex matching)
      */
-    public static final class AttributeWithValueMatching extends Evaluator {
+    public static final class AttributeWithValueMatching extends AttributeEvaluator {
         final String key;
         final Regex pattern;
 
@@ -395,9 +405,8 @@ public abstract class Evaluator {
             this(key, Regex.fromPattern(pattern)); // api compat
         }
 
-        @Override
-        public boolean matches(Element root, Element element) {
-            return element.hasAttr(key) && pattern.matcher(element.attr(key)).find();
+        @Override boolean matchesNode(Node node) {
+            return node.hasAttr(key) && pattern.matcher(node.attr(key)).find();
         }
 
         @Override protected int cost() {
@@ -414,7 +423,7 @@ public abstract class Evaluator {
     /**
      * Abstract evaluator for attribute name/value matching
      */
-    public abstract static class AttributeKeyPair extends Evaluator {
+    public abstract static class AttributeKeyPair extends AttributeEvaluator {
         final String key;
         final String value;
 
@@ -772,7 +781,8 @@ public abstract class Evaluator {
                 if (n instanceof TextNode) {
                     if (!((TextNode) n).isBlank())
                         return false; // non-blank text: not empty
-                } else if (!(n instanceof Comment || n instanceof XmlDeclaration || n instanceof DocumentType))
+                } else if (!(n instanceof Comment || n instanceof ProcessingInstruction ||
+                    n instanceof XmlDeclaration || n instanceof DocumentType))
                     return false; // non "blank" element: not empty
             }
             return true;

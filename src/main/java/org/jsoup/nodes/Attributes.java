@@ -275,15 +275,16 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         return rangeSpans;
     }
 
-    /**
-     Sets the range spans when expanding compact leaf storage.
-     */
+    /** Sets the leaf node's source ranges without discarding existing attribute ranges. */
     void putSpans(Range.Spans rangeSpans) {
         int i = indexOfKey(SharedConstants.RangeSpansKey);
-        if (i == NotFound)
+        if (i == NotFound) {
             addObject(SharedConstants.RangeSpansKey, rangeSpans);
-        else
+        } else {
+            Range.Spans attributeSpans = (Range.Spans) vals[i];
+            rangeSpans.copyAttributeRanges(attributeSpans);
             vals[i] = rangeSpans;
+        }
     }
 
     void putIgnoreCase(String key, @Nullable String value) {

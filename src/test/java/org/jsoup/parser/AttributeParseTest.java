@@ -96,4 +96,88 @@ public class AttributeParseTest {
         doc = Jsoup.parse(html, "", Parser.xmlParser());
         assertEquals("<img onerror=\"doMyJob\" />", doc.html());
     }
+
+    @Test void parseAttributesParsesNamesAndValues() {
+        Attributes attributes = Parser.xmlParser().parseAttributes(
+            "One='1' two = unquoted empty=\"\" flag encoded='&lt;'"
+        );
+
+        assertEquals(5, attributes.size());
+        assertEquals("1", attributes.get("One"));
+        assertEquals("unquoted", attributes.get("two"));
+        assertEquals("", attributes.get("empty"));
+        assertEquals("", attributes.get("flag"));
+        assertEquals("<", attributes.get("encoded"));
+    }
+
+    @Test void parseAttributesUsesParserSettings() {
+        Attributes html = Parser.htmlParser().parseAttributes("One=1 one=2");
+        Attributes xml = Parser.xmlParser().parseAttributes("One=1 one=2");
+
+        assertEquals(1, html.size());
+        assertEquals("1", html.get("one"));
+        assertEquals(2, xml.size());
+        assertEquals("1", xml.get("One"));
+        assertEquals("2", xml.get("one"));
+    }
+
+    @Test void parseAttributesLeavesParserReusable() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Attributes attributes = parser.parseAttributes("one=1 two=2");
+
+        assertEquals("2", attributes.get("two"));
+        assertTrue(parser.getErrors().isEmpty());
+        assertEquals("Text", parser.parseInput("<p>Text", "").expectFirst("p").text());
+    }
+
+    @Test void parseAttributesAcceptsCompleteInputAtEof() {
+        for (String input : new String[] {"", "flag", "flag ", "one=1", "one='1'", "one=\"1\""}) {
+            Parser parser = Parser.htmlParser().setTrackErrors(10);
+
+            parser.parseAttributes(input);
+
+            assertTrue(parser.getErrors().isEmpty(), input + ": " + parser.getErrors());
+        }
+    }
+
+    @Test void parseAttributesStopsAtTagCloser() {
+        for (String input : new String[] {"foo=bar><a href>text", "foo=bar />text"}) {
+            Parser parser = Parser.htmlParser().setTrackErrors(10);
+
+            Attributes attributes = parser.parseAttributes(input);
+
+            assertEquals(1, attributes.size());
+            assertEquals("bar", attributes.get("foo"));
+            assertEquals(1, parser.getErrors().size());
+            assertTrue(parser.getErrors().get(0).getErrorMessage().contains("Unexpected tag closer"));
+        }
+    }
+
+    @Test void parseAttributesAllowsCloserInQuotedValue() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+
+        Attributes attributes = parser.parseAttributes("foo='bar>baz'");
+
+        assertEquals("bar>baz", attributes.get("foo"));
+        assertTrue(parser.getErrors().isEmpty());
+    }
+
+    @Test void parseAttributesReportsIncompleteValue() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+
+        Attributes attributes = parser.parseAttributes("foo=");
+
+        assertTrue(attributes.hasKey("foo"));
+        assertEquals(1, parser.getErrors().size());
+        assertTrue(parser.getErrors().get(0).getErrorMessage().contains("end of file"));
+    }
+
+    @Test void parseAttributesTracksSourceRanges() {
+        Parser parser = Parser.xmlParser().setTrackErrors(10).setTrackPosition(true);
+        Attributes attributes = parser.parseAttributes("One='1' two='unterminated");
+
+        assertEquals("1,1:0-1,4:3=1,6:5-1,7:6", attributes.sourceRange("One").toString());
+        assertEquals("unterminated", attributes.get("two"));
+        assertFalse(parser.getErrors().isEmpty());
+    }
 }

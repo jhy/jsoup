@@ -427,6 +427,23 @@ public class Range {
             attrRanges[valueIndex + 1] = valueEnd;
         }
 
+        /** Rebases locally parsed attribute ranges into their containing source. */
+        void rebaseAttributeRanges(Range sourceRange, int offset) {
+            this.lineMap = sourceRange.lineMap;
+            for (int i = 0; i < attrRanges.length; i++) {
+                if (attrRanges[i] >= 0)
+                    attrRanges[i] += offset;
+            }
+        }
+
+        /** Copies attribute ranges while retaining this node's other ranges. */
+        void copyAttributeRanges(Spans source) {
+            if (source.attrRanges.length == 0)
+                return;
+            useLineMap(source.lineMap);
+            attrRanges = source.attrRanges.clone();
+        }
+
         /**
          Retains the first line map and rejects mixed-source ranges.
          */

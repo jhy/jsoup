@@ -3,6 +3,7 @@ package org.jsoup.parser;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.DocumentType;
 
+import static org.jsoup.internal.Normalizer.equalsIgnoreAsciiCase;
 import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
 
 /**
@@ -108,12 +109,7 @@ enum TokeniserState {
                     t.advanceTransition(EndTagOpen);
                     break;
                 case '?':
-                    if (t.syntax == xml) {
-                        t.advanceTransition(MarkupProcessingOpen);
-                    } else {
-                        t.createBogusCommentPending();
-                        t.transition(BogusComment);
-                    }
+                    t.advanceTransition(ProcessingInstructionOpen);
                     break;
                 default:
                     if (r.matchesAsciiAlpha()) {
@@ -660,7 +656,10 @@ enum TokeniserState {
                     break;
                 case eof:
                     t.eofError(this);
-                    t.emitTagPending();
+                    if (t.attributeFragment)
+                        t.emit(new Token.EOF());
+                    else
+                        t.emitTagPending();
                     t.transition(Data);
                     break;
                 case '>':
@@ -898,16 +897,117 @@ enum TokeniserState {
             }
         }
     },
-    MarkupProcessingOpen { // From <? in syntax XML
+    // HTML's processing-instruction states are also used for XML, with broader targets and a required ?> close.
+    ProcessingInstructionOpen {
         @Override void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesAsciiAlpha()) {
-                t.createXmlDeclPending(false);
-                t.transition(TagName); // treat <?xml... as XML Declaration (processing instruction), with tag-like handling
+            if (t.syntax == xml) {
+                if (r.isEmpty()) {
+                    t.eofError(this);
+                    t.emit(new Token.EOF());
+                } else {
+                    t.createPiPending();
+                    t.transition(ProcessingInstructionTarget);
+                }
+            } else if (r.matchesAsciiAlpha() || r.matches('_')) {
+                t.createPiPending();
+                t.transition(ProcessingInstructionTarget);
+            } else if (r.isEmpty()) {
+                t.eofError(this);
+                t.emit(new Token.EOF());
             } else {
                 t.error(this);
                 t.createBogusCommentPending();
-                t.commentPending.append('?'); // push the ? to the start of the comment
+                t.commentPending.append('?');
                 t.transition(BogusComment);
+            }
+        }
+    },
+    ProcessingInstructionTarget {
+        @Override void read(Tokeniser t, CharacterReader r) {
+            char c = r.current();
+            if (isProcessingInstructionWhitespace(t, c) || c == '?' || c == '>') {
+                String target = t.piPending.target();
+                if (t.syntax == xml) {
+                    if (target.isEmpty() || c == '>') {
+                        t.error(this);
+                        t.createBogusCommentPending();
+                        t.commentPending.append('?').append(target);
+                        t.transition(BogusComment);
+                    } else if (equalsIgnoreAsciiCase(target, "xml")) {
+                        // XML declarations retain their attribute-backed XmlDeclaration representation
+                        Token.XmlDecl decl = t.createXmlDeclPending(false);
+                        decl.name(target);
+                        t.transition(BeforeAttributeName);
+                    } else if (c == '?') {
+                        t.piPending.dataStartPos = r.pos();
+                        r.advance();
+                        t.transition(ProcessingInstructionQuestionable);
+                    } else {
+                        t.transition(AfterProcessingInstructionTarget);
+                    }
+                } else {
+                    if (equalsIgnoreAsciiCase(target, "xml") || equalsIgnoreAsciiCase(target, "xml-stylesheet")) {
+                        t.error(this);
+                        t.createBogusCommentPending();
+                        t.commentPending.append('?').append(target);
+                        t.transition(BogusComment);
+                    } else {
+                        t.transition(AfterProcessingInstructionTarget);
+                    }
+                }
+            } else if (r.isEmpty()) {
+                t.eofError(this);
+                t.emit(new Token.EOF());
+            } else if (t.syntax == xml || isHtmlProcessingInstructionTarget(c)) {
+                t.piPending.target.append(r.consume());
+            } else {
+                t.error(this);
+                t.createBogusCommentPending();
+                t.commentPending.append('?').append(t.piPending.target());
+                t.transition(BogusComment);
+            }
+        }
+    },
+    AfterProcessingInstructionTarget {
+        @Override void read(Tokeniser t, CharacterReader r) {
+            if (isProcessingInstructionWhitespace(t, r.current()))
+                r.advance();
+            else {
+                t.piPending.dataStartPos = r.pos();
+                t.transition(ProcessingInstructionData);
+            }
+        }
+    },
+    ProcessingInstructionData {
+        @Override void read(Tokeniser t, CharacterReader r) {
+            char c = r.current();
+            if (c == '?') {
+                r.advance();
+                t.transition(ProcessingInstructionQuestionable);
+            } else if (t.syntax != xml && c == '>') {
+                r.advance();
+                t.transition(Data);
+                t.emitPiPending();
+            } else if (r.isEmpty()) {
+                t.eofError(this);
+                t.emit(new Token.EOF());
+            } else {
+                t.piPending.append(r.consume());
+            }
+        }
+    },
+    ProcessingInstructionQuestionable {
+        @Override void read(Tokeniser t, CharacterReader r) {
+            if (r.matches('>')) {
+                r.advance();
+                t.transition(Data);
+                t.emitPiPending();
+            } else if (r.isEmpty()) {
+                t.eofError(this);
+                t.emit(new Token.EOF());
+            } else {
+                t.piPending.append('?');
+                t.transition(ProcessingInstructionData);
             }
         }
     },
@@ -1749,6 +1849,16 @@ enum TokeniserState {
                 r.unconsume();
                 t.transition(fallback);
         }
+    }
+
+    /** Tests whether this character separates a processing-instruction target and data in the current syntax. */
+    private static boolean isProcessingInstructionWhitespace(Tokeniser tokeniser, char c) {
+        return c == '\t' || c == '\n' || c == '\r' || c == ' ' || tokeniser.syntax != xml && c == '\f';
+    }
+
+    /** Returns whether this character may continue an HTML processing instruction target. */
+    private static boolean isHtmlProcessingInstructionTarget(char c) {
+        return c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '-' || c == '_';
     }
 
     /**

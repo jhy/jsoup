@@ -8,6 +8,7 @@ import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.ProcessingInstruction;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.TokenQueue;
 import org.jsoup.select.HasEvaluator.Scope;
@@ -357,6 +358,9 @@ public class QueryParser implements AutoCloseable {
             case "cdata":
                 nodeType = new NodeEvaluator.InstanceType(CDataNode.class, pseudo);
                 break;
+            case "pi":
+                nodeType = piSelector();
+                break;
             default:
                 throw new Selector.SelectorParseException(
                     "Could not parse query '%s': unknown node type '::%s'", query, pseudo);
@@ -370,6 +374,21 @@ public class QueryParser implements AutoCloseable {
             return parseRemainingSubclasses(nodeType);
         } finally {
             inNodeContext = previousNodeContext;
+        }
+    }
+
+    /** Parses an optional processing-instruction target. */
+    private Evaluator piSelector() {
+        if (!tq.matches('('))
+            return new NodeEvaluator.InstanceType(ProcessingInstruction.class, "pi");
+
+        String argument = trimAsciiWhitespace(consumeParens());
+        Validate.notEmpty(argument, "::pi target must not be empty");
+        try (TokenQueue targetQueue = new TokenQueue(argument)) {
+            String target = targetQueue.consumeCssIdentifier();
+            targetQueue.consumeWhitespace();
+            Validate.isTrue(targetQueue.isEmpty(), "::pi target must be a CSS identifier");
+            return new NodeEvaluator.ProcessingInstructionTarget(target);
         }
     }
 
