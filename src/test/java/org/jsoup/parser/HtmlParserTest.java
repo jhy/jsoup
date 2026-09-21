@@ -2307,6 +2307,49 @@ public class HtmlParserTest {
         assertEquals("<p><template><b>One</b></template><i>Two</i></p>", TextUtil.stripNewlines(template.html()));
     }
 
+    @Test void nestedTemplatesCloseAtEof() {
+        Document doc = Jsoup.parse("<template><template>");
+        doc.outputSettings().prettyPrint(false);
+        assertEquals("<html><head><template><template></template></template></head><body></body></html>", doc.html());
+    }
+
+    @Test void deeplyNestedTemplatesCloseAtEof() {
+        StringBuilder html = new StringBuilder();
+        for (int i = 0; i < 16; i++) html.append("<template><div>");
+
+        Parser parser = Parser.htmlParser().setTrackErrors(100);
+        Document doc = parser.parseInput(html.toString(), "");
+        assertEquals(16, doc.select("template").size());
+        assertEquals(16, parser.getErrors().size());
+    }
+
+    @Test void tableModeEofClosesTemplate() {
+        Document doc = Jsoup.parse("<template><table>");
+        doc.outputSettings().prettyPrint(false);
+        assertEquals("<html><head><template><table></table></template></head><body></body></html>", doc.html());
+    }
+
+    @Test void formInTableUsesTemplateRules() {
+        Document doc = Jsoup.parse("<template><table><form></table></template><input name=outside>");
+        doc.outputSettings().prettyPrint(false);
+        assertEquals("<html><head><template><table><form></form></table></template></head><body><input name=\"outside\"></body></html>", doc.html());
+        assertTrue(((FormElement) doc.expectFirst("form")).elements().isEmpty());
+    }
+
+    @Test void formsInTemplateFragmentIgnoreFormPointer() {
+        Element template = Jsoup.parseBodyFragment("<template></template>").expectFirst("template");
+        template.ownerDocument().outputSettings().prettyPrint(false);
+        template.html("<form><form>");
+        assertEquals("<form><form></form></form>", template.html());
+    }
+
+    @Test void formEndInTemplateFragmentUsesScope() {
+        Element template = Jsoup.parseBodyFragment("<template></template>").expectFirst("template");
+        template.ownerDocument().outputSettings().prettyPrint(false);
+        template.html("<form><div>E</form>F");
+        assertEquals("<form><div>E</div></form>F", template.html());
+    }
+
     @Test void templateFragment() {
         // https://github.com/jhy/jsoup/issues/1315
         String html = "<template id=\"lorem-ipsum\"><tr><td>Lorem</td><td>Ipsum</td></tr></template>";
