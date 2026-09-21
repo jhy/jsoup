@@ -12,6 +12,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.NodeInternals;
+import org.jsoup.nodes.ProcessingInstruction;
 import org.jsoup.nodes.TextNode;
 import org.jspecify.annotations.Nullable;
 
@@ -532,7 +533,15 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     /** Inserts a comment into the supplied target. */
     void insertCommentNode(Token.Comment token, Element target) {
-        Comment node = new Comment(token.getData());
+        Node node;
+        if (token.isPI()) {
+            Token.PI piToken = token.asPI();
+            ProcessingInstruction instruction = new ProcessingInstruction(piToken.target(), token.getData());
+            NodeInternals.sourceDataStart(instruction, piToken.dataStartPos);
+            node = instruction;
+        } else {
+            node = new Comment(token.getData());
+        }
         insertionTarget(target).appendChild(node);
         onNodeInserted(node);
     }

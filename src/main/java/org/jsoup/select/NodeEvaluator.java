@@ -4,6 +4,7 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.ProcessingInstruction;
 import org.jsoup.helper.Regex;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
@@ -49,6 +50,27 @@ abstract class NodeEvaluator extends Evaluator {
         @Override
         public String toString() {
             return selector;
+        }
+    }
+
+    /** Matches a processing instruction with the exact target. */
+    static class ProcessingInstructionTarget extends NodeEvaluator {
+        private final String target;
+
+        ProcessingInstructionTarget(String target) {
+            this.target = target;
+        }
+
+        @Override boolean evaluateMatch(Node node) {
+            return node instanceof ProcessingInstruction && ((ProcessingInstruction) node).target().equals(target);
+        }
+
+        @Override protected int cost() {
+            return 2;
+        }
+
+        @Override public String toString() {
+            return "::pi(" + target + ")";
         }
     }
 

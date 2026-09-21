@@ -4,7 +4,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.ProcessingInstruction;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -719,6 +721,8 @@ public class W3CDomTest {
         // preserve both PI positions, but not the XML declaration
         String xml = "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"style.xsl\"?><root xmlns=\"urn:test\"><?target data?></root>";
         org.jsoup.nodes.Document jdoc = Jsoup.parse(xml, "", Parser.xmlParser());
+        assertTrue(jdoc.childNode(0) instanceof XmlDeclaration);
+        assertTrue(jdoc.childNode(1) instanceof ProcessingInstruction);
 
         org.w3c.dom.Document w3cDoc = new W3CDom().fromJsoup(jdoc);
         Node top = w3cDoc.getFirstChild();

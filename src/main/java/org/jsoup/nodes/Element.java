@@ -621,7 +621,7 @@ public class Element extends Node implements Iterable<Element> {
      Find nodes that match the supplied {@link Selector} CSS query, with this element as the starting context. Matched
      nodes may include this element, or any of its descendents.
      <p>To select leaf nodes, the query should specify the node type, e.g. {@code ::text},
-     {@code ::comment}, {@code ::data}, {@code ::leafnode}.</p>
+     {@code ::comment}, {@code ::data}, {@code ::pi}, {@code ::leafnode}.</p>
 
      @param cssQuery a {@link Selector} CSS query
      @return a list of nodes that match the query (empty if none match)
@@ -649,7 +649,7 @@ public class Element extends Node implements Iterable<Element> {
     /**
      Find nodes that match the supplied {@link Selector} CSS query, with this element as the starting context. Matched
      nodes may include this element, or any of its descendents.
-     <p>To select specific node types, use {@code ::text}, {@code ::comment}, {@code ::leafnode}, etc. For example, to
+     <p>To select specific node types, use {@code ::text}, {@code ::comment}, {@code ::pi}, {@code ::leafnode}, etc. For example, to
      select all text nodes under {@code p} elements: </p>
      <pre>    Nodes&lt;TextNode&gt; textNodes = doc.selectNodes("p ::text", TextNode.class);</pre>
 

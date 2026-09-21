@@ -37,6 +37,12 @@ public final class NodeInternals {
             spans.clearEndSourceRange();
     }
 
+    /** Records where this processing instruction's data starts in the original input. */
+    public static void sourceDataStart(ProcessingInstruction pi, int pos) {
+        Validate.notNull(pi);
+        pi.sourceDataStart(pos);
+    }
+
     /**
      Sets parser-tracked source offsets for an attribute.
      */

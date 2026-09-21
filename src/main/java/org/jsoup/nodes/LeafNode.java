@@ -31,16 +31,23 @@ public abstract class LeafNode extends Node {
         return (Attributes) value;
     }
 
-    private void ensureAttributes() {
+    /** Expands this leaf's compact value into attribute storage when needed. */
+    final void ensureAttributes() {
         if (!hasAttributes()) {
             String coreValue = coreValue();
-            Attributes attributes = new Attributes();
             Range.Spans rangeSpans = spans();
+            Attributes attributes = newAttributes(coreValue);
             value = attributes;
-            attributes.put(nodeName(), coreValue);
             if (rangeSpans != null)
                 attributes.putSpans(rangeSpans);
         }
+    }
+
+    /** Expands this leaf's compact value into attribute storage. */
+    Attributes newAttributes(String coreValue) {
+        Attributes attributes = new Attributes();
+        attributes.put(nodeName(), coreValue);
+        return attributes;
     }
 
     String coreValue() {

@@ -7,6 +7,7 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
+import org.jsoup.nodes.ProcessingInstruction;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.Parser;
@@ -361,7 +362,8 @@ public class W3CDom {
             org.jsoup.nodes.Element root = source.firstElementChild();
             for (org.jsoup.nodes.Node child : source.childNodes()) {
                 if (child == root || child instanceof org.jsoup.nodes.DocumentType ||
-                    child instanceof org.jsoup.nodes.Comment || child instanceof org.jsoup.nodes.XmlDeclaration)
+                    child instanceof org.jsoup.nodes.Comment || child instanceof ProcessingInstruction ||
+                    child instanceof org.jsoup.nodes.XmlDeclaration)
                     traverse(child);
             }
         }
@@ -380,6 +382,8 @@ public class W3CDom {
                 append(doc.createComment(((Comment) source).getData()), source);
             else if (source instanceof DataNode)
                 append(doc.createTextNode(((DataNode) source).getWholeData()), source);
+            else if (source instanceof ProcessingInstruction)
+                appendProcessingInstruction((ProcessingInstruction) source);
             else if (source instanceof XmlDeclaration)
                 appendProcessingInstruction((XmlDeclaration) source);
 
@@ -427,6 +431,15 @@ public class W3CDom {
                 append(doc.createCDATASection(source.getWholeText()), source);
             } catch (DOMException ignored) {
                 append(doc.createTextNode(source.getWholeText()), source);
+            }
+        }
+
+        /** Appends a W3C processing instruction if its target and data are valid. */
+        private void appendProcessingInstruction(ProcessingInstruction source) {
+            try {
+                append(doc.createProcessingInstruction(source.target(), source.data()), source);
+            } catch (DOMException ignored) {
+                // The W3C DOM rejects invalid targets or data.
             }
         }
 

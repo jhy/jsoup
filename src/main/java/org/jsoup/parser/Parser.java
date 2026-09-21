@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -89,6 +90,24 @@ public class Parser implements Cloneable {
         try {
             lock.lock(); // using a lock vs synchronized to support loom threads
             return treeBuilder.parse(inputHtml, baseUri, this);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     Parses attribute names and values without a surrounding tag, using this parser's settings.
+     Parsing stops at a tag closer, which is reported if error tracking is enabled.
+
+     @param input the attribute string to parse
+     @return the parsed attributes
+     @see #setTrackErrors(int)
+     @since 1.24.1
+     */
+    public Attributes parseAttributes(String input) {
+        try {
+            lock.lock();
+            return treeBuilder.parseAttributes(new StringReader(input), this);
         } finally {
             lock.unlock();
         }

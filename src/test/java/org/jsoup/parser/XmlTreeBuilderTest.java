@@ -134,13 +134,13 @@ public class XmlTreeBuilderTest {
     }
 
     @Test
-    public void testParseDeclarationWithoutAttributes() {
+    public void parsesProcessingInstructionData() {
         String xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<?myProcessingInstruction My Processing instruction.?>";
         Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
-        XmlDeclaration decl = (XmlDeclaration) doc.childNode(2);
-        assertEquals("myProcessingInstruction", decl.name());
-        assertTrue(decl.hasAttr("My"));
-        assertEquals("<?myProcessingInstruction My Processing instruction.?>", decl.outerHtml());
+        ProcessingInstruction instruction = (ProcessingInstruction) doc.childNode(2);
+        assertEquals("myProcessingInstruction", instruction.target());
+        assertEquals("My Processing instruction.", instruction.data());
+        assertEquals("<?myProcessingInstruction My Processing instruction.?>", instruction.outerHtml());
     }
 
     @Test
@@ -234,7 +234,7 @@ public class XmlTreeBuilderTest {
         // https://github.com/jhy/jsoup/issues/1139
         String html = "<script> var a=\"<?\"; var b=\"?>\"; </script>";
         Document doc = Jsoup.parse(html, "", Parser.xmlParser());
-        assertEquals("<script> var a=\"<!--?\"; var b=\"?-->\"; </script>", doc.html()); // converted from pseudo xmldecl to comment
+        assertEquals(html, doc.html());
     }
 
     @Test public void dropsDuplicateAttributes() {
@@ -378,12 +378,12 @@ public class XmlTreeBuilderTest {
             "<!ELEMENT footnote (#PCDATA|a)*>", doc.outerHtml());
     }
 
-    @Test void declarationWithGt() {
+    @Test void processingInstructionDataMayContainGt() {
         // https://github.com/jhy/jsoup/issues/1947
         String xml = "<x><?xmlDeclaration att1=\"value1\" att2=\"&lt;val2>\"?></x>";
         Document doc = Jsoup.parse(xml, Parser.xmlParser());
-        XmlDeclaration decl = (XmlDeclaration) doc.expectFirst("x").childNode(0);
-        assertEquals("<val2>", decl.attr("att2"));
+        ProcessingInstruction instruction = (ProcessingInstruction) doc.expectFirst("x").childNode(0);
+        assertEquals("att1=\"value1\" att2=\"&lt;val2>\"", instruction.data());
     }
 
     @Test void xmlHeaderIsValid() {
@@ -399,6 +399,31 @@ public class XmlTreeBuilderTest {
         doc = Jsoup.parse(xml, Parser.xmlParser().setTrackErrors(10));
         assertEquals(0, doc.parser().getErrors().size());
         assertEquals(expect, doc.html());
+    }
+
+    @Test void parsesXmlProcessingInstructionGrammar() {
+        String xml = "<?_target:name data > stays?><?café?><?target?>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+
+        assertEquals(xml, doc.outerHtml());
+        assertEquals("_target:name", ((ProcessingInstruction) doc.childNode(0)).target());
+        assertEquals("data > stays", ((ProcessingInstruction) doc.childNode(0)).data());
+        assertEquals("café", ((ProcessingInstruction) doc.childNode(1)).target());
+        assertEquals("", ((ProcessingInstruction) doc.childNode(2)).data());
+    }
+
+    @Test void acceptsLenientXmlProcessingInstructionTarget() {
+        Document doc = Jsoup.parse("<?target\fdata?>", Parser.xmlParser());
+
+        ProcessingInstruction instruction = (ProcessingInstruction) doc.childNode(0);
+        assertEquals("target\fdata", instruction.target());
+        assertEquals("", instruction.data());
+    }
+
+    @Test void dropsProcessingInstructionTargetAtEof() {
+        Document doc = Jsoup.parse("<?target", Parser.xmlParser());
+
+        assertTrue(doc.childNodes().isEmpty());
     }
 
     @Test void roundtripsDoctypeInternalSubset() {

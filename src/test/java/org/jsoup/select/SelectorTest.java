@@ -7,6 +7,7 @@ import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.ProcessingInstruction;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
@@ -1728,6 +1729,38 @@ public class SelectorTest {
         assertEquals(" find this ", nodes.get(0).nodeValue());
         assertEquals(" and this ", nodes.get(1).nodeValue());
         assertEquals(" not that ", nodes.get(2).nodeValue());
+    }
+
+    @Test void selectProcessingInstructions() {
+        String html = "<body><?marker name=country-options mode=Append data-code=abc-123?>" +
+            "<?Marker name=other mode=replace?><?other name=country-options?><!-- name=country-options -->";
+        Document doc = Jsoup.parse(html);
+        ProcessingInstruction marker = doc.expectFirstNode("::pi(marker)", ProcessingInstruction.class);
+
+        assertEquals(3, doc.selectNodes("::pi", ProcessingInstruction.class).size());
+        assertEquals(1, doc.selectNodes("::pi(marker)", ProcessingInstruction.class).size());
+        assertEquals(1, doc.selectNodes("::pi(Marker)", ProcessingInstruction.class).size());
+        assertEquals("name=country-options mode=Append data-code=abc-123", marker.data());
+        assertEquals(2, doc.selectNodes("::pi[name=country-options]", ProcessingInstruction.class).size());
+        assertEquals("name=\"country-options\" mode=\"Append\" data-code=\"abc-123\"", marker.data());
+        assertEquals(1, doc.selectNodes("::pi(marker)[name=country-options]", ProcessingInstruction.class).size());
+
+        assertEquals(2, doc.selectNodes("::pi[mode]", ProcessingInstruction.class).size());
+        assertEquals(1, doc.selectNodes("::pi[data-code=abc-123]", ProcessingInstruction.class).size());
+        assertEquals(2, doc.selectNodes("::pi[mode!=append]", ProcessingInstruction.class).size());
+        assertEquals(2, doc.selectNodes("::pi[name^=country]", ProcessingInstruction.class).size());
+        assertEquals(2, doc.selectNodes("::pi[name$=options]", ProcessingInstruction.class).size());
+        assertEquals(2, doc.selectNodes("::pi[name*=try-opt]", ProcessingInstruction.class).size());
+        assertEquals(2, doc.selectNodes("::pi[name~=^country-]", ProcessingInstruction.class).size());
+        assertEquals(3, doc.selectNodes("::pi[^na]", ProcessingInstruction.class).size());
+        assertEquals(3, doc.selectNodes("::pi[*]", ProcessingInstruction.class).size());
+
+        assertEquals(1, doc.selectNodes("::pi(marker):not([mode=replace]):contains(country-options)", ProcessingInstruction.class).size());
+        assertTrue(doc.selectNodes("::comment[name]", Comment.class).isEmpty());
+        assertTrue(doc.selectNodes("::text[name]", TextNode.class).isEmpty());
+
+        Document blank = Jsoup.parse("<body><?empty?>");
+        assertEquals(1, blank.selectNodes("::pi(empty):blank", ProcessingInstruction.class).size());
     }
 
     @Test void selectTextNodes() {

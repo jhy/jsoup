@@ -14,6 +14,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Entities;
 import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.NodeInternals;
+import org.jsoup.nodes.ProcessingInstruction;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.select.Elements;
@@ -208,9 +210,18 @@ public class XmlTreeBuilder extends TreeBuilder {
         onNodeInserted(node);
     }
 
+    /** Inserts a comment or processing instruction at the current insertion point. */
     void insertCommentFor(Token.Comment commentToken) {
-        Comment comment = new Comment(commentToken.getData());
-        insertLeafNode(comment);
+        LeafNode node;
+        if (commentToken.isPI()) {
+            Token.PI piToken = commentToken.asPI();
+            ProcessingInstruction instruction = new ProcessingInstruction(piToken.target(), commentToken.getData());
+            NodeInternals.sourceDataStart(instruction, piToken.dataStartPos);
+            node = instruction;
+        } else {
+            node = new Comment(commentToken.getData());
+        }
+        insertLeafNode(node);
     }
 
     void insertCharacterFor(Token.Character token) {
