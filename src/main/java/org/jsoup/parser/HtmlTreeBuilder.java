@@ -358,6 +358,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return fragmentParsing && contextElement != null && contextElement.elementIs(normalName, NamespaceHtml);
     }
 
+    /** Tests whether the parser is inside a template or using a template fragment context. */
+    boolean isParsingTemplateContents() {
+        return onStack("template") || fragmentContextIs("template");
+    }
+
     void error(HtmlTreeBuilderState state) {
         if (parser.getErrors().canAddError())
             parser.getErrors().add(new ParseError(reader, "Unexpected %s token [%s] when in state [%s]",
@@ -435,14 +440,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return el;
     }
 
-    FormElement insertFormElement(Token.StartTag startTag, boolean onStack, boolean checkTemplateStack) {
+    /** Inserts a form and leaves the form pointer unset while parsing template contents. */
+    FormElement insertFormElement(Token.StartTag startTag, boolean onStack) {
         FormElement el = (FormElement) createElementFor(startTag, NamespaceHtml, false);
-
-        if (checkTemplateStack) {
-            if(!onStack("template"))
-                setFormElement(el);
-        } else
-            setFormElement(el);
+        if (!isParsingTemplateContents()) setFormElement(el);
 
         doInsertElement(el);
         if (!onStack) pop();
