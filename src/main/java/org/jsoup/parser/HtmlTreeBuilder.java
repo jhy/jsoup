@@ -562,6 +562,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
      */
     void insertCharacterNode(Token.Character characterToken, boolean replace) {
         characterToken.normalizeNulls(replace);
+        if (characterToken.getData().isEmpty()) return;
         Element el = currentElOrDoc();
         insertCharacterToElement(characterToken, el);
     }

@@ -22,6 +22,7 @@
 * Within node selectors, `:not()` now correctly applies `:contains()` and `:matches()` to the node value. For example, `::comment:not(:contains(foo))` excludes comments containing `foo`. [#2610](https://github.com/jhy/jsoup/pull/2610)
 * Updated `<select>` parsing to the current HTML spec, retaining elements such as buttons and other markup that the previous rules discarded. [#2611](https://github.com/jhy/jsoup/issues/2611)
 * Template parsing now closes unclosed templates at EOF and handles forms correctly in template documents and fragments. [#2614](https://github.com/jhy/jsoup/issues/2614)
+* Fixed handling of null characters and initial newlines in HTML to better match the HTML spec, including `pre`, `listing`, and `textarea` elements. Leading newlines in these elements' text are preserved when saving and reparsing HTML.
 
 ## 1.23.2 (2026-Aug-26)
 

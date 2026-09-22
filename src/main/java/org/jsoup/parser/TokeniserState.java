@@ -858,8 +858,13 @@ enum TokeniserState {
     BogusComment {
         @Override void read(Tokeniser t, CharacterReader r) {
             // todo: handle bogus comment starting from eof. when does that trigger?
-            t.commentPending.append(r.consumeTo('>'));
-            // todo: replace nullChar with replaceChar
+            t.commentPending.append(r.consumeToAny('>', nullChar));
+            if (r.current() == nullChar) {
+                t.error(this);
+                r.advance();
+                t.commentPending.append(replacementChar);
+                return;
+            }
             char next = r.current();
             if (next == '>' || next == eof) {
                 r.consume();
@@ -1712,12 +1717,19 @@ enum TokeniserState {
     },
     CdataSection {
         @Override void read(Tokeniser t, CharacterReader r) {
-            String data = r.consumeTo("]]>");
+            String data = r.consumeToAny(']', nullChar);
             t.dataBuffer.append(data);
+            if (r.current() == nullChar) {
+                if (t.syntax != xml) t.error(this);
+                t.dataBuffer.append(r.consume()); // tree building decides whether to replace or remove nulls
+                return;
+            }
             if (r.matchConsume("]]>") || r.isEmpty()) {
                 t.emit(new Token.CData(t.dataBuffer.value()));
                 t.transition(Data);
-            }// otherwise, buffer underrun, stay in data section
+            } else if (r.matches(']')) {
+                t.dataBuffer.append(r.consume());
+            } // otherwise, buffer underrun, stay in data section
         }
     };
 

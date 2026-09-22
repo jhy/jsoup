@@ -450,6 +450,7 @@ abstract class Token {
 
     static class Character extends Token {
         final TokenData data = new TokenData();
+        boolean hasNull; // avoids rescanning text for nulls
 
         Character() {
             super(TokenType.Character);
@@ -461,22 +462,21 @@ abstract class Token {
             this.startPos = source.startPos;
             this.endPos = source.endPos;
             this.data.set(source.data.value());
+            this.hasNull = source.hasNull;
         }
 
         @Override
         Token reset() {
             super.reset();
             data.reset();
+            hasNull = false;
             return this;
         }
 
+        /** Sets arbitrary character data, including CDATA which may contain nulls. */
         Character data(String str) {
             data.set(str);
-            return this;
-        }
-
-        Character append(String str) {
-            data.append(str);
+            hasNull = str.indexOf(TokeniserState.nullChar) != -1;
             return this;
         }
 
@@ -493,13 +493,14 @@ abstract class Token {
          Normalize null chars in the data. If replace is true, replaces with the replacement char; if false, removes.
          */
         public void normalizeNulls(boolean replace) {
+            if (!hasNull) return;
             String data = this.data.value();
-            if (data.indexOf(TokeniserState.nullChar) == -1) return;
 
             data = (replace ?
                 data.replace(TokeniserState.nullChar, Tokeniser.replacementChar) :
                 data.replace(nullString, ""));
             this.data.set(data);
+            hasNull = false;
         }
 
         private static final String nullString = String.valueOf(TokeniserState.nullChar);

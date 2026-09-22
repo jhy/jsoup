@@ -40,6 +40,7 @@ final class Tokeniser {
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
     @Nullable private Token emitPending = null; // the token we are about to emit on next read
     private boolean isEmitPending = false;
+    private boolean ignoreLeadingLf; // skip one newline immediately after pre, listing, or textarea
     boolean attributeFragment; // parsing attributes without a surrounding tag
     final TokenData dataBuffer = new TokenData(); // buffers data looking for </script>
 
@@ -67,6 +68,11 @@ final class Tokeniser {
     }
 
     Token read() {
+        if (ignoreLeadingLf && !isEmitPending && (reader.matches('\r') || reader.matches('\n'))) {
+            if (reader.consume() == '\r') reader.matchConsume("\n");
+            charStartPos = reader.pos();
+            ignoreLeadingLf = false;
+        }
         while (!isEmitPending) {
             state.read(this, reader);
         }
@@ -82,6 +88,7 @@ final class Tokeniser {
     }
 
     void emit(Token token) {
+        ignoreLeadingLf = false;
         Validate.isFalse(isEmitPending);
 
         emitPending = token;
@@ -100,23 +107,44 @@ final class Tokeniser {
         }
     }
 
+    /** Buffers text for the next character token. */
     void emit(final String str) {
+        if (str.isEmpty()) return;
+        if (ignoreLeadingLf) {
+            ignoreLeadingLf = false;
+            // literal newlines were consumed before tokenization; this LF came from a reference
+            if (str.equals("\n")) {
+                charStartPos = reader.pos();
+                return;
+            }
+        }
         // buffer strings up until last string token found, to emit only one token for a run of character refs etc.
         // does not set isEmitPending; read checks that
         // todo move "<" to '<'...
-        charPending.append(str);
+        // bulk literal runs stop at null; decoded references are handled separately
+        charPending.data.append(str);
         charPending.startPos(charStartPos);
         charPending.endPos(reader.pos());
     }
 
+    /** Buffers a character for the next character token. */
     void emit(char c) {
+        ignoreLeadingLf = false;
         charPending.data.append(c);
+        if (c == TokeniserState.nullChar) charPending.hasNull = true;
         charPending.startPos(charStartPos);
         charPending.endPos(reader.pos());
     }
 
+    /** Buffers a decoded character reference. */
     void emit(int[] codepoints) {
+        if (codepoints[0] == 0) charPending.hasNull = true; // only numeric references can produce null
         emit(new String(codepoints, 0, codepoints.length));
+    }
+
+    /** Skips the next character if it is a newline. */
+    void ignoreLeadingLf() {
+        ignoreLeadingLf = true;
     }
 
     void transition(TokeniserState newState) {
@@ -167,7 +195,7 @@ final class Tokeniser {
             }
             // todo: check for extra illegal unicode points as parse errors - described https://html.spec.whatwg.org/multipage/syntax.html#character-references and in Infra
             // The numeric character reference forms described above are allowed to reference any code point excluding U+000D CR, noncharacters, and controls other than ASCII whitespace.
-            if (charval == -1 || charval > 0x10FFFF) {
+            if (charval == -1 || charval > 0x10FFFF || (charval == 0 && syntax == Document.OutputSettings.Syntax.html)) {
                 characterReferenceError("character [%s] outside of valid range", charval);
                 codeRef[0] = replacementChar;
             } else {
