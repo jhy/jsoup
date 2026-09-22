@@ -264,7 +264,7 @@ public class HtmlParserTest {
         assertEquals(expect, el.text());
         assertEquals(expect, el.val());
         assertEquals(expect, el.html());
-        assertEquals("<textarea>\n\t" + expect + "\n</textarea>", el.outerHtml()); // but preserved in round-trip html
+        assertEquals("<textarea>\t" + expect + "\n</textarea>", el.outerHtml()); // the parser consumes only the initial LF
     }
 
     @Test public void preservesSpaceInScript() {
@@ -2501,7 +2501,7 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(sourceHtml);
         Element textArea = doc.expectFirst("textarea");
 
-        assertEquals(textContent, textArea.wholeText());
+        assertEquals(textContent.substring(1), textArea.wholeText()); // the initial LF is ignored
     }
 
     @Test void svgParseTest() {

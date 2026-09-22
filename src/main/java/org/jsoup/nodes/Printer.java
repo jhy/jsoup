@@ -7,6 +7,8 @@ import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeVisitor;
 import org.jspecify.annotations.Nullable;
 
+import static org.jsoup.parser.Parser.NamespaceHtml;
+
 /** Base Printer */
 class Printer implements NodeVisitor {
     final Node root;
@@ -21,7 +23,17 @@ class Printer implements NodeVisitor {
 
     void addHead(Element el, int depth) {
         el.outerHtmlHead(accum, settings);
+        // HTML consumes one initial newline; supply LF so preserved LF or CR text survives a reparse
+        if (settings.syntax() == OutputSettings.Syntax.html && el.tag().namespace().equals(NamespaceHtml)
+            && StringUtil.in(el.normalName(), InitialNewlineTags)
+            && el.firstChild() instanceof TextNode) {
+            String text = ((TextNode) el.firstChild()).getWholeText();
+            if (text.startsWith("\n") || text.startsWith("\r"))
+                accum.append('\n');
+        }
     }
+
+    private static final String[] InitialNewlineTags = {"pre", "listing", "textarea"};
 
     void addTail(Element el, int depth) {
         el.outerHtmlTail(accum, settings);

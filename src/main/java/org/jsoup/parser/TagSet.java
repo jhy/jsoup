@@ -265,7 +265,7 @@ public class TagSet {
             "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track"
         };
         String[] preserveWhitespaceTags = {
-            "pre", "plaintext", "title", "textarea", "script"
+            "pre", "listing", "plaintext", "title", "textarea", "script"
         };
         String[] rcdataTags = { "title", "textarea" };
         String[] dataTags = { "iframe", "noembed", "noframes", "script", "style", "xmp" };

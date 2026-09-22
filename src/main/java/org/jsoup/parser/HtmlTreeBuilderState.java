@@ -252,14 +252,12 @@ enum HtmlTreeBuilderState {
             switch (t.type) {
                 case Character: {
                     Token.Character c = t.asCharacter();
-                    if (tb.framesetOk() && isWhitespace(c)) { // don't check if whitespace if frames already closed
-                        tb.reconstructFormattingElements();
-                        tb.insertCharacterNode(c);
-                    } else {
-                        tb.reconstructFormattingElements();
-                        tb.insertCharacterNode(c); // strips nulls
-                        tb.framesetOk(false);
-                    }
+                    c.normalizeNulls(false);
+                    if (c.getData().isEmpty()) break;
+                    boolean disableFrameset = tb.framesetOk() && !isWhitespace(c);
+                    tb.reconstructFormattingElements();
+                    tb.insertCharacterNode(c);
+                    if (disableFrameset) tb.framesetOk(false);
                     break;
                 }
                 case Comment: {
@@ -454,6 +452,7 @@ enum HtmlTreeBuilderState {
                         tb.insertElementFor(startTag);
                     break;
                 case "textarea":
+                    tb.tokeniser.ignoreLeadingLf();
                     tb.framesetOk(false);
                     HandleTextState(startTag, tb, tb.tagFor(startTag).textState());
                     break;
@@ -521,7 +520,7 @@ enum HtmlTreeBuilderState {
                         tb.processEndTag("p");
                     }
                     tb.insertElementFor(startTag);
-                    tb.reader.matchConsume("\n"); // ignore LF if next token
+                    tb.tokeniser.ignoreLeadingLf();
                     tb.framesetOk(false);
                     break;
                 // static final String[] DdDt = new String[]{"dd", "dt"};
@@ -1080,7 +1079,9 @@ enum HtmlTreeBuilderState {
     InTableText {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.type == Token.TokenType.Character) {
-                tb.addPendingTableCharacters(t.asCharacter()); // gets to insertCharacterNode, which strips nulls
+                Token.Character c = t.asCharacter();
+                c.normalizeNulls(false);
+                if (!c.getData().isEmpty()) tb.addPendingTableCharacters(c);
             } else {
                 // insert gathered table text into the correct element:
                 if (tb.getPendingTableCharacters().size() > 0) {
@@ -1628,12 +1629,11 @@ enum HtmlTreeBuilderState {
             switch (t.type) {
                 case Character:
                     Token.Character c = t.asCharacter();
-                    if (HtmlTreeBuilderState.isWhitespace(c))
-                        tb.insertCharacterNode(c);
-                    else {
-                        tb.insertCharacterNode(c, true); // replace nulls
-                        tb.framesetOk(false);
-                    }
+                    // nulls produce replacement text but do not disable a later frameset
+                    boolean disableFrameset = tb.framesetOk() && !StringUtil.isBlank(
+                        c.hasNull ? c.getData().replace(nullString, "") : c.getData());
+                    tb.insertCharacterNode(c, true);
+                    if (disableFrameset) tb.framesetOk(false);
                     break;
                 case Comment:
                     tb.insertCommentNode(t.asComment());
