@@ -24,6 +24,7 @@
 * Template parsing now closes unclosed templates at EOF and handles forms correctly in template documents and fragments. [#2614](https://github.com/jhy/jsoup/issues/2614)
 * Fixed handling of null characters and initial newlines in HTML to better match the HTML spec, including `pre`, `listing`, and `textarea` elements. Leading newlines in these elements' text are preserved when saving and reparsing HTML. [#2616](https://github.com/jhy/jsoup/pull/2616)
 * Fixed several HTML parsing edge cases across malformed doctypes, misplaced text in tables, and whitespace in framesets to match the HTML spec. [#2618](https://github.com/jhy/jsoup/pull/2618)
+* If a HTML void element ends up with children (via DOM manipulation), those are no longer serialized in `html()`. [#2619](https://github.com/jhy/jsoup/issues/2619) 
 
 ## 1.23.2 (2026-Aug-26)
 

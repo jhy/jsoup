@@ -4,13 +4,14 @@ import org.jsoup.internal.QuietAppendable;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.parser.Tag;
-import org.jsoup.select.NodeVisitor;
+import org.jsoup.select.NodeFilter;
 import org.jspecify.annotations.Nullable;
 
+import static org.jsoup.nodes.Document.OutputSettings.Syntax.html;
 import static org.jsoup.parser.Parser.NamespaceHtml;
 
 /** Base Printer */
-class Printer implements NodeVisitor {
+class Printer implements NodeFilter {
     final Node root;
     final QuietAppendable accum;
     final OutputSettings settings;
@@ -24,7 +25,7 @@ class Printer implements NodeVisitor {
     void addHead(Element el, int depth) {
         el.outerHtmlHead(accum, settings);
         // HTML consumes one initial newline; supply LF so preserved LF or CR text survives a reparse
-        if (settings.syntax() == OutputSettings.Syntax.html && el.tag().namespace().equals(NamespaceHtml)
+        if (settings.syntax() == html && el.tag().namespace().equals(NamespaceHtml)
             && StringUtil.in(el.normalName(), InitialNewlineTags)
             && el.firstChild() instanceof TextNode) {
             String text = ((TextNode) el.firstChild()).getWholeText();
@@ -53,17 +54,19 @@ class Printer implements NodeVisitor {
     }
 
     @Override
-    public void head(Node node, int depth) {
+    public FilterResult head(Node node, int depth) {
         if (node.getClass() == TextNode.class)  addText((TextNode) node, 0, depth); // Excludes CData; falls to addNode
         else if (node instanceof Element)       addHead((Element) node, depth);
         else                                    addNode((LeafNode) node, depth);
+
+        return node instanceof Element && settings.syntax() == html && ((Element) node).isHtmlVoid()
+            ? FilterResult.SKIP_ENTIRELY : FilterResult.CONTINUE; // skip any children in void tags
     }
 
     @Override
-    public void tail(Node node, int depth) {
-        if (node instanceof Element) { // otherwise a LeafNode
-            addTail((Element) node, depth);
-        }
+    public FilterResult tail(Node node, int depth) {
+        if (node instanceof Element) addTail((Element) node, depth); // otherwise a LeafNode
+        return FilterResult.CONTINUE;
     }
 
     /** Pretty Printer */

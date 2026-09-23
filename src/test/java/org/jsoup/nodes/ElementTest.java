@@ -3570,4 +3570,38 @@ public class ElementTest {
         assertEquals(1, actualSize);
         assertEquals(1, reported); // was 0 via cache
     }
+
+    @Test void htmlVoidPrintOmitsDomChildren() {
+        Document doc = new Document("");
+        doc.outputSettings().prettyPrint(false);
+        Element span = new Element("span");
+        Element br = new Element("br");
+        br.appendElement("a").text("hidden");
+        span.appendChild(br);
+        span.appendElement("b").text("shown");
+        doc.appendChild(span);
+
+        assertEquals(1, br.childNodeSize());
+        assertEquals("", br.html());
+        assertEquals("<br>", br.outerHtml());
+        assertEquals("<br><b>shown</b>", span.html());
+        assertEquals("<span><br><b>shown</b></span>", span.outerHtml());
+
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        assertEquals("<a>hidden</a>", br.html());
+        assertEquals("<br><a>hidden</a></br>", br.outerHtml());
+        assertEquals("<span><br><a>hidden</a></br><b>shown</b></span>", span.outerHtml());
+    }
+
+    @Test void foreignElementWithVoidNameRetainsChildren() {
+        Document doc = new Document("");
+        doc.outputSettings().prettyPrint(false);
+        Element foreignBr = new Element("br", Parser.NamespaceSvg);
+        foreignBr.appendElement("a").text("kept");
+        doc.appendChild(foreignBr);
+
+        assertEquals("<a>kept</a>", foreignBr.html());
+        assertEquals("<br><a>kept</a></br>", foreignBr.outerHtml());
+    }
+
 }

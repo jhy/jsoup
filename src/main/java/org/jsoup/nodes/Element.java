@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.jsoup.internal.Normalizer.asciiLowerCase;
+import static org.jsoup.nodes.Document.OutputSettings.Syntax.html;
 import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
 import static org.jsoup.nodes.TextNode.lastCharIsWhitespace;
 import static org.jsoup.parser.Parser.NamespaceHtml;
@@ -2001,11 +2002,12 @@ public class Element extends Node implements Iterable<Element> {
         accum.append('<').append(tagName);
         if (attributes != null) attributes.html(accum, out);
 
-        if (childNodes.isEmpty()) {
+        boolean htmlVoid = out.syntax() == html && isHtmlVoid();
+        if (childNodes.isEmpty() || htmlVoid) {
             boolean xmlMode = out.syntax() == xml || !tag.namespace().equals(NamespaceHtml);
             if (xmlMode && (tag.is(Tag.SeenSelfClose) || (tag.isKnownTag() && (tag.isEmpty() || tag.isSelfClosing())))) {
                 accum.append(" />");
-            } else if (!xmlMode && tag.isEmpty()) { // html void element
+            } else if (htmlVoid) {
                 accum.append('>');
             } else {
                 accum.append("></").append(tagName).append('>');
@@ -2020,6 +2022,11 @@ public class Element extends Node implements Iterable<Element> {
         if (!childNodes.isEmpty())
             accum.append("</").append(safeTagName(out.syntax())).append('>');
         // if empty, we have already closed in htmlHead
+    }
+
+    /** Tests if this element is an HTML-namespace void tag. */
+    boolean isHtmlVoid() {
+        return tag.namespace().equals(NamespaceHtml) && tag.isEmpty();
     }
 
     /** Gets the tag name normalized for the output syntax. */
@@ -2060,6 +2067,7 @@ public class Element extends Node implements Iterable<Element> {
 
     /** Append the inner HTML of this element to the supplied {@link QuietAppendable}. */
     void html(QuietAppendable accum) {
+        if (NodeUtils.outputSettings(this).syntax() == html && isHtmlVoid()) return;
         Node child = firstChild();
         if (child != null) {
             Printer printer = Printer.printerFor(child, accum);
