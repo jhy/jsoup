@@ -515,11 +515,12 @@ class PositionTest {
         assertEquals(5, textNodes.size());
         assertEquals("foo", textNodes.get(0).text());
         assertEquals("bar", textNodes.get(1).text());
-        assertEquals("baz", textNodes.get(2).text());
-        assertEquals("qux", textNodes.get(3).text());
-        assertEquals("coo", textNodes.get(4).text());
+        assertEquals("qux", textNodes.get(2).text());
+        assertEquals("coo", textNodes.get(3).text());
+        assertEquals("baz", textNodes.get(4).text());
 
-        assertEquals("#text:7-10; #text:14-17; #text:21-24; #text:29-32; #text:37-40; ", track.toString());
+        // traversal follows the fostered DOM order while each range retains its source position
+        assertEquals("#text:7-10; #text:14-17; #text:29-32; #text:37-40; #text:21-24; ", track.toString());
     }
 
     @Test void tracksClosingHtmlTagsInXml() {

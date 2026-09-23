@@ -1198,6 +1198,7 @@ enum TokeniserState {
                     break;
                 default:
                     t.error(this);
+                    r.unconsume(); // spec reconsumes this char in before doctype name
                     t.transition(BeforeDoctypeName);
             }
         }
