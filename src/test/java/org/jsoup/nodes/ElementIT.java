@@ -228,4 +228,53 @@ public class ElementIT {
             throw new AssertionError(failure.get());
         }
     }
+
+    @Test
+    void concurrentEmptyAndTextNodesOnEmptyNodeList() throws InterruptedException {
+        int threadCount = 50;
+        int iterations = 20000;
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch endLatch = new CountDownLatch(threadCount * 2);
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+
+        for (int i = 0; i < threadCount; i++) {
+            Thread writer = new Thread(() -> {
+                try {
+                    startLatch.await();
+                    for (int j = 0; j < iterations; j++) {
+                        new Element("p").empty();
+                    }
+                } catch (Throwable e) {
+                    System.err.println(e);
+                    failure.set(e);
+                } finally {
+                    endLatch.countDown();
+                }
+            });
+            writer.start();
+        }
+
+        for (int i = 0; i < threadCount; i++) {
+            Thread reader = new Thread(() -> {
+                try {
+                    startLatch.await();
+                    for (int j = 0; j < iterations; j++) {
+                        new Element("p").textNodes(); // filterNodes() streams childNodes, even when empty
+                    }
+                } catch (Throwable e) {
+                    System.err.println(e);
+                    failure.set(e);
+                } finally {
+                    endLatch.countDown();
+                }
+            });
+            reader.start();
+        }
+
+        startLatch.countDown();
+        endLatch.await();
+        if (failure.get() != null) {
+            throw new AssertionError(failure.get());
+        }
+    }
 }
