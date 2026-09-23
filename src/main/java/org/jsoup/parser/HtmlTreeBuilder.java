@@ -282,6 +282,21 @@ public class HtmlTreeBuilder extends TreeBuilder {
             && StringUtil.inSorted(el.normalName(), TagMathMlTextIntegration));
     }
 
+    /** Tests if an element is in the HTML namespace. */
+    static boolean isHtmlEl(Element el) {
+        return NamespaceHtml.equals(el.tag().namespace());
+    }
+
+    /** Tests if an HTML element has the supplied normal name. */
+    static boolean isHtmlEl(Element el, String normalName) {
+        return isHtmlEl(el) && el.normalName().equals(normalName);
+    }
+
+    /** Tests if an HTML element has one of the supplied sorted normal names. */
+    static boolean isHtmlEl(Element el, String[] normalNames) {
+        return isHtmlEl(el) && inSorted(el.normalName(), normalNames);
+    }
+
     static boolean isHtmlIntegration(Element el) {
         /*
         A node is an HTML integration point if it is one of the following elements:
@@ -355,7 +370,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     /** Tests whether this fragment was created with the named HTML context element. */
     boolean fragmentContextIs(String normalName) {
-        return fragmentParsing && contextElement != null && contextElement.elementIs(normalName, NamespaceHtml);
+        return fragmentParsing && contextElement != null && isHtmlEl(contextElement, normalName);
     }
 
     /** Tests whether the parser is inside a template or using a template fragment context. */
@@ -457,7 +472,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private void doInsertElement(Element el) {
         enforceStackDepthLimit();
 
-        if (formElement != null && el.tag().namespace.equals(NamespaceHtml) && StringUtil.inSorted(el.normalName(), TagFormListed))
+        if (formElement != null && isHtmlEl(el, TagFormListed))
             formElement.addElement(el); // connect form controls to their form element
 
         // in HTML, the xmlns attribute if set must match what the parser set the tag's namespace to
@@ -468,63 +483,79 @@ public class HtmlTreeBuilder extends TreeBuilder {
         push(el);
     }
 
-    /** Inserts a node at the appropriate location for the target. */
+    /** Inserts a node into the target, applying foster parenting when required. */
     void insertNode(Node node, Element target) {
-        insertionLocation(target).insert(node);
+        if (fosterInserts && isHtmlEl(target, InTableFoster))
+            insertInFosterParent(node);
+        else
+            insertionTarget(target).appendChild(node);
     }
 
-    /** Finds the parent and reference node for an insertion. */
-    InsertionLocation insertionLocation(Element target) {
-        if (isFosterInserts() && target.tag().namespace().equals(NamespaceHtml) && inSorted(target.normalName(), InTableFoster)) {
+    /** Inserts a node at the foster parenting location. */
+    void insertInFosterParent(Node node) {
+        for (int pos = stack.size() - 1; pos >= 0; pos--) {
+            Element el = stack.get(pos);
+            if (isHtmlEl(el, "template")) {
+                el.appendChild(node); // template contents are stored on the element
+                return;
+            }
+            if (isHtmlEl(el, "table")) {
+                Element parent = el.parent();
+                if (parent != null)
+                    el.before(node);
+                else
+                    insertionTarget(stack.get(pos - 1)).appendChild(node);
+                return;
+            }
+        }
+        // https://html.spec.whatwg.org/multipage/parsing.html#appropriate-place-for-inserting-a-node
+        // fragment case: insert into the first element on the stack (the html element)
+        insertionTarget(stack.get(0)).appendChild(node);
+    }
+
+    /** Moves a node for adoption agency recovery to its adjusted insertion location. */
+    void insertAdopted(Node node, Element target) {
+        if (fosterInserts && isHtmlEl(target, InTableFoster)) {
             for (int pos = stack.size() - 1; pos >= 0; pos--) {
                 Element el = stack.get(pos);
-                if (el.elementIs("template", NamespaceHtml))
-                    return new InsertionLocation(el, null); // template contents are stored on the element
-                if (el.elementIs("table", NamespaceHtml)) {
+                if (isHtmlEl(el, "template")) {
+                    insertAdopted(node, el, null); // template contents are stored on the element
+                    return;
+                }
+                if (isHtmlEl(el, "table")) {
                     Element parent = el.parent();
-                    return parent != null ? new InsertionLocation(parent, el) :
-                        new InsertionLocation(insertionTarget(stack.get(pos - 1)), null);
+                    if (parent != null)
+                        insertAdopted(node, parent, el);
+                    else
+                        insertAdopted(node, insertionTarget(stack.get(pos - 1)), null);
+                    return;
                 }
             }
             target = stack.get(0);
         }
-        return new InsertionLocation(insertionTarget(target), null);
+        insertAdopted(node, insertionTarget(target), null);
     }
 
     /**
-     An insertion position saved before moving a node. Adoption agency recovery checks that this position remains valid
-     after detaching the node.
+     Moves a node to a resolved parent and position, subject to the DOM insertion validity rules.
+     @param node the node to remove and reinsert
+     @param parent the element to insert the node into
+     @param before a child of {@code parent} to insert the node before, or {@code null} to append the node
      */
-    static class InsertionLocation {
-        final Element parent;
-        final @Nullable Node before;
-
-        InsertionLocation(Element parent, @Nullable Node before) {
-            this.parent = parent;
-            this.before = before;
+    static void insertAdopted(Node node, Element parent, @Nullable Node before) {
+        // https://html.spec.whatwg.org/multipage/parsing.html#adoption-agency-algorithm
+        // 4.15: If lastNode's parent is non-null, then remove lastNode.
+        if (node.parent() != null) node.remove();
+        // 4.16: Insert lastNode into target before refNode only if pre-insert validity holds.
+        if (node.parent() != null || (before != null && before.parent() != parent)) return;
+        if (parent instanceof Document && parent.childrenSize() != 0) return;
+        for (Node ancestor = parent; ancestor != null; ancestor = ancestor.parent()) {
+            if (ancestor == node) return;
         }
-
-        /** Inserts a node at this position. */
-        void insert(Node node) {
-            if (before == null)
-                parent.appendChild(node);
-            else
-                before.before(node);
-        }
-
-        /** Moves an adopted node here if the position remains valid after removal. */
-        void insertAdopted(Node node) {
-            // https://html.spec.whatwg.org/multipage/parsing.html#adoption-agency-algorithm
-            // 4.15: If lastNode's parent is non-null, then remove lastNode.
-            if (node.parent() != null) node.remove();
-            // 4.16: Insert lastNode into target before refNode only if pre-insert validity holds.
-            if (node.parent() != null || (before != null && before.parent() != parent)) return;
-            if (parent instanceof Document && parent.childrenSize() != 0) return;
-            for (Node ancestor = parent; ancestor != null; ancestor = ancestor.parent()) {
-                if (ancestor == node) return;
-            }
-            insert(node);
-        }
+        if (before == null)
+            parent.appendChild(node);
+        else
+            before.before(node);
     }
 
     /** Inserts a comment into the current element, or the document when there is none. */
@@ -563,24 +594,30 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void insertCharacterNode(Token.Character characterToken, boolean replace) {
         characterToken.normalizeNulls(replace);
         if (characterToken.getData().isEmpty()) return;
-        Element el = currentElOrDoc();
-        insertCharacterToElement(characterToken, el);
+        Element target = currentElOrDoc();
+        Node node = createCharacterNode(characterToken, insertionTarget(target));
+        insertNode(node, target);
+        onNodeInserted(node);
     }
 
     /** Inserts the provided character token into the provided element. */
     void insertCharacterToElement(Token.Character characterToken, Element el) {
-        final Node node;
+        Element target = insertionTarget(el);
+        Node node = createCharacterNode(characterToken, target);
+        target.appendChild(node); // insert at the requested element, without foster parenting
+        onNodeInserted(node);
+    }
+
+    /** Creates the text or data node represented by a character token. */
+    private Node createCharacterNode(Token.Character characterToken, Element target) {
         final String data = characterToken.getData();
-        el = insertionTarget(el);
 
         if (characterToken.isCData())
-            node = new CDataNode(data);
-        else if (el.tag().is(Tag.Data))
-            node = new DataNode(data);
+            return new CDataNode(data);
+        else if (target.tag().is(Tag.Data))
+            return new DataNode(data);
         else
-            node = new TextNode(data);
-        el.appendChild(node); // doesn't use insertNode, because we don't foster these
-        onNodeInserted(node);
+            return new TextNode(data);
     }
 
     ArrayList<Element> getStack() {
@@ -642,7 +679,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     Element getFromStack(String elName) {
         for (int pos = stack.size() - 1; pos >= 0; pos--) {
             Element next = stack.get(pos);
-            if (next.elementIs(elName, NamespaceHtml)) {
+            if (isHtmlEl(next, elName)) {
                 return next;
             }
         }
@@ -682,7 +719,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     Element popStackToClose(String elName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = pop();
-            if (el.elementIs(elName, NamespaceHtml)) {
+            if (isHtmlEl(el, elName)) {
                 return el;
             }
         }
@@ -705,7 +742,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void popStackToClose(String... elNames) { // elnames is sorted, comes from Constants
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = pop();
-            if (inSorted(el.normalName(), elNames) && NamespaceHtml.equals(el.tag().namespace())) {
+            if (isHtmlEl(el, elNames)) {
                 break;
             }
         }
@@ -727,7 +764,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private void clearStackToContext(String... nodeNames) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
-            if (NamespaceHtml.equals(next.tag().namespace()) &&
+            if (isHtmlEl(next) &&
                 (StringUtil.in(next.normalName(), nodeNames) || next.nameIs("html")))
                 break;
             else
@@ -782,7 +819,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         LOOP: for (int pos = stack.size() - 1; pos >= 0; pos--) {
             boolean last = pos == 0;
             Element node = last && fragmentParsing ? contextElement : stack.get(pos);
-            String name = node != null && NamespaceHtml.equals(node.tag().namespace()) ? node.normalName() : "";
+            String name = node != null && isHtmlEl(node) ? node.normalName() : "";
 
             switch (name) {
                 case "td":
@@ -854,7 +891,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         for (int pos = stack.size() - 1; pos >= 0; pos--) {
             Element el = stack.get(pos);
             Tag tag = el.tag();
-            if (NamespaceHtml.equals(tag.namespace()) && el.normalName().equals(targetName))
+            if (isHtmlEl(el) && el.normalName().equals(targetName))
                 return true;
             if (tag.hasParserOption(boundaryOptions))
                 return false;
@@ -869,7 +906,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         for (int pos = stack.size() - 1; pos >= 0; pos--) {
             Element el = stack.get(pos);
             Tag tag = el.tag();
-            if (NamespaceHtml.equals(tag.namespace()) && inSorted(el.normalName(), Headings))
+            if (isHtmlEl(el, Headings))
                 return true;
             if (tag.hasParserOption(HtmlTagOptions.Scope))
                 return false;
@@ -921,12 +958,12 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return headElement;
     }
 
-    boolean isFosterInserts() {
-        return fosterInserts;
-    }
-
-    void setFosterInserts(boolean fosterInserts) {
-        this.fosterInserts = fosterInserts;
+    /** Processes a token using the in body insertion mode with foster parenting enabled. */
+    void processWithFosterInserts(Token token) {
+        boolean previous = fosterInserts;
+        fosterInserts = true;
+        process(token, HtmlTreeBuilderState.InBody);
+        fosterInserts = previous;
     }
 
     @Nullable FormElement getFormElement() {

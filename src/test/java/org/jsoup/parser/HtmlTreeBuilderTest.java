@@ -162,7 +162,7 @@ public class HtmlTreeBuilderTest {
         Element formatting = body.appendElement("b");
         Element block = formatting.appendElement("p");
         // adoption steps 4.15–4.16 detach the node, but do not insert an ancestor into its descendant
-        new HtmlTreeBuilder.InsertionLocation(block, null).insertAdopted(formatting);
+        HtmlTreeBuilder.insertAdopted(formatting, block, null);
         assertNull(formatting.parent());
         assertSame(formatting, block.parent());
         assertEquals("", body.html());
@@ -172,7 +172,7 @@ public class HtmlTreeBuilderTest {
         Element body = new Element("body");
         Element table = body.appendElement("table");
         // step 4.15 removes lastNode; step 4.16 rejects the now-detached reference node
-        new HtmlTreeBuilder.InsertionLocation(body, table).insertAdopted(table);
+        HtmlTreeBuilder.insertAdopted(table, body, table);
         assertNull(table.parent());
         assertEquals("", body.html());
     }
@@ -181,7 +181,7 @@ public class HtmlTreeBuilderTest {
         Document doc = Document.createShell("");
         Element formatting = doc.body().appendElement("b");
         // step 4.16 rejects insertion into a Document that already has an element child
-        new HtmlTreeBuilder.InsertionLocation(doc, null).insertAdopted(formatting);
+        HtmlTreeBuilder.insertAdopted(formatting, doc, null);
         assertNull(formatting.parent());
         assertEquals(1, doc.childrenSize());
         assertEquals("html", doc.child(0).normalName());
@@ -197,10 +197,49 @@ public class HtmlTreeBuilderTest {
             tb.push(table);
             table.remove();
             Element paragraph = new Element("p");
-            tb.setFosterInserts(true);
-            tb.insertNode(paragraph, table);
+            tb.insertInFosterParent(paragraph);
             assertSame(container, paragraph.parent());
             assertEquals(1, container.childrenSize());
+        }
+    }
+
+    @Test void fosterInsertionUsesDocumentHtmlWithoutTableOnStack() throws IOException {
+        HtmlTreeBuilder tb = new HtmlTreeBuilder();
+        Parser parser = new Parser(tb);
+        tb.initialiseParse(new StringReader(""), "", parser);
+        try {
+            tb.processStartTag("html");
+            Element html = tb.currentElement();
+            Element paragraph = new Element("p");
+            assertEquals(1, tb.stack.size());
+            assertSame(html, tb.stack.get(0));
+
+            tb.insertInFosterParent(paragraph);
+
+            assertSame(html, paragraph.parent());
+        } finally {
+            tb.closeParse();
+        }
+    }
+
+    @Test void fosterInsertionUsesFragmentContextWithoutTableOnStack() throws IOException {
+        HtmlTreeBuilder tb = new HtmlTreeBuilder();
+        Parser parser = new Parser(tb);
+        tb.initialiseParse(new StringReader(""), "", parser);
+        tb.initialiseParseFragment(new Element("div"));
+        try {
+            Element fragmentRoot = tb.currentElement();
+            Element context = tb.doc.child(0);
+            Element paragraph = new Element("p");
+            assertEquals(1, tb.stack.size());
+            assertSame(fragmentRoot, tb.stack.get(0));
+
+            tb.insertInFosterParent(paragraph);
+
+            assertSame(context, paragraph.parent());
+            assertNotSame(fragmentRoot, paragraph.parent());
+        } finally {
+            tb.closeParse();
         }
     }
 

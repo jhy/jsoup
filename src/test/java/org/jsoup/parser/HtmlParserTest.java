@@ -741,6 +741,18 @@ public class HtmlParserTest {
         // no body auto vivification
     }
 
+    @Test void retainsWhitespaceFromMixedFramesetText() {
+        // in and after a frameset, the parser inserts ASCII whitespace and ignores the remaining characters
+        Document doc = Jsoup.parse("<!doctype html><frameset> te st</frameset> te st");
+        doc.outputSettings().prettyPrint(false);
+
+        Element frameset = doc.expectFirst("frameset");
+        assertEquals("  ", frameset.wholeText());
+        TextNode afterFrameset = assertInstanceOf(TextNode.class, frameset.nextSibling());
+        assertEquals("  ", afterFrameset.getWholeText());
+        assertEquals("<!doctype html><html><head></head><frameset>  </frameset>  </html>", doc.outerHtml());
+    }
+
     @Test public void ignoresContentAfterFrameset() {
         String h = "<html><head><title>One</title></head><frameset><frame /><frame /></frameset><table></table></html>";
         Document doc = Jsoup.parse(h);
@@ -1580,6 +1592,11 @@ public class HtmlParserTest {
         assertEquals(
             "<!doctype �> <html> <head></head> <body></body> </html>",
             StringUtil.normaliseWhitespace(doc.outerHtml()));
+
+        doc = Jsoup.parse("<!doctypehtml>Hello");
+        assertEquals(
+            "<!doctype html> <html> <head></head> <body>Hello</body> </html>",
+            StringUtil.normaliseWhitespace(doc.outerHtml()));
     }
 
     @Test public void handlesManyChildren() {
@@ -2219,6 +2236,15 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse("<table><tr><p id=first><p id=second>");
         doc.outputSettings().prettyPrint(false);
         assertEquals("<p id=\"first\"></p><p id=\"second\"></p><table><tbody><tr></tr></tbody></table>", doc.body().html());
+    }
+
+    @Test void fostersCharactersBeforeTable() {
+        Document doc = Jsoup.parse("<table><tr>TEST");
+        doc.outputSettings().prettyPrint(false);
+
+        TextNode text = assertInstanceOf(TextNode.class, doc.body().childNode(0));
+        assertEquals("TEST", text.getWholeText());
+        assertEquals("TEST<table><tbody><tr></tr></tbody></table>", doc.body().html());
     }
 
     @Test void colgroupFragmentIgnoresRowStart() {

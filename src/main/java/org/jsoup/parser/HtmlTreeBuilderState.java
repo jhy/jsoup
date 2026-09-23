@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import static org.jsoup.internal.Normalizer.asciiLowerCase;
 import static org.jsoup.internal.Normalizer.equalsIgnoreAsciiCase;
 import static org.jsoup.internal.StringUtil.inSorted;
+import static org.jsoup.parser.HtmlTreeBuilder.isHtmlEl;
 import static org.jsoup.parser.HtmlTreeBuilder.isSpecial;
 import static org.jsoup.parser.HtmlTreeBuilderState.Constants.*;
 
@@ -932,7 +933,7 @@ enum HtmlTreeBuilderState {
 
                 // 4.14: Let (target, refNode) be the adjusted insertion location given (commonAncestor, null).
                 // steps 4.15–4.16 (remove lastNode, then insert if valid) are in insertAdopted
-                tb.insertionLocation(commonAncestor).insertAdopted(lastNode);
+                tb.insertAdopted(lastNode, commonAncestor);
                 // 4.17: Create a replacement for formattingElement, with furthestBlock as the intended parent.
                 Element replacement = tb.recreateElement(formatEl);
                 // 4.18: Append all children of furthestBlock to the new element.
@@ -1068,11 +1069,7 @@ enum HtmlTreeBuilderState {
 
         boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             tb.error(this);
-            boolean fosterInserts = tb.isFosterInserts();
-            tb.setFosterInserts(true);
-            tb.process(t, InBody);
-            // synthetic end tags can reenter this handler; restore the outer token's foster flag
-            tb.setFosterInserts(fosterInserts);
+            tb.processWithFosterInserts(t);
             return true;
         }
     },
@@ -1091,13 +1088,7 @@ enum HtmlTreeBuilderState {
                         if (!isWhitespace(c)) {
                             // InTable anything else section:
                             tb.error(this);
-                            if (inSorted(tb.currentElement().normalName(), InTableFoster)) {
-                                tb.setFosterInserts(true);
-                                tb.process(c, InBody);
-                                tb.setFosterInserts(false);
-                            } else {
-                                tb.process(c, InBody);
-                            }
+                            tb.processWithFosterInserts(c);
                         } else
                             tb.insertCharacterNode(c);
                     }
@@ -1516,8 +1507,8 @@ enum HtmlTreeBuilderState {
     },
     InFrameset {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
-            if (isWhitespace(t)) {
-                tb.insertCharacterNode(t.asCharacter());
+            if (t.isCharacter()) {
+                processFramesetCharacters(t.asCharacter(), tb, this);
             } else if (t.isComment()) {
                 tb.insertCommentNode(t.asComment());
             } else if (t.isDoctype()) {
@@ -1564,8 +1555,8 @@ enum HtmlTreeBuilderState {
     },
     AfterFrameset {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
-            if (isWhitespace(t)) {
-                tb.insertCharacterNode(t.asCharacter());
+            if (t.isCharacter()) {
+                processFramesetCharacters(t.asCharacter(), tb, this);
             } else if (t.isComment()) {
                 tb.insertCommentNode(t.asComment());
             } else if (t.isDoctype()) {
@@ -1694,7 +1685,7 @@ enum HtmlTreeBuilderState {
                         }
                         i--;
                         el = stack.get(i);
-                        if (el.tag().namespace().equals(Parser.NamespaceHtml)) {
+                        if (isHtmlEl(el)) {
                             return processAsHtml(t, tb);
                         }
                     }
@@ -1719,7 +1710,7 @@ enum HtmlTreeBuilderState {
             // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inforeign
             while (!tb.getStack().isEmpty()) {
                 Element current = tb.currentElement();
-                if (Parser.NamespaceHtml.equals(current.tag().namespace())
+                if (isHtmlEl(current)
                     || HtmlTreeBuilder.isMathmlTextIntegration(current)
                     || HtmlTreeBuilder.isHtmlIntegration(current))
                     break;
@@ -1752,6 +1743,22 @@ enum HtmlTreeBuilderState {
             return StringUtil.isBlank(data);
         }
         return false;
+    }
+
+    /** Applies the frameset insertion rules to each character in the token. */
+    private static void processFramesetCharacters(Token.Character character, HtmlTreeBuilder tb, HtmlTreeBuilderState state) {
+        String data = character.getData();
+        if (StringUtil.isBlank(data)) {
+            tb.insertCharacterNode(character); // keep the token and its source range; no filtering needed
+            return;
+        }
+
+        tb.error(state);
+        String whitespace = data.replaceAll("[^\\t\\n\\f\\r ]", ""); // ignore text, but keep whitespace in the same token
+        if (!whitespace.isEmpty()) {
+            character.data(whitespace); // reuse the token to keep its source range
+            tb.insertCharacterNode(character);
+        }
     }
 
     /** Inserts a text element and switches the tokenizer and tree builder into their text states. */
