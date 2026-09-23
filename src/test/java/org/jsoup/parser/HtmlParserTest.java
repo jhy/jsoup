@@ -607,6 +607,11 @@ public class HtmlParserTest {
         assertEquals("there", foos.last().text());
     }
 
+    @Test public void unknownTagsReconstructFormattingElements() {
+        Document doc = Jsoup.parse("<p><b></p><foo>");
+        assertEquals("<p><b></b></p><b><foo></foo></b>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
     @Test public void handlesUnknownInlineTags() {
         String h = "<p><cust>Test</cust></p><p><cust><cust>Test</cust></cust></p>";
         Document doc = Jsoup.parseBodyFragment(h);

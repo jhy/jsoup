@@ -253,7 +253,7 @@ public class TagSet {
             "q",
             "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "audio", "video", "canvas", "optgroup",
             "option", "legend", "datalist", "keygen", "output", "progress", "meter", "area", "param", "source", "track",
-            "summary", "command", "device", "basefont", "bgsound", "menuitem", "data", "bdi", "s", "strike", "nobr",
+            "summary", "basefont", "bgsound", "data", "bdi", "s", "strike", "nobr",
             "ins", "del", "button", "picture", "slot",
             "rb", // deprecated but still known / special handling
         };
@@ -261,8 +261,8 @@ public class TagSet {
             "title", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style"
         };
         String[] voidTags = {
-            "meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command",
-            "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track"
+            "meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col",
+            "area", "basefont", "bgsound", "param", "source", "track"
         };
         String[] preserveWhitespaceTags = {
             "pre", "listing", "plaintext", "title", "textarea", "script"
