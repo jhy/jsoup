@@ -1063,13 +1063,12 @@ public class Element extends Node implements Iterable<Element> {
      */
     @Override
     public Element empty() {
-        if (childNodes != EmptyNodeList) {
-            // Detach each of the children -> parent links:
-            int size = childNodes.size();
-            for (int i = 0; i < size; i++)
-                childNodes.get(i).parentNode = null;
-            childNodes.clear();
-        }
+        if (childNodes.isEmpty()) return this;
+        // Detach each of the children -> parent links:
+        int size = childNodes.size();
+        for (int i = 0; i < size; i++)
+            childNodes.get(i).parentNode = null;
+        childNodes.clear();
         return this;
     }
 

@@ -2557,6 +2557,27 @@ public class ElementTest {
         assertFalse(p.hasChildNodes());
     }
 
+    @Test void emptyDoesNotModifyAnEmptyNodeList() {
+        Element p = new Element("p");
+        int modCount = p.childNodes.modCount();
+
+        p.empty();
+
+        assertEquals(modCount, p.childNodes.modCount());
+        assertEquals(0, p.childNodes.modCount());
+    }
+
+    @Test void emptyDoesNotModifyAnAllocatedEmptyNodeList() {
+        Element p = new Element("p");
+        p.appendElement("span");
+        p.empty();
+        int modCount = p.childNodes.modCount();
+
+        p.empty();
+
+        assertEquals(2, p.childNodes.modCount());
+    }
+
     @Test void emptyChildrenElementsIsModifiable() {
         // using unmodifiable empty in childElementList as short circuit, but people may be modifying Elements.
         Element p = new Element("p");
