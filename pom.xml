@@ -91,7 +91,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.27</version>
+        <version>1.28</version>
         <executions>
           <execution>
             <id>check-java8-api</id>
