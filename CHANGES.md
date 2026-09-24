@@ -28,6 +28,7 @@
 * Fixed a `ConcurrentModificationException` when emptying and reading separate childless elements concurrently. [#2620](https://github.com/jhy/jsoup/pull/2620)
 * Removed the old `command`, `device`, and `menuitem` tags, as they are no longer in the HTML spec. [#2621](https://github.com/jhy/jsoup/issues/2621)
 * Double-escaped script tags in body were being closed too early. [#2627](https://github.com/jhy/jsoup/issues/2627)
+* `Node.before(Node)` and `Node.after(Node)` now leave the document unchanged when given the node itself, instead of throwing a `NullPointerException`. [#2628](https://github.com/jhy/jsoup/issues/2628)
 
 ## 1.23.2 (2026-Aug-26)
 

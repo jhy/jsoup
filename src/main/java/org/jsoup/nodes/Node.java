@@ -403,6 +403,7 @@ public abstract class Node implements Cloneable {
     public Node before(Node node) {
         Validate.notNull(node);
         Validate.notNull(parentNode);
+        if (node == this) return this;
 
         // if the incoming node is a sibling of this, remove it first so siblingIndex is correct on add
         if (node.parentNode == parentNode) node.remove();
@@ -431,6 +432,7 @@ public abstract class Node implements Cloneable {
     public Node after(Node node) {
         Validate.notNull(node);
         Validate.notNull(parentNode);
+        if (node == this) return this;
 
         // if the incoming node is a sibling of this, remove it first so siblingIndex is correct on add
         if (node.parentNode == parentNode) node.remove();

@@ -319,6 +319,19 @@ public class NodeTest {
         assertEquals("Three One Two", div.text());
     }
 
+    @Test void beforeSelfIsNoOp() {
+        // https://github.com/jhy/jsoup/issues/2628
+        Document doc = Jsoup.parse("<ul><li id=a>A</li><li id=b>B</li><li id=c>C</li></ul>");
+        Element ul = doc.expectFirst("ul");
+        Element b = doc.expectFirst("#b");
+
+        assertSame(b, b.before(b));
+        assertSame(ul, b.parent());
+        assertEquals(3, ul.childrenSize());
+        assertSame(b, ul.child(1));
+        assertEquals("A B C", ul.text());
+    }
+
     @Test public void after() {
         Document doc = Jsoup.parse("<p>One <b>two</b> three</p>");
         Element newNode = new Element(Tag.valueOf("em"), "");
@@ -348,6 +361,19 @@ public class NodeTest {
         p3.after(p1);
         p1.after(p2);
         assertEquals("Three One Two", div.text());
+    }
+
+    @Test void afterSelfIsNoOp() {
+        // https://github.com/jhy/jsoup/issues/2628
+        Document doc = Jsoup.parse("<ul><li id=a>A</li><li id=b>B</li><li id=c>C</li></ul>");
+        Element ul = doc.expectFirst("ul");
+        Element b = doc.expectFirst("#b");
+
+        assertSame(b, b.after(b));
+        assertSame(ul, b.parent());
+        assertEquals(3, ul.childrenSize());
+        assertSame(b, ul.child(1));
+        assertEquals("A B C", ul.text());
     }
 
     @Test public void unwrap() {
