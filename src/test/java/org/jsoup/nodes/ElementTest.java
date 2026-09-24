@@ -2559,11 +2559,7 @@ public class ElementTest {
 
     @Test void emptyDoesNotModifyAnEmptyNodeList() {
         Element p = new Element("p");
-        int modCount = p.childNodes.modCount();
-
         p.empty();
-
-        assertEquals(modCount, p.childNodes.modCount());
         assertEquals(0, p.childNodes.modCount());
     }
 
@@ -2571,10 +2567,7 @@ public class ElementTest {
         Element p = new Element("p");
         p.appendElement("span");
         p.empty();
-        int modCount = p.childNodes.modCount();
-
         p.empty();
-
         assertEquals(2, p.childNodes.modCount());
     }
 
