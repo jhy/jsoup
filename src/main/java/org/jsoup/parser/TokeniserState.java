@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.DocumentType;
 
@@ -362,7 +363,7 @@ enum TokeniserState {
         @Override void read(Tokeniser t, CharacterReader r) {
             if (r.matchesAsciiAlpha()) {
                 t.createTempBuffer();
-                t.dataBuffer.append(r.current());
+                t.dataBuffer.append(Normalizer.asciiLowerCase(r.current()));
                 t.emit('<');
                 t.emit(r.current());
                 t.advanceTransition(ScriptDataDoubleEscapeStart);
@@ -1838,7 +1839,7 @@ enum TokeniserState {
     private static void handleDataDoubleEscapeTag(Tokeniser t, CharacterReader r, TokeniserState primary, TokeniserState fallback) {
         if (r.matchesAsciiAlpha()) {
             String name = r.consumeLetterSequence();
-            t.dataBuffer.append(name);
+            t.dataBuffer.append(Normalizer.asciiLowerCase(name));
             t.emit(name);
             return;
         }

@@ -619,17 +619,15 @@ enum HtmlTreeBuilderState {
                     tb.pushActiveFormattingElements(el);
                     break;
                 default:
+                    if (inSorted(name, Constants.InBodyStartToHead))
+                        return tb.process(t, InHead);
                     Tag tag = tb.tagFor(startTag);
                     TokeniserState textState = tag.textState();
-                    if (textState != null) { // custom rcdata or rawtext (if we were in head, will have auto-transitioned here)
+                    if (textState != null) {
                         HandleTextState(startTag, tb, textState);
-                    } else if (!tag.isKnownTag()) { // no other special rules for custom tags
-                        tb.insertElementFor(startTag);
                     } else if (inSorted(name, Constants.InBodyStartPClosers)) {
                         if (tb.inButtonScope("p")) tb.processEndTag("p");
                         tb.insertElementFor(startTag);
-                    } else if (inSorted(name, Constants.InBodyStartToHead)) {
-                        return tb.process(t, InHead);
                     } else if (inSorted(name, Constants.InBodyStartApplets)) {
                         tb.reconstructFormattingElements();
                         tb.insertElementFor(startTag);
@@ -1772,12 +1770,12 @@ enum HtmlTreeBuilderState {
 
     // lists of tags to search through
     static final class Constants {
-        static final String[] InHeadEmpty = new String[]{"base", "basefont", "bgsound", "command", "link"};
+        static final String[] InHeadEmpty = new String[]{"base", "basefont", "bgsound", "link"};
         static final String[] InHeadRaw = new String[]{"noframes", "style"};
         static final String[] InHeadEnd = new String[]{"body", "br", "html"};
         static final String[] AfterHeadBody = new String[]{"body", "br", "html"};
         static final String[] BeforeHtmlToHead = new String[]{"body", "br", "head", "html", };
-        static final String[] InBodyStartToHead = new String[]{"base", "basefont", "bgsound", "command", "link", "meta", "noframes", "script", "style", "template", "title"};
+        static final String[] InBodyStartToHead = new String[]{"base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title"};
         static final String[] InBodyStartPClosers = new String[]{"address", "article", "aside", "blockquote", "center", "details", "dir", "div", "dl",
             "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "menu", "nav", "ol",
             "p", "section", "summary", "ul"};

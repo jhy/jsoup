@@ -142,6 +142,15 @@ public class TokeniserStateTest {
     }
 
     @Test
+    void scriptDoubleEscapeMatchesAsciiCase() {
+        assertEquals("<!--<sCrIpt>foo</script>BAR", Jsoup.parse("<script><!--<sCrIpt>foo</script>BAR").expectFirst("script").data());
+
+        Document doc = Jsoup.parse("<script><!--<script>foo</sCrIpt>--></script>BAR");
+        assertEquals("<!--<script>foo</sCrIpt>-->", doc.expectFirst("script").data());
+        assertEquals("BAR", doc.body().text());
+    }
+
+    @Test
     public void testRCDATAEndTagName() {
         for (char c : whiteSpace) {
             String body = String.format("<textarea>data</textarea%c>", c);
