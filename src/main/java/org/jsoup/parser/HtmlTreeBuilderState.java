@@ -619,15 +619,15 @@ enum HtmlTreeBuilderState {
                     tb.pushActiveFormattingElements(el);
                     break;
                 default:
+                    if (inSorted(name, Constants.InBodyStartToHead))
+                        return tb.process(t, InHead);
                     Tag tag = tb.tagFor(startTag);
                     TokeniserState textState = tag.textState();
-                    if (textState != null) { // custom rcdata or rawtext (if we were in head, will have auto-transitioned here)
+                    if (textState != null) {
                         HandleTextState(startTag, tb, textState);
                     } else if (inSorted(name, Constants.InBodyStartPClosers)) {
                         if (tb.inButtonScope("p")) tb.processEndTag("p");
                         tb.insertElementFor(startTag);
-                    } else if (inSorted(name, Constants.InBodyStartToHead)) {
-                        return tb.process(t, InHead);
                     } else if (inSorted(name, Constants.InBodyStartApplets)) {
                         tb.reconstructFormattingElements();
                         tb.insertElementFor(startTag);

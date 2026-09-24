@@ -26,6 +26,7 @@
 * Fixed several HTML parsing edge cases across malformed doctypes, misplaced text in tables, and whitespace in framesets to match the HTML spec. [#2618](https://github.com/jhy/jsoup/pull/2618)
 * If a HTML void element ends up with children (via DOM manipulation), those are no longer serialized in `html()`. [#2619](https://github.com/jhy/jsoup/issues/2619) 
 * Removed the old `command`, `device`, and `menuitem` tags, as they are no longer in the HTML spec. [#2621](https://github.com/jhy/jsoup/issues/2621)
+* Double-escaped script tags in body were being closed too early. [#2627](https://github.com/jhy/jsoup/issues/2627)
 
 ## 1.23.2 (2026-Aug-26)
 

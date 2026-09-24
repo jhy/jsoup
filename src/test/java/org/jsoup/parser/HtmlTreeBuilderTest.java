@@ -413,4 +413,18 @@ public class HtmlTreeBuilderTest {
         x2.html(inner); // <foo> will be text not el, via custom fragment context element
         assertEquals(inner, xEl.data());
     }
+
+    @Test void scriptInBodyUsesScriptData() {
+        Document unclosed = Jsoup.parse("FOO<script type=\"text/plain\">'<!-- <sCrIpt>'</script>BAR");
+        Element script = unclosed.expectFirst("script");
+        assertSame(unclosed.body(), script.parent());
+        assertEquals("'<!-- <sCrIpt>'</script>BAR", script.data());
+        assertEquals(2, unclosed.body().childNodeSize());
+
+        Document closed = Jsoup.parse("FOO<script><!--<script>-></script>--></script>QUX");
+        script = closed.expectFirst("script");
+        assertSame(closed.body(), script.parent());
+        assertEquals("<!--<script>-></script>-->", script.data());
+        assertEquals("QUX", closed.body().childNode(2).outerHtml());
+    }
 }
