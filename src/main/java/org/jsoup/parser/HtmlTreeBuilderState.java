@@ -1776,9 +1776,9 @@ enum HtmlTreeBuilderState {
         static final String[] AfterHeadBody = new String[]{"body", "br", "html"};
         static final String[] BeforeHtmlToHead = new String[]{"body", "br", "head", "html", };
         static final String[] InBodyStartToHead = new String[]{"base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title"};
-        static final String[] InBodyStartPClosers = new String[]{"address", "article", "aside", "blockquote", "center", "details", "dir", "div", "dl",
-            "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "menu", "nav", "ol",
-            "p", "section", "summary", "ul"};
+        static final String[] InBodyStartPClosers = new String[]{"address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl",
+            "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol",
+            "p", "search", "section", "summary", "ul"};
         static final String[] Headings = new String[]{"h1", "h2", "h3", "h4", "h5", "h6"};
         static final String[] InBodyStartLiBreakers = new String[]{"address", "div", "p"};
         static final String[] DdDt = new String[]{"dd", "dt"};
@@ -1786,9 +1786,9 @@ enum HtmlTreeBuilderState {
         static final String[] InBodyStartMedia = new String[]{"param", "source", "track"};
         static final String[] InBodyStartInputAttribs = new String[]{"action", "name", "prompt"};
         static final String[] InBodyStartDrop = new String[]{"caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"};
-        static final String[] InBodyEndClosers = new String[]{"address", "article", "aside", "blockquote", "button", "center", "details", "dir", "div",
-            "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "menu",
-            "nav", "ol", "pre", "section", "select", "summary", "ul"};
+        static final String[] InBodyEndClosers = new String[]{"address", "article", "aside", "blockquote", "button", "center", "details", "dialog", "dir", "div",
+            "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "main", "menu",
+            "nav", "ol", "pre", "search", "section", "select", "summary", "ul"};
         static final String[] InBodyEndOtherErrors = new String[] {"body", "dd", "dt", "html", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc", "tbody", "td", "tfoot", "th", "thead", "tr"};
         static final String[] InBodyEndAdoptionFormatters = new String[]{"a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u"};
         static final String[] InTableToBody = new String[]{"tbody", "tfoot", "thead"};

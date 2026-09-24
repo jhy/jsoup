@@ -2,6 +2,7 @@ package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.internal.StringUtil;
+import org.jsoup.nodes.Document;
 import org.jsoup.parser.HtmlTreeBuilderState.Constants;
 import org.junit.jupiter.api.Test;
 
@@ -58,6 +59,12 @@ public class HtmlTreeBuilderStateTest {
                 assertTrue(Tag.isKnownTag(tagName), String.format("Unknown tag name: %s", tagName));
             }
         }
+    }
+
+    @Test public void mainStartAndEndTagsCloseParagraphs() {
+        Document doc = Jsoup.parse("<p>foo<main><p>bar</main>baz");
+        doc.outputSettings().prettyPrint(false);
+        assertEquals("<p>foo</p><main><p>bar</p></main>baz", doc.body().html());
     }
 
 
