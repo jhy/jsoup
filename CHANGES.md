@@ -6,6 +6,7 @@
 * Added support for parsing processing instructions in HTML and XML, as `ProcessingInstruction` nodes. This supports marker nodes such as `<?marker name="country-options"?>`, matched by `<template for="country-options">` in the HTML Standard's new declarative streaming syntax. Processing instructions can be selected with `::pi` or `::pi(target)`, and their data can be read and changed through the node's attribute methods. **Change:** when using the XML parser, ordinary `<?target ...?>` nodes are now represented by `ProcessingInstruction` instead of `XmlDeclaration`; the `<?xml ...?>` declaration remains an `XmlDeclaration`. [#2613](https://github.com/jhy/jsoup/pull/2613)
 * Added `Parser.parseAttributes(String)` to parse an attribute fragment using that parser's settings.
 * `:has()` selectors with child and sibling combinators now run faster by limiting the search to the parts of the document where they can match. This particularly improves selectors such as `:has(> a)`, `:has(+ dd)`, and `:has(+ div span)`. [#2610](https://github.com/jhy/jsoup/pull/2610)
+* SVG-specific tag and attribute names are now automatically case corrected (e.g. `pathlength` becomes `pathLength`) when parsing HTML.
 
 ### Changes
 * Removed APIs previously deprecated and scheduled for removal in 1.24.1. [#2597](https://github.com/jhy/jsoup/pull/2597)

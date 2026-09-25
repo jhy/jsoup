@@ -1641,7 +1641,6 @@ enum HtmlTreeBuilderState {
                         return breakoutToHtml(t, tb);
 
                     // Any other start:
-                    // (whatwg says to fix up tag name and attribute case per a table - we will preserve original case instead)
                     String namespace = tb.currentElNs();
                     tb.insertForeignElementFor(start, namespace);
                     // (self-closing handled in insert)

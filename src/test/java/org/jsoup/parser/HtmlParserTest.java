@@ -2557,6 +2557,54 @@ public class HtmlParserTest {
             "</svg>", serialized);
     }
 
+    @Test void adjustsForeignNameCase() {
+        Document doc = Jsoup.parse("<SVG VIEWBOX=one FILTERRES=two><LINEARGRADIENT KEYPOINTS=three UNKNOWN=four />" +
+            "<FEDROPSHADOW/><SOLIDCOLOR/></SVG><MATH DEFINITIONURL=five UNKNOWN=six><LINEARGRADIENT/></MATH>");
+        Element svg = doc.expectFirst("svg");
+        assertEquals("one", svg.attr("viewBox"));
+        assertEquals("two", svg.attr("filterres"));
+        assertFalse(svg.attributes().hasKey("FILTERRES"));
+        Element gradient = svg.child(0);
+        assertEquals("linearGradient", gradient.tagName());
+        assertEquals("three", gradient.attr("keyPoints"));
+        assertEquals("four", gradient.attr("unknown"));
+        assertEquals("feDropShadow", svg.child(1).tagName());
+        assertEquals("solidcolor", svg.child(2).tagName());
+
+        Element math = doc.expectFirst("math");
+        assertEquals("five", math.attr("definitionURL"));
+        assertEquals("six", math.attr("unknown"));
+        assertEquals("lineargradient", math.child(0).tagName());
+    }
+
+    @Test void foreignNameAdjustmentsRespectCaseSettings() {
+        String html = "<SVG VIEWBOX=one><LINEARGRADIENT KEYPOINTS=two UNKNOWN=three /></SVG>";
+        Element tagPreserved = Jsoup.parse(html, Parser.htmlParser().settings(new ParseSettings(true, false)))
+            .expectFirst("svg").child(0);
+        assertEquals("LINEARGRADIENT", tagPreserved.tagName());
+        assertEquals("two", tagPreserved.attr("keyPoints"));
+        assertEquals("three", tagPreserved.attr("unknown"));
+
+        Element attrPreserved = Jsoup.parse(html, Parser.htmlParser().settings(new ParseSettings(false, true)))
+            .expectFirst("svg").child(0);
+        assertEquals("linearGradient", attrPreserved.tagName());
+        assertEquals("two", attrPreserved.attr("KEYPOINTS"));
+        assertEquals("three", attrPreserved.attr("UNKNOWN"));
+
+        Element bothPreserved = Jsoup.parse(html, Parser.htmlParser().settings(ParseSettings.preserveCase))
+            .expectFirst("svg").child(0);
+        assertEquals("LINEARGRADIENT", bothPreserved.tagName());
+        assertEquals("two", bothPreserved.attr("KEYPOINTS"));
+    }
+
+    @Test void adjustedForeignAttributesDedupe() {
+        Element svg = Jsoup.parse("<svg VIEWBOX=first viewBox=second CUSTOM=third custom=fourth></svg>")
+            .expectFirst("svg");
+        assertEquals(2, svg.attributes().size());
+        assertEquals("first", svg.attr("viewBox"));
+        assertEquals("third", svg.attr("custom"));
+    }
+
     @Test void svgForeignObjectInParagraph() {
         String html = "<p><svg><foreignObject><div><p>One</p></div></foreignObject></svg></p>";
         Document doc = Jsoup.parse(html);
@@ -2810,7 +2858,7 @@ public class HtmlParserTest {
         doc = Jsoup.parse(html, parser);
         errors = parser.getErrors();
         assertEquals(0, errors.size());
-        assertEquals("<svg /><svg><femerge /><foo /></svg>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<svg /><svg><feMerge /><foo /></svg>", TextUtil.stripNewlines(doc.body().html()));
         // check namespace of foo
         Element foo = doc.expectFirst("foo");
         assertEquals(Parser.NamespaceSvg, foo.tag().namespace());

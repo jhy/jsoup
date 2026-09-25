@@ -384,30 +384,31 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 currentToken.tokenType(), currentToken, state));
     }
 
-    Element createElementFor(Token.StartTag startTag, String namespace, boolean forcePreserveCase) {
-        // dedupe and normalize the attributes:
+    /** Creates an element after normalizing its attributes for the selected namespace. */
+    Element createElementFor(Token.StartTag startTag, String namespace) {
+        // normalize before deduping so differently cased names resolve to one attribute
         Attributes attributes = startTag.attributes;
+        boolean isHtml = NamespaceHtml.equals(namespace);
         if (attributes != null && !attributes.isEmpty()) {
-            if (!forcePreserveCase)
+            if (isHtml)
                 settings.normalizeAttributes(attributes);
+            else if (!settings.preserveAttributeCase())
+                ForeignNames.normalizeAttributes(attributes, namespace);
             int dupes = attributes.deduplicate(settings);
-            if (dupes > 0) {
+            if (dupes > 0)
                 error("Dropped duplicate attribute(s) in tag [%s]", startTag.normalName);
-            }
-            startTag.finaliseAttributeRanges(forcePreserveCase ? ParseSettings.preserveCase : settings);
+            startTag.finaliseAttributeRanges(settings);
         }
 
-        Tag tag = tagFor(startTag.name(), startTag.normalName, namespace,
-            forcePreserveCase ? ParseSettings.preserveCase : settings);
-
-        return (tag.normalName().equals("form")) ?
-            new FormElement(tag, null, attributes) :
-            new Element(tag, null, attributes);
+        Tag tag = tagFor(startTag.name(), startTag.normalName, namespace, isHtml ? settings : ParseSettings.preserveCase);
+        if (isHtml && tag.normalName().equals("form"))
+            return new FormElement(tag, null, attributes);
+        return new Element(tag, null, attributes);
     }
 
     /** Inserts an HTML element for the given tag */
     Element insertElementFor(final Token.StartTag startTag) {
-        Element el = createElementFor(startTag, NamespaceHtml, false);
+        Element el = createElementFor(startTag, NamespaceHtml);
         doInsertElement(el);
 
         // handle self-closing tags. when the spec expects an empty (void) tag, will directly hit insertEmpty, so won't generate this fake end tag.
@@ -433,11 +434,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return el;
     }
 
-    /**
-     Inserts a foreign element. Preserves the case of the tag name and of the attributes.
-     */
+    /** Inserts a foreign element with its configured SVG or MathML name adjustments. */
     Element insertForeignElementFor(final Token.StartTag startTag, String namespace) {
-        Element el = createElementFor(startTag, namespace, true);
+        if (!settings.preserveTagCase())
+            startTag.name(ForeignNames.tagName(startTag.name(), namespace));
+        Element el = createElementFor(startTag, namespace);
         doInsertElement(el);
 
         if (startTag.isSelfClosing()) { // foreign els are OK to self-close
@@ -449,7 +450,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     Element insertEmptyElementFor(Token.StartTag startTag) {
-        Element el = createElementFor(startTag, NamespaceHtml, false);
+        Element el = createElementFor(startTag, NamespaceHtml);
         doInsertElement(el);
         pop();
         return el;
@@ -457,7 +458,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     /** Inserts a form and leaves the form pointer unset while parsing template contents. */
     FormElement insertFormElement(Token.StartTag startTag, boolean onStack) {
-        FormElement el = (FormElement) createElementFor(startTag, NamespaceHtml, false);
+        FormElement el = (FormElement) createElementFor(startTag, NamespaceHtml);
         if (!isParsingTemplateContents()) setFormElement(el);
 
         doInsertElement(el);

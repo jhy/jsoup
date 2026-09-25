@@ -604,7 +604,7 @@ class PositionTest {
         assertEquals("one:5-8=10-21; id:24-26=27-28; class:30-35=37-40; attr5:41-46=46-46; ", track.toString());
     }
 
-    @Test void tracksForeignAttributesWithPreservedCase() {
+    @Test void tracksForeignAttributesWithAdjustedCase() {
         String html = "<svg viewBox=2><foreignObject Foo=bar></foreignObject></svg>";
         Document doc = Jsoup.parse(html, TrackingHtmlParser);
 
@@ -613,8 +613,22 @@ class PositionTest {
         assertFalse(svg.attributes().sourceRange("viewbox").nameRange().isTracked());
 
         Element foreignObject = doc.expectFirst("foreignObject");
-        assertEquals("1,31:30-1,34:33=1,35:34-1,38:37", foreignObject.attributes().sourceRange("Foo").toString());
-        assertFalse(foreignObject.attributes().sourceRange("foo").nameRange().isTracked());
+        assertEquals("1,31:30-1,34:33=1,35:34-1,38:37", foreignObject.attributes().sourceRange("foo").toString());
+        assertFalse(foreignObject.attributes().sourceRange("Foo").nameRange().isTracked());
+
+        Document preserved = Jsoup.parse(html, Parser.htmlParser().settings(ParseSettings.preserveCase).setTrackPosition(true));
+        assertEquals("1,31:30-1,34:33=1,35:34-1,38:37",
+            preserved.expectFirst("foreignObject").attributes().sourceRange("Foo").toString());
+    }
+
+    @Test void tracksFirstAdjustedForeignAttribute() {
+        String html = "<svg VIEWBOX=one viewBox=two></svg>";
+        Element svg = Jsoup.parse(html, TrackingHtmlParser).expectFirst("svg");
+        Range.AttributeRange viewBox = svg.attributes().sourceRange("viewBox");
+        assertEquals("one", svg.attr("viewBox"));
+        assertEquals("1,6:5-1,13:12=1,14:13-1,17:16", viewBox.toString());
+        assertEquals("VIEWBOX", html.substring(viewBox.nameRange().startPos(), viewBox.nameRange().endPos()));
+        assertEquals("one", html.substring(viewBox.valueRange().startPos(), viewBox.valueRange().endPos()));
     }
 
     @Test void trackAttributePositionInFirstElement() {
