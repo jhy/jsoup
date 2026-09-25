@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.NodeInternals;
 import org.jsoup.nodes.Range;
@@ -10,6 +11,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import static org.jsoup.internal.Normalizer.asciiLowerCase;
+import static org.jsoup.internal.Normalizer.equalsIgnoreAsciiCase;
 
 /**
  * Parse tokens for the Tokeniser.
@@ -241,7 +243,7 @@ abstract class Token {
             attrRangeCount = 0;
             for (int i = 0; i < count; i++) {
                 String stagedName = Objects.requireNonNull(attrRangeNames[i]);
-                String rangeName = settings.preserveAttributeCase() ? stagedName : asciiLowerCase(stagedName);
+                String rangeName = rangeKey(stagedName, attributes, settings);
                 Range.AttributeRange existing = attributes.sourceRange(rangeName);
                 if (!existing.isTracked()) {
                     int rangeIndex = attrRangeIndex(i);
@@ -257,6 +259,21 @@ abstract class Token {
                 }
                 attrRangeNames[i] = null;
             }
+        }
+
+        /**
+         Finds the retained attribute key after name normalization and deduplication.
+         */
+        private static String rangeKey(String stagedName, Attributes attributes, ParseSettings settings) {
+            if (settings.preserveAttributeCase()) return stagedName;
+            String key = asciiLowerCase(stagedName);
+            if (attributes.hasKey(key)) return key;
+            // SVG and MathML may have restored casing; use the surviving attribute's key
+            for (Attribute attribute : attributes) {
+                if (equalsIgnoreAsciiCase(attribute.getKey(), key))
+                    return attribute.getKey();
+            }
+            return key;
         }
 
         /**
