@@ -2156,7 +2156,7 @@ public class HtmlParserTest {
             Document doc = Jsoup.parse("<" + tag + ">Text</" + tag + ">");
             Elements els = doc.getElementsByTag(tag);
             assertEquals(0, els.size());
-            assertEquals("&lt;" + tag + "&gt;Text<!--/" + tag + "-->", doc.body().html());
+            assertEquals("&lt;" + tag + "&gt;Text<!--" + tag + "-->", doc.body().html());
         }
     }
 

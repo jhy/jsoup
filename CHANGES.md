@@ -31,6 +31,7 @@
 * Double-escaped script tags in body were being closed too early. [#2627](https://github.com/jhy/jsoup/issues/2627)
 * `Node.before(Node)` and `Node.after(Node)` now leave the document unchanged when given the node itself, instead of throwing a `NullPointerException`. [#2628](https://github.com/jhy/jsoup/issues/2628)
 * Fixed HTML parse of `<dialog>`, `<main>`, and `<search>` so their start and end tags close open paragraphs correctly. [#2629](https://github.com/jhy/jsoup/issues/2629)
+* Updated the parse of malformed end tags such as `</ COMMENT >` to match the spec (`<!-- COMMENT -->`). [#2631](https://github.com/jhy/jsoup/issues/2631)
 
 ## 1.23.2 (2026-Aug-26)
 

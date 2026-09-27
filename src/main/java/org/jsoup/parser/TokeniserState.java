@@ -140,7 +140,6 @@ enum TokeniserState {
             } else {
                 t.error(this);
                 t.createBogusCommentPending();
-                t.commentPending.append('/'); // push the / back on that got us here
                 t.transition(BogusComment);
             }
         }

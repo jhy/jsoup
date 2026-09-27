@@ -84,6 +84,19 @@ public class TokeniserStateTest {
     }
 
     @Test
+    public void malformedEndTagCommentsExcludeSolidus() {
+        String[][] cases = {
+            {"</#", "#"},
+            {"</ COMMENT >", " COMMENT "},
+            {"</ COM--MENT >", " COM--MENT "}
+        };
+        for (String[] testCase : cases) {
+            Document doc = Jsoup.parse(testCase[0]);
+            assertEquals(testCase[1], ((Comment) doc.childNode(0)).getData(), testCase[0]);
+        }
+    }
+
+    @Test
     public void testRcdataLessthanSign() {
         String body;
         Document doc;
