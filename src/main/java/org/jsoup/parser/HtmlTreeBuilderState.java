@@ -344,8 +344,7 @@ enum HtmlTreeBuilderState {
                 case "body":
                     tb.error(this);
                     stack = tb.getStack();
-                    if (stack.size() < 2 || (stack.size() > 2 && !stack.get(1).nameIs("body")) || tb.onStack("template")) {
-                        // only in fragment case
+                    if (stack.size() < 2 || !stack.get(1).nameIs("body") || tb.onStack("template")) {
                         return false; // ignore
                     } else {
                         tb.framesetOk(false);
@@ -357,8 +356,7 @@ enum HtmlTreeBuilderState {
                 case "frameset":
                     tb.error(this);
                     stack = tb.getStack();
-                    if (stack.size() < 2|| (stack.size() > 2 && !stack.get(1).nameIs("body"))) {
-                        // only in fragment case
+                    if (stack.size() < 2 || !stack.get(1).nameIs("body")) {
                         return false; // ignore
                     } else if (!tb.framesetOk()) {
                         return false; // ignore frameset

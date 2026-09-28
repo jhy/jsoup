@@ -746,6 +746,19 @@ public class HtmlParserTest {
         // no body auto vivification
     }
 
+    @Test void ignoresFramesetAfterSpanInFragments() {
+        for (String context : new String[]{"body", "div"}) {
+            List<Node> nodes = Parser.htmlParser().parseFragmentInput("<span><frameset>", new Element(context), "");
+            assertEquals(1, nodes.size(), context);
+            assertEquals("span", (nodes.get(0)).normalName(), context);
+        }
+
+        List<Node> htmlNodes = Parser.htmlParser().parseFragmentInput("<frameset><span>", new Element("html"), "");
+        assertEquals(2, htmlNodes.size());
+        assertEquals("head", (htmlNodes.get(0)).normalName());
+        assertEquals("frameset", (htmlNodes.get(1)).normalName());
+    }
+
     @Test void retainsWhitespaceFromMixedFramesetText() {
         // in and after a frameset, the parser inserts ASCII whitespace and ignores the remaining characters
         Document doc = Jsoup.parse("<!doctype html><frameset> te st</frameset> te st");
