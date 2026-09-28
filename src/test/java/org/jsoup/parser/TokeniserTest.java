@@ -1,10 +1,12 @@
 package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 
+import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
@@ -12,6 +14,68 @@ import static org.jsoup.parser.CharacterReader.BufferSize;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TokeniserTest {
+    @Test void accumulatesWhitespaceReferencesBeforeText() {
+        String input = " &#32;&Tab;&amp;X";
+        HtmlTreeBuilder tree = new HtmlTreeBuilder();
+        tree.initialiseParse(new StringReader(input), "", Parser.htmlParser());
+        try {
+            Token whitespace = tree.tokeniser.readWhitespace();
+            assertEquals("  \t", whitespace.asCharacter().getData());
+            assertEquals(0, whitespace.startPos());
+            assertEquals(input.indexOf("&amp;"), whitespace.endPos());
+            whitespace.reset();
+
+            Token text = tree.tokeniser.readWhitespace();
+            assertEquals("&X", text.asCharacter().getData());
+            assertEquals(input.indexOf("&amp;"), text.startPos());
+            assertEquals(input.length(), text.endPos());
+            text.reset();
+            assertTrue(tree.tokeniser.read().isEOF());
+        } finally {
+            tree.closeParse();
+        }
+    }
+
+    @Test void whitespaceReferencePeekCrossesBufferBoundary() {
+        String spaces = StringUtil.padding(BufferSize - 2, BufferSize - 2);
+        String input = spaces + "&#32;&amp;X";
+        HtmlTreeBuilder tree = new HtmlTreeBuilder();
+        tree.initialiseParse(new StringReader(input), "", Parser.htmlParser());
+        try {
+            Token whitespace = tree.tokeniser.readWhitespace();
+            assertEquals(spaces + " ", whitespace.asCharacter().getData());
+            assertEquals(input.indexOf("&amp;"), whitespace.endPos());
+            whitespace.reset();
+
+            Token text = tree.tokeniser.readWhitespace();
+            assertEquals("&X", text.asCharacter().getData());
+            assertEquals(input.indexOf("&amp;"), text.startPos());
+            text.reset();
+        } finally {
+            tree.closeParse();
+        }
+    }
+
+    @Test void whitespaceReferencePeekDoesNotDuplicateErrors() {
+        for (String ref : new String[]{"&bogus;", "&notit;", "&#x80;", "&#;"}) {
+            Parser normal = Parser.htmlParser();
+            normal.setTrackErrors(10);
+            normal.parseInput("<!doctype html><body>" + ref + "X", "");
+            long expected = normal.getErrors().stream()
+                .filter(error -> error.getErrorMessage().startsWith("Invalid character reference"))
+                .count();
+            assertTrue(expected > 0, ref);
+
+            Parser parser = Parser.htmlParser();
+            parser.setTrackErrors(10);
+            parser.parseInput("<!doctype html><head> " + ref + "X", "");
+            long errors = parser.getErrors().stream()
+                .filter(error -> error.getErrorMessage().startsWith("Invalid character reference"))
+                .count();
+            assertEquals(expected, errors, ref);
+        }
+    }
+
     @Test
     public void bufferUpInAttributeVal() {
         // https://github.com/jhy/jsoup/issues/967

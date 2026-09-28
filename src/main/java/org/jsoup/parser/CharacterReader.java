@@ -482,6 +482,15 @@ public final class CharacterReader implements AutoCloseable {
         return consumeRange(start, pos);
     }
 
+    /** Read HTML whitespace. */
+    String consumeWhitespace() {
+        bufferUp();
+        int start = bufPos;
+        int pos = start;
+        while (pos < bufLength && StringUtil.isWhitespace(charBuf[pos])) pos++;
+        return consumeRange(start, pos);
+    }
+
     String consumeData() {
         // consumes until &, <, null
         return consumeToAny('&', '<', TokeniserState.nullChar);

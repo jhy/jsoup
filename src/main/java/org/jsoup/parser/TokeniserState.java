@@ -35,6 +35,27 @@ enum TokeniserState {
             }
         }
     },
+    DataWhitespace {
+        // jsoup special: split batched Data characters where the spec handles them one by one.
+        // After </script>, InHead puts the space in " -->" in the head and "-->" in the body.
+        @Override
+        void read(Tokeniser t, CharacterReader r) {
+            char c = r.current();
+            if (StringUtil.isWhitespace(c)) {
+                t.emit(r.consumeWhitespace());
+            } else if (c == '&' && t.isWhitespaceReference()) {
+                // whitespace references eg &#32; will extend this run; others will unread until after the whitespace token
+                r.advance();
+                int[] ref = t.consumeCharacterReference(null, false, false);
+                assert ref != null;
+                t.emit(ref);
+            } else {
+                t.transition(Data);
+                // splitting before a null could leave a stray space before a later frameset
+                if (c != nullChar && t.charPending.data.hasData()) t.emitCharacters();
+            }
+        }
+    },
     CharacterReferenceInData {
         // from & in data
         @Override void read(Tokeniser t, CharacterReader r) {
@@ -696,7 +717,7 @@ enum TokeniserState {
                     t.transition(AfterAttributeValue_quoted);
                     break;
                 case '&':
-                    int[] ref = t.consumeCharacterReference('"', true);
+                    int[] ref = t.consumeCharacterReference('"', true, false);
                     if (ref != null)
                         t.tagPending.appendAttributeValue(ref, pos, r.pos());
                     else
@@ -731,7 +752,7 @@ enum TokeniserState {
                     t.transition(AfterAttributeValue_quoted);
                     break;
                 case '&':
-                    int[] ref = t.consumeCharacterReference('\'', true);
+                    int[] ref = t.consumeCharacterReference('\'', true, false);
                     if (ref != null)
                         t.tagPending.appendAttributeValue(ref, pos, r.pos());
                     else
@@ -768,7 +789,7 @@ enum TokeniserState {
                     t.transition(BeforeAttributeName);
                     break;
                 case '&':
-                    int[] ref = t.consumeCharacterReference('>', true);
+                    int[] ref = t.consumeCharacterReference('>', true, false);
                     if (ref != null)
                         t.tagPending.appendAttributeValue(ref, pos, r.pos());
                     else
@@ -1816,7 +1837,7 @@ enum TokeniserState {
     }
 
     private static void readCharRef(Tokeniser t, TokeniserState advance) {
-        int[] c = t.consumeCharacterReference(null, false);
+        int[] c = t.consumeCharacterReference(null, false, false);
         if (c == null)
             t.emit('&');
         else

@@ -7,6 +7,7 @@
 * Added `Parser.parseAttributes(String)` to parse an attribute fragment using that parser's settings.
 * `:has()` selectors with child and sibling combinators now run faster by limiting the search to the parts of the document where they can match. This particularly improves selectors such as `:has(> a)`, `:has(+ dd)`, and `:has(+ div span)`. [#2610](https://github.com/jhy/jsoup/pull/2610)
 * SVG-specific tag and attribute names are now automatically case corrected (e.g. `pathlength` becomes `pathLength`) when parsing HTML.
+* Improved the HTML parse across document boundaries by handling whitespace separately from subsequent text. This better preserves the input's whitespace through parse and serialize round-trips.
 
 ### Changes
 * Removed APIs previously deprecated and scheduled for removal in 1.24.1. [#2597](https://github.com/jhy/jsoup/pull/2597)

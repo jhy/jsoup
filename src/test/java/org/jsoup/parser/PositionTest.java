@@ -3,8 +3,8 @@ package org.jsoup.parser;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.integration.TestServer;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
@@ -892,5 +892,63 @@ class PositionTest {
             .append(range.valueRange().endPos());
 
         sb.append("; ");
+    }
+
+    @Test void scriptEndSplitsTextRanges() {
+        String html = "<!DOCTYPE html><script> <!-- </script> --> </script> EOF";
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+        int splitAt = html.indexOf("</script>") + "</script>".length();
+        TextNode headSpace = (TextNode) doc.head().childNode(1);
+        TextNode bodyText = (TextNode) doc.body().childNode(0);
+
+        assertEquals(" ", headSpace.getWholeText());
+        assertEquals(splitAt, headSpace.sourceRange().startPos());
+        assertEquals(splitAt + 1, headSpace.sourceRange().endPos());
+        assertEquals("--> ", bodyText.getWholeText());
+        assertEquals(splitAt + 1, bodyText.sourceRange().startPos());
+    }
+
+    @Test void referencesStartNextTextRange() {
+        String[] refs = {"&amp;", "&bogus;", "&NotEqualTilde;", "&#x1f600;", "&#0;"};
+        String[] values = {"&", "&bogus;", "\u2242\u0338", "\ud83d\ude00", "\ufffd"};
+        for (int i = 0; i < refs.length; i++) {
+            String html = "<!doctype html><head> &#32;&Tab;" + refs[i] + "X";
+            Document doc = Jsoup.parse(html, TrackingHtmlParser);
+            TextNode space = (TextNode) doc.head().childNode(0);
+            TextNode text = (TextNode) doc.body().childNode(0);
+            int boundary = html.indexOf(refs[i]);
+
+            assertEquals("  \t", space.getWholeText(), html);
+            assertEquals(html.indexOf(" &#32;"), space.sourceRange().startPos(), html);
+            assertEquals(boundary, space.sourceRange().endPos(), html);
+            assertEquals(values[i] + "X", text.getWholeText(), html);
+            assertEquals(boundary, text.sourceRange().startPos(), html);
+            assertEquals(html.length(), text.sourceRange().endPos(), html);
+        }
+    }
+
+    @Test void whitespaceRangeCrossesBuffers() {
+        String spaces = StringUtil.padding(CharacterReader.BufferSize * 3, CharacterReader.BufferSize * 3);
+        String html = "<!doctype html><head>" + spaces + "&amp;X";
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+        TextNode space = (TextNode) doc.head().childNode(0);
+        TextNode text = (TextNode) doc.body().childNode(0);
+
+        assertEquals(spaces, space.getWholeText());
+        assertEquals(html.indexOf("&amp;"), space.sourceRange().endPos());
+        assertEquals("&X", text.getWholeText());
+        assertEquals(space.sourceRange().endPos(), text.sourceRange().startPos());
+        assertEquals(html.length(), text.sourceRange().endPos());
+    }
+
+    @Test void bodyTextKeepsOneRange() {
+        String html = "<body>alpha beta</body>";
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+        TextNode text = (TextNode) doc.body().childNode(0);
+
+        assertEquals(1, doc.body().childNodeSize());
+        assertEquals("alpha beta", text.getWholeText());
+        assertEquals(html.indexOf("alpha"), text.sourceRange().startPos());
+        assertEquals(html.indexOf("</body>"), text.sourceRange().endPos());
     }
 }

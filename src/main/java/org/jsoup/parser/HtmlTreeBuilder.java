@@ -148,6 +148,30 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return (contextElement != null ? contextElement : doc).childNodes();
     }
 
+    /**
+     Reads a token, separating leading whitespace in insertion modes that handle it separately.
+     */
+    @Override
+    Token readToken() {
+        // the spec processes Data characters individually; return leading whitespace first
+        // so that the current insertion mode handles it, before following text takes another route
+        if (noscriptState == null && useCurrentOrForeignInsert(tokeniser.charPending)) {
+            switch (state) {
+                case Initial:
+                case BeforeHtml:
+                case BeforeHead:
+                case InHead:
+                case AfterHead:
+                case InColumnGroup:
+                case AfterBody:
+                case AfterAfterBody:
+                case AfterAfterFrameset:
+                    return tokeniser.readWhitespace();
+            }
+        }
+        return tokeniser.read();
+    }
+
     @Override
     protected boolean process(Token token) {
         if (noscriptState != null && state != HtmlTreeBuilderState.Text)

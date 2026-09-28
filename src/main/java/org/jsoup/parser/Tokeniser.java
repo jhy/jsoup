@@ -38,9 +38,7 @@ final class Tokeniser {
     private final TreeBuilder treeBuilder; // current tree state for contextual tokenisation
 
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
-    @Nullable private Token emitPending = null; // the token we are about to emit on next read
-    private boolean isEmitPending = false;
-    private boolean ignoreLeadingLf; // skip one newline immediately after pre, listing, or textarea
+    @Nullable private Token emitPending = null; // queued token; buffered characters may return first
     boolean attributeFragment; // parsing attributes without a surrounding tag
     final TokenData dataBuffer = new TokenData(); // buffers data looking for </script>
 
@@ -67,32 +65,77 @@ final class Tokeniser {
         this.errors = treeBuilder.parser.getErrors();
     }
 
+    /** Returns the next token for tree construction. */
     Token read() {
-        if (ignoreLeadingLf && !isEmitPending && (reader.matches('\r') || reader.matches('\n'))) {
-            if (reader.consume() == '\r') reader.matchConsume("\n");
-            charStartPos = reader.pos();
-            ignoreLeadingLf = false;
-        }
-        while (!isEmitPending) {
+        while (emitPending == null) {
             state.read(this, reader);
         }
 
-        // if emit is pending, a non-character token was found: return any chars in buffer, and leave token for next read:
-        if (charPending.data.hasData()) {
-            return charPending;
-        } else {
-            isEmitPending = false;
-            assert emitPending != null;
-            return emitPending;
+        Token token = emitPending;
+        // markup or EOF waits behind buffered text; DataWhitespace queues charPending itself
+        // to return leading whitespace before reading the following text
+        if (token != charPending && charPending.data.hasData()) return charPending;
+
+        emitPending = null;
+        return token;
+    }
+
+    /** Reads the next token, separating leading whitespace when in the Data state. */
+    Token readWhitespace() {
+        // The HTML Standard emits Data characters individually, so an insertion mode can handle
+        // whitespace before later text changes the mode. DataWhitespace preserves that boundary
+        // while batching characters.
+        if (state == TokeniserState.Data && emitPending == null)
+            transition(TokeniserState.DataWhitespace);
+        return read();
+    }
+
+    /** Ignores the first newline after a pre, listing, or textarea start tag, if present. */
+    void ignoreLeadingLf() {
+        // input CR and CRLF represent LF here; a reference must decode to LF, not CR
+        if (reader.matches('\r') || reader.matches('\n')) {
+            if (reader.consume() == '\r') reader.matchConsume("\n");
+        } else if (reader.matches('&')) {
+            int[] ref = peekCharacterReference();
+            if (ref == null || ref.length != 1 || ref[0] != '\n') return;
+            reader.advance();
+            consumeCharacterReference(null, false, false); // report any reference error once
+        } else return;
+        charStartPos = reader.pos();
+    }
+
+    /** Peeks at a character reference beginning at the current ampersand. */
+    private int @Nullable [] peekCharacterReference() {
+        reader.mark();
+        try {
+            reader.advance(); // skip '&' for the reference parser
+            return consumeCharacterReference(null, false, true);
+        } finally {
+            reader.rewindToMark();
         }
     }
 
+    /** Tests whether the reference at the current '&' decodes to HTML whitespace without consuming it. */
+    boolean isWhitespaceReference() {
+        int[] ref = peekCharacterReference();
+        if (ref == null) return false; // literal '&'
+        for (int cp : ref) {
+            if (!StringUtil.isWhitespace(cp)) return false;
+        }
+        return true;
+    }
+
+    /** Marks the buffered characters as the next token to return. */
+    void emitCharacters() {
+        emitPending = charPending;
+        // the next token starts where the buffered whitespace ended
+        charStartPos = charPending.endPos();
+    }
+
     void emit(Token token) {
-        ignoreLeadingLf = false;
-        Validate.isFalse(isEmitPending);
+        Validate.isTrue(emitPending == null);
 
         emitPending = token;
-        isEmitPending = true;
         token.startPos(markupStartPos);
         token.endPos(reader.pos());
         charStartPos = reader.pos(); // update char start when we complete a token emit
@@ -110,16 +153,7 @@ final class Tokeniser {
     /** Buffers text for the next character token. */
     void emit(final String str) {
         if (str.isEmpty()) return;
-        if (ignoreLeadingLf) {
-            ignoreLeadingLf = false;
-            // literal newlines were consumed before tokenization; this LF came from a reference
-            if (str.equals("\n")) {
-                charStartPos = reader.pos();
-                return;
-            }
-        }
-        // buffer strings up until last string token found, to emit only one token for a run of character refs etc.
-        // does not set isEmitPending; read checks that
+        // gather adjacent text and references in one character token until a state queues the next token
         // todo move "<" to '<'...
         // bulk literal runs stop at null; decoded references are handled separately
         charPending.data.append(str);
@@ -129,7 +163,6 @@ final class Tokeniser {
 
     /** Buffers a character for the next character token. */
     void emit(char c) {
-        ignoreLeadingLf = false;
         charPending.data.append(c);
         if (c == TokeniserState.nullChar) charPending.hasNull = true;
         charPending.startPos(charStartPos);
@@ -140,11 +173,6 @@ final class Tokeniser {
     void emit(int[] codepoints) {
         if (codepoints[0] == 0) charPending.hasNull = true; // only numeric references can produce null
         emit(new String(codepoints, 0, codepoints.length));
-    }
-
-    /** Skips the next character if it is a newline. */
-    void ignoreLeadingLf() {
-        ignoreLeadingLf = true;
     }
 
     void transition(TokeniserState newState) {
@@ -163,8 +191,14 @@ final class Tokeniser {
     final private int[] codepointHolder = new int[1]; // holder to not have to keep creating arrays
     final private int[] multipointHolder = new int[2];
 
-    /** Tries to consume a character reference, and returns: null if nothing, int[1], or int[2]. */
-    int @Nullable [] consumeCharacterReference(@Nullable Character additionalAllowedCharacter, boolean inAttribute) {
+    /**
+     * Parses a character reference after its leading {@code &} has been consumed.
+     * @param additionalAllowedCharacter a character that prevents a reference when it follows {@code &}, or null for none
+     * @param inAttribute whether to apply attribute value rules for named references without a semicolon
+     * @param peek whether the caller has marked {@code &} for lookahead; suppresses errors and leaves the mark for the caller to rewind
+     * @return one or two decoded code points, or null if no reference matched; the array is reused by later calls
+     */
+    int @Nullable [] consumeCharacterReference(@Nullable Character additionalAllowedCharacter, boolean inAttribute, boolean peek) {
         if (reader.isEmpty())
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())
@@ -173,19 +207,19 @@ final class Tokeniser {
             return null;
 
         final int[] codeRef = codepointHolder;
-        reader.mark();
+        if (!peek) reader.mark(); // the probe is already marked at '&'
         if (reader.matchConsume("#")) { // numbered
             boolean isHexMode = reader.matchConsumeIgnoreCase("X");
             String numRef = isHexMode ? reader.consumeHexSequence() : reader.consumeDigitSequence();
             if (numRef.isEmpty()) { // didn't match anything
-                characterReferenceError("numeric reference with no numerals");
-                reader.rewindToMark();
+                characterReferenceError(!peek, "numeric reference with no numerals");
+                rewindReference(peek);
                 return null;
             }
 
-            reader.unmark();
+            if (!peek) reader.unmark();
             if (!reader.matchConsume(";"))
-                characterReferenceError("missing semicolon on [&#%s]", numRef); // missing semi
+                characterReferenceError(!peek, "missing semicolon on [&#%s]", numRef); // missing semi
             int charval = -1;
             try {
                 int base = isHexMode ? 16 : 10;
@@ -196,12 +230,12 @@ final class Tokeniser {
             // todo: check for extra illegal unicode points as parse errors - described https://html.spec.whatwg.org/multipage/syntax.html#character-references and in Infra
             // The numeric character reference forms described above are allowed to reference any code point excluding U+000D CR, noncharacters, and controls other than ASCII whitespace.
             if (charval == -1 || charval > 0x10FFFF || (charval == 0 && syntax == Document.OutputSettings.Syntax.html)) {
-                characterReferenceError("character [%s] outside of valid range", charval);
+                characterReferenceError(!peek, "character [%s] outside of valid range", charval);
                 codeRef[0] = replacementChar;
             } else {
                 // fix illegal unicode characters to match browser behavior
                 if (charval >= win1252ExtensionsStart && charval < win1252ExtensionsStart + win1252Extensions.length) {
-                    characterReferenceError("character [%s] is not a valid unicode code point", charval);
+                    characterReferenceError(!peek, "character [%s] is not a valid unicode code point", charval);
                     charval = win1252Extensions[charval - win1252ExtensionsStart];
                 }
 
@@ -218,9 +252,9 @@ final class Tokeniser {
             boolean found = (Entities.isBaseNamedEntity(nameRef) || (Entities.isNamedEntity(nameRef) && looksLegit));
 
             if (!found) {
-                reader.rewindToMark();
+                rewindReference(peek);
                 if (looksLegit) // named with semicolon
-                    characterReferenceError("invalid named reference [%s]", nameRef);
+                    characterReferenceError(!peek, "invalid named reference [%s]", nameRef);
                 if (inAttribute) return null;
                 // check if there's a base prefix match; consume and use that if so
                 String prefix = Entities.findPrefix(nameRef);
@@ -230,13 +264,13 @@ final class Tokeniser {
             }
             if (inAttribute && (reader.matchesAsciiAlpha() || reader.matchesDigit() || reader.matches('='))) {
                 // in attributes, don't consume semicolonless references followed by ASCII alphanumeric or equals
-                reader.rewindToMark();
+                rewindReference(peek);
                 return null;
             }
 
-            reader.unmark();
+            if (!peek) reader.unmark();
             if (!reader.matchConsume(";"))
-                characterReferenceError("missing semicolon on [&%s]", nameRef); // missing semi
+                characterReferenceError(!peek, "missing semicolon on [&%s]", nameRef); // missing semi
             int numChars = Entities.codepointsForName(nameRef, multipointHolder);
             if (numChars == 1) {
                 codeRef[0] = multipointHolder[0];
@@ -247,6 +281,15 @@ final class Tokeniser {
                 Validate.fail("Unexpected characters returned for " + nameRef);
                 return multipointHolder;
             }
+        }
+    }
+
+    /** Rewinds a failed reference, retaining the probe's mark when needed. */
+    private void rewindReference(boolean peek) {
+        reader.rewindToMark();
+        if (peek) {
+            reader.mark();
+            reader.advance(); // resume after '&', leaving its position marked for the probe
         }
     }
 
@@ -351,8 +394,9 @@ final class Tokeniser {
             state == TokeniserState.AfterAttributeValue_quoted;
     }
 
-    private void characterReferenceError(String message, Object... args) {
-        if (errors.canAddError())
+    /** Records a reference error when requested. */
+    private void characterReferenceError(boolean reportError, String message, Object... args) {
+        if (reportError && errors.canAddError())
             errors.add(new ParseError(reader, String.format("Invalid character reference: " + message, args)));
     }
 
@@ -377,7 +421,7 @@ final class Tokeniser {
             builder.append(reader.consumeTo('&'));
             if (reader.matches('&')) {
                 reader.consume();
-                int[] c = consumeCharacterReference(null, inAttribute);
+                int[] c = consumeCharacterReference(null, inAttribute, false);
                 if (c == null || c.length==0)
                     builder.append('&');
                 else {

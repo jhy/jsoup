@@ -36,6 +36,23 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class StreamParserTest {
 
+    @Test void streamedElementsContainAccumulatedReferenceText() throws IOException {
+        String html = "<!doctype html><head> &#32;&amp;X<p>One</p>";
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            Element head = parser.selectFirst("head");
+            assertNotNull(head);
+            assertEquals(1, head.childNodeSize());
+            assertEquals("  ", head.wholeText());
+            head.remove();
+
+            Element body = parser.selectNext("body");
+            assertNotNull(body);
+            assertEquals(2, body.childNodeSize());
+            assertEquals("&X", body.textNodes().get(0).getWholeText());
+            assertEquals("One", body.expectFirst("p").text());
+        }
+    }
+
     @Test
     void canStream() {
         String html = "<title>Test</title></head><div id=1>D1</div><div id=2>D2<p id=3><span>P One</p><p id=4>P Two</p></div><div id=5>D3<p id=6>P three</p>";

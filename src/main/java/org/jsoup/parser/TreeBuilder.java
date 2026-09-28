@@ -148,11 +148,16 @@ abstract class TreeBuilder {
             pop();
             return true;
         }
-        final Token token = tokeniser.read();
+        final Token token = readToken();
         currentToken = token;
         process(token);
         token.reset();
         return true;
+    }
+
+    /** Returns the next token from the tokenizer. */
+    Token readToken() {
+        return tokeniser.read();
     }
 
     /** Return if we have reached EOF and completed the document tree. */

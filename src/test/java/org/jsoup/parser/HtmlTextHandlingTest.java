@@ -32,6 +32,17 @@ class HtmlTextHandlingTest {
         assertEquals("�\nA", Jsoup.parse("<pre>&#0;\nA</pre>").expectFirst("pre").wholeText());
     }
 
+    @Test void initialLfReferenceReportsErrorOnce() {
+        for (String tag : new String[]{"pre", "listing", "textarea"}) {
+            Parser parser = Parser.htmlParser().setTrackErrors(10);
+            Document doc = parser.parseInput("<" + tag + ">&#10X</" + tag + ">", "");
+            assertEquals("X", doc.expectFirst(tag).wholeText());
+            assertEquals(1, parser.getErrors().stream()
+                .filter(error -> error.getErrorMessage().startsWith("Invalid character reference"))
+                .count());
+        }
+    }
+
     @Test void roundTripsLeadingNewlines() {
         for (String tag : new String[]{"pre", "listing", "textarea"}) {
             for (String text : new String[]{"\nA", "\rA", "\r\nA", "\r\rA", "\n\nA"}) {
