@@ -1082,6 +1082,14 @@ public class HtmlParserTest {
         assertEquals("<b>1</b>\n<p><b>2</b>3</p>", doc.body().html());
     }
 
+    @Test void sourceTrackingHonorsFormattingElementLimit() {
+        String input = "<p><b><b><b><b><p>x";
+        Document doc = Parser.htmlParser().setTrackPosition(true).parseInput(input, "");
+
+        assertEquals("<b><b><b><b></b></b></b></b>", doc.body().child(0).html());
+        assertEquals("<b><b><b>x</b></b></b>", doc.body().child(1).html());
+    }
+
     @ParameterizedTest(name = "fragment={0}")
     @ValueSource(booleans = {false, true})
     void preservesAdoptionBookmarkAfterRemovingFormattingElement(boolean fragment) {

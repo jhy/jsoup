@@ -374,9 +374,57 @@ public class AttributesTest {
         assertEquals(two, three);
         assertEquals(three, three);
         assertEquals(three, three.clone());
+        assertEquals(one.hashCode(), three.hashCode());
         assertEquals(four, four);
         assertEquals(four, four.clone());
         assertNotEquals(one, four);
+    }
+
+    @Test void equalsIgnoresInternalData() {
+        Element first = Parser.htmlParser().setTrackPosition(true)
+            .parseInput("<b id=one></b><b id=one></b>", "").select("b").first();
+        Element second = Parser.htmlParser().setTrackPosition(true)
+            .parseInput("<p><b id=one></b>", "").expectFirst("b");
+        assertNotNull(first);
+        assertNotEquals(first.sourceRange(), second.sourceRange());
+
+        Attributes one = first.attributes();
+        Attributes two = second.attributes();
+        two.userData("owner", "second");
+        assertEquals(one, two);
+        assertEquals(one.hashCode(), two.hashCode());
+        Attributes untracked = Parser.htmlParser().parseInput("<b id=one>", "").expectFirst("b").attributes();
+        assertEquals(one, untracked);
+        assertEquals(one.hashCode(), untracked.hashCode());
+
+        two.put("id", "two");
+        assertNotEquals(one, two);
+    }
+
+    @Test void hashCodeIgnoresAttributeOrder() {
+        Attributes one = new Attributes().add("a", "b").add("c", "d");
+        Attributes reordered = new Attributes().add("c", "d").add("a", "b");
+
+        assertEquals(one, reordered);
+        assertEquals(one.hashCode(), reordered.hashCode());
+    }
+
+    @Test void hashCodeDistinguishesSwappedNameAndValue() {
+        Attributes one = new Attributes().add("a", "b");
+        Attributes swapped = new Attributes().add("b", "a");
+
+        assertNotEquals(one.hashCode(), swapped.hashCode());
+    }
+
+    @Test void equalsCountsDuplicateAttributes() {
+        Attributes one = new Attributes().add("a", "1").add("a", "1").add("b", "2");
+        Attributes two = new Attributes().add("b", "2").add("a", "1").add("a", "1");
+        Attributes three = new Attributes().add("b", "2").add("a", "1").add("a", "2");
+
+        assertEquals(one, two);
+        assertEquals(one.hashCode(), two.hashCode());
+        assertNotEquals(one, three);
+        assertNotEquals(three, one);
     }
 
     @Test void cloneAttributes() {

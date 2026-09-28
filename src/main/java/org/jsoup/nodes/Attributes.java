@@ -596,10 +596,11 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     * Checks if these attributes are equal to another set of attributes, by comparing the two sets. Note that the order
-     * of the attributes does not impact this equality (as per the Map interface equals()).
-     * @param o attributes to compare with
-     * @return if both sets of attributes have the same content
+     Checks if these attributes have the same names and values as another set, ignoring attribute order. Internal
+     attributes, such as source ranges and user data, are excluded.
+
+     @param o attributes to compare with
+     @return if both sets of attributes have the same content
      */
     @Override
     public boolean equals(@Nullable Object o) {
@@ -607,26 +608,38 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         if (o == null || getClass() != o.getClass()) return false;
 
         Attributes that = (Attributes) o;
-        if (size != that.size) return false;
+        if (size() != that.size()) return false;
         for (int i = 0; i < size; i++) {
             String key = keys[i];
             assert key != null;
-            int thatI = that.indexOfKey(key);
-            if (thatI == NotFound || !Objects.equals(vals[i], that.vals[thatI]))
-                return false;
+            if (isInternalKey(key)) continue;
+
+            int here = 0, there = 0;
+            for (int j = 0; j < size; j++) {
+                if (key.equals(keys[j]) && Objects.equals(vals[i], vals[j])) here++;
+            }
+            for (int j = 0; j < that.size; j++) {
+                if (key.equals(that.keys[j]) && Objects.equals(vals[i], that.vals[j])) there++;
+            }
+            if (here != there) return false;
         }
         return true;
     }
 
     /**
-     * Calculates the hashcode of these attributes, by iterating all attributes and summing their hashcodes.
-     * @return calculated hashcode
+     Calculates an order-independent hash code from attribute names and values, excluding internal attributes.
+
+     @return calculated hashcode
      */
     @Override
     public int hashCode() {
-        int result = size;
-        result = 31 * result + Arrays.hashCode(keys);
-        result = 31 * result + Arrays.hashCode(vals);
+        int result = 0;
+        for (int i = 0; i < size; i++) {
+            String key = keys[i];
+            assert key != null;
+            if (!isInternalKey(key))
+                result += 31 * key.hashCode() + Objects.hashCode(vals[i]);
+        }
         return result;
     }
 
