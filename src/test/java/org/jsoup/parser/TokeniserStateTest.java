@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -259,6 +260,71 @@ public class TokeniserStateTest {
                 }
             }
         }
+    }
+
+    @Test void doctypeEofReportsOnce() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        parser.parseInput("<!DOCTYPE", "");
+
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals("Unexpectedly reached end of file (EOF) in input state [Doctype]", errors.get(0).getErrorMessage());
+    }
+
+    @Test void emptyDoctypeReportsMissingName() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = parser.parseInput("<!DOCTYPE>Hi", "");
+
+        assertEquals("Hi", doc.body().text());
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals("Unexpected character '>' in input state [BeforeDoctypeName]", errors.get(0).getErrorMessage());
+    }
+
+    @Test void whitespaceBeforeSystemIdentifierDoesNotError() {
+        for (char quote : new char[] {'"', '\''}) {
+            Parser parser = Parser.htmlParser().setTrackErrors(10);
+            Document doc = parser.parseInput(String.format("<!DOCTYPE html PUBLIC 'pub' %csys%c>Hi", quote, quote), "");
+
+            assertEquals("Hi", doc.body().text());
+            assertEquals(0, parser.getErrors().size());
+        }
+    }
+
+    @Test void missingQuoteAfterSystemKeywordEntersBogusDoctype() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = parser.parseInput("<!DOCTYPE html SYSTEMfoo>Hi", "");
+
+        assertEquals("Hi", doc.body().text());
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals("Unexpected character 'f' in input state [AfterDoctypeSystemKeyword]", errors.get(0).getErrorMessage());
+    }
+
+    @ParameterizedTest @MethodSource
+    void bogusDoctypeReportsNull(String input, String state, Document.QuirksMode expectedMode) {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = parser.parseInput(String.format("%s\u0000>Hi", input), "");
+
+        assertEquals("Hi", doc.body().text());
+        assertEquals(expectedMode, doc.quirksMode());
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(2, errors.size(), input);
+        assertEquals(String.format("Unexpected character '\u0000' in input state [%s]", state), errors.get(0).getErrorMessage());
+        assertEquals("Unexpected character '\u0000' in input state [BogusDoctype]", errors.get(1).getErrorMessage());
+    }
+
+    private static Arguments[] bogusDoctypeReportsNull() {
+        return new Arguments[] {
+            arguments("<!DOCTYPE html ", "AfterDoctypeName", Document.QuirksMode.quirks),
+            arguments("<!DOCTYPE html PUBLIC", "AfterDoctypePublicKeyword", Document.QuirksMode.quirks),
+            arguments("<!DOCTYPE html PUBLIC ", "BeforeDoctypePublicIdentifier", Document.QuirksMode.quirks),
+            arguments("<!DOCTYPE html PUBLIC 'pub'", "AfterDoctypePublicIdentifier", Document.QuirksMode.quirks),
+            arguments("<!DOCTYPE html PUBLIC 'pub' ", "BetweenDoctypePublicAndSystemIdentifiers", Document.QuirksMode.quirks),
+            arguments("<!DOCTYPE html SYSTEM", "AfterDoctypeSystemKeyword", Document.QuirksMode.quirks),
+            arguments("<!DOCTYPE html SYSTEM ", "BeforeDoctypeSystemIdentifier", Document.QuirksMode.quirks),
+            arguments("<!DOCTYPE html SYSTEM 'sys'", "AfterDoctypeSystemIdentifier", Document.QuirksMode.noQuirks)
+        };
     }
 
     @Test

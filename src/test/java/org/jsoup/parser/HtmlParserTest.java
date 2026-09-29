@@ -1625,6 +1625,14 @@ public class HtmlParserTest {
             StringUtil.normaliseWhitespace(doc.outerHtml()));
     }
 
+    @Test public void closesEmptyDoctypeBeforeBodyText() {
+        Document doc = Jsoup.parse("<!DOCTYPE >Hello");
+        doc.outputSettings().prettyPrint(false);
+
+        assertEquals("<!doctype><html><head></head><body>Hello</body></html>", doc.outerHtml());
+        assertEquals(Document.QuirksMode.quirks, doc.quirksMode());
+    }
+
     @Test public void handlesManyChildren() {
         // Arrange
         StringBuilder longBody = new StringBuilder(500000);

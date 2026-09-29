@@ -1198,20 +1198,20 @@ enum TokeniserState {
     },
     Doctype {
         @Override void read(Tokeniser t, CharacterReader r) {
-            char c = r.consume();
+            char c = r.current();
             switch (c) {
                 case '\t':
                 case '\n':
                 case '\r':
                 case '\f':
                 case ' ':
-                    t.transition(BeforeDoctypeName);
+                    t.advanceTransition(BeforeDoctypeName);
+                    break;
+                case '>':
+                    t.transition(BeforeDoctypeName); // reconsume to report the missing name
                     break;
                 case eof:
                     t.eofError(this);
-                    // note: fall through to > case
-                case '>': // catch invalid <!DOCTYPE>
-                    t.error(this);
                     t.createDoctypePending();
                     t.doctypePending.forceQuirks = true;
                     t.emitDoctypePending();
@@ -1219,7 +1219,6 @@ enum TokeniserState {
                     break;
                 default:
                     t.error(this);
-                    r.unconsume(); // spec reconsumes this char in before doctype name
                     t.transition(BeforeDoctypeName);
             }
         }
@@ -1231,19 +1230,28 @@ enum TokeniserState {
                 t.transition(DoctypeName);
                 return;
             }
-            char c = r.consume();
+            char c = r.current();
             switch (c) {
                 case '\t':
                 case '\n':
                 case '\r':
                 case '\f':
                 case ' ':
+                    r.advance();
                     break; // ignore whitespace
                 case nullChar:
                     t.error(this);
                     t.createDoctypePending();
                     t.doctypePending.name.append(replacementChar);
-                    t.transition(DoctypeName);
+                    t.advanceTransition(DoctypeName);
+                    break;
+                case '>':
+                    t.error(this);
+                    t.createDoctypePending();
+                    t.doctypePending.forceQuirks = true;
+                    r.advance();
+                    t.emitDoctypePending();
+                    t.transition(Data);
                     break;
                 case eof:
                     t.eofError(this);
@@ -1255,7 +1263,7 @@ enum TokeniserState {
                 default:
                     t.createDoctypePending();
                     t.doctypePending.name.append(c);
-                    t.transition(DoctypeName);
+                    t.advanceTransition(DoctypeName);
             }
         }
     },
@@ -1321,7 +1329,7 @@ enum TokeniserState {
             } else {
                 t.error(this);
                 t.doctypePending.forceQuirks = true;
-                t.advanceTransition(BogusDoctype);
+                t.transition(BogusDoctype);
             }
 
         }
@@ -1360,6 +1368,7 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
+                    r.unconsume();
                     t.error(this);
                     t.doctypePending.forceQuirks = true;
                     t.transition(BogusDoctype);
@@ -1397,6 +1406,7 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
+                    r.unconsume();
                     t.error(this);
                     t.doctypePending.forceQuirks = true;
                     t.transition(BogusDoctype);
@@ -1491,6 +1501,7 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
+                    r.unconsume();
                     t.error(this);
                     t.doctypePending.forceQuirks = true;
                     t.transition(BogusDoctype);
@@ -1517,17 +1528,16 @@ enum TokeniserState {
                         t.transition(DoctypeInternalSubset);
                         break;
                     }
+                    r.unconsume();
                     t.error(this);
                     t.doctypePending.forceQuirks = true;
                     t.transition(BogusDoctype);
                     break;
                 case '"':
-                    t.error(this);
                     // system id empty
                     t.transition(DoctypeSystemIdentifier_doubleQuoted);
                     break;
                 case '\'':
-                    t.error(this);
                     // system id empty
                     t.transition(DoctypeSystemIdentifier_singleQuoted);
                     break;
@@ -1538,6 +1548,7 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
+                    r.unconsume();
                     t.error(this);
                     t.doctypePending.forceQuirks = true;
                     t.transition(BogusDoctype);
@@ -1578,9 +1589,10 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
+                    r.unconsume();
                     t.error(this);
                     t.doctypePending.forceQuirks = true;
-                    t.emitDoctypePending();
+                    t.transition(BogusDoctype);
             }
         }
     },
@@ -1599,7 +1611,7 @@ enum TokeniserState {
                     t.transition(DoctypeSystemIdentifier_doubleQuoted);
                     break;
                 case '\'':
-                    // set public id to empty string
+                    // set system id to empty string
                     t.transition(DoctypeSystemIdentifier_singleQuoted);
                     break;
                 case '>':
@@ -1615,6 +1627,7 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
+                    r.unconsume();
                     t.error(this);
                     t.doctypePending.forceQuirks = true;
                     t.transition(BogusDoctype);
@@ -1697,6 +1710,7 @@ enum TokeniserState {
                         t.transition(DoctypeInternalSubset);
                         break;
                     }
+                    r.unconsume();
                     t.error(this);
                     t.transition(BogusDoctype);
                     // NOT force quirks
@@ -1708,6 +1722,7 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
+                    r.unconsume();
                     t.error(this);
                     t.transition(BogusDoctype);
                     // NOT force quirks
@@ -1716,19 +1731,23 @@ enum TokeniserState {
     },
     BogusDoctype {
         @Override void read(Tokeniser t, CharacterReader r) {
-            char c = r.consume();
+            char c = r.current();
             switch (c) {
                 case '>':
+                    r.advance();
                     t.emitDoctypePending();
                     t.transition(Data);
+                    break;
+                case nullChar:
+                    t.error(this);
+                    r.advance();
                     break;
                 case eof:
                     t.emitDoctypePending();
                     t.transition(Data);
                     break;
                 default:
-                    // ignore char
-                    break;
+                    r.advance(); // ignore char
             }
         }
     },

@@ -76,6 +76,7 @@
 * Redirects with malformed single-slash HTTP locations now use standard URL resolution to align with browsers. [#2580](https://github.com/jhy/jsoup/pull/2580)
 * Template fragment parsing now handles unmatched `</template>` tags without throwing a `ValidationException`. [#2581](https://github.com/jhy/jsoup/pull/2581)
 * Improved source tracking for adopted formatting elements and malformed markup ending at EOF. [#2582](https://github.com/jhy/jsoup/pull/2582)
+* Updated how the tokeniser handles malformed doctypes, to remove duplicative tokens and error messages.
 
 ## 1.23.1 (2026-Jul-30)
 
