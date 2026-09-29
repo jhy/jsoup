@@ -18,6 +18,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class TokeniserStateTest {
@@ -95,6 +96,74 @@ public class TokeniserStateTest {
             Document doc = Jsoup.parse(testCase[0]);
             assertEquals(testCase[1], ((Comment) doc.childNode(0)).getData(), testCase[0]);
         }
+    }
+
+    @Test void commentStartDashRetainsHyphen() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = parser.parseInput("<!---x", "");
+
+        assertEquals("-x", ((Comment) doc.childNode(0)).getData());
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals(6, errors.get(0).getPosition());
+        assertEquals("Unexpectedly reached end of file (EOF) in input state [Comment]", errors.get(0).getErrorMessage());
+    }
+
+    @Test void commentStartDashReconsumesNull() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = parser.parseInput("<!---\u0000x-->", "");
+
+        assertEquals("-\uFFFDx", ((Comment) doc.childNode(0)).getData());
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals(5, errors.get(0).getPosition());
+        assertEquals("Unexpected character '\u0000' in input state [Comment]", errors.get(0).getErrorMessage());
+    }
+
+    @Test void commentStartDashReportsAbruptCloseAtGreaterThan() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = parser.parseInput("<!--->", "");
+
+        assertEquals("", ((Comment) doc.childNode(0)).getData());
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals(5, errors.get(0).getPosition());
+        assertEquals("Unexpected character '>' in input state [CommentStartDash]", errors.get(0).getErrorMessage());
+    }
+
+    @Test void eofBeforeAttributeValueDropsTag() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = parser.parseInput("<a x=", "");
+
+        assertEquals(0, doc.select("a").size());
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals(5, errors.get(0).getPosition());
+        assertEquals("Unexpectedly reached end of file (EOF) in input state [BeforeAttributeValue]", errors.get(0).getErrorMessage());
+    }
+
+    @Test void missingAttributeValueReportsGreaterThan() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = parser.parseInput("<a x=></a>", "");
+
+        Element a = doc.expectFirst("a");
+        assertTrue(a.hasAttr("x"));
+        assertEquals("", a.attr("x"));
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals(5, errors.get(0).getPosition());
+        assertEquals("Unexpected character '>' in input state [BeforeAttributeValue]", errors.get(0).getErrorMessage());
+    }
+
+    @Test void scriptLessThanAtEofReportsOnlyUnclosedScript() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = parser.parseInput("<script><", "");
+
+        assertEquals("<", doc.expectFirst("script").data());
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals(9, errors.get(0).getPosition());
+        assertEquals("Unexpected EOF token [] when in state [Text]", errors.get(0).getErrorMessage());
     }
 
     @Test
@@ -384,9 +453,6 @@ public class TokeniserStateTest {
         Document doc = Jsoup.parse("<p name=foo&lt;bar>");
         Element p = doc.selectFirst("p");
         assertEquals("foo<bar", p.attr("name"));
-
-        doc = Jsoup.parse("<p foo=");
-        assertEquals("<p foo></p>", doc.body().html());
     }
 
     @ParameterizedTest
