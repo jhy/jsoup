@@ -36,6 +36,7 @@
 * Updated the parse of malformed end tags such as `</ COMMENT >` to match the spec (`<!-- COMMENT -->`). [#2631](https://github.com/jhy/jsoup/issues/2631)
 * Source position tracking no longer impacts the adoption algo when repeated HTML formatting tags are reconstructed after a paragraph closes. [#2633](https://github.com/jhy/jsoup/issues/2633)
 * Fixed fragment parsing to ignore `<body>` and `<frameset>` start tags when the second open element is not `body`, matching the HTML spec. [#2634](https://github.com/jhy/jsoup/issues/2634)
+* Corrected HTML tokenisation of malformed comments such as `<!---x` and incomplete start tags such as `<p id=`, and improved their error reporting.
 
 ## 1.23.2 (2026-Aug-26)
 

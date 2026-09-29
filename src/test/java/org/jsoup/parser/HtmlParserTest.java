@@ -140,11 +140,15 @@ public class HtmlParserTest {
         assertEquals("", doc.text());
     }
 
-    @Test public void dropsUnterminatedAttribute() {
-        // jsoup used to parse this to <p id="foo">, but whatwg, webkit will drop.
-        String h1 = "<p id=\"foo";
-        Document doc = Jsoup.parse(h1);
-        assertEquals("", doc.text());
+    @ParameterizedTest @ValueSource(strings = {"<p id=", "<p id=foo", "<p id=\"foo", "<p id=\"foo\""})
+    public void dropsUnterminatedAttribute(String html) {
+        assertEquals(0, Jsoup.parse(html).body().childNodeSize());
+    }
+
+    @Test public void keepsTagWithMissingAttributeValue() {
+        Element p = Jsoup.parse("<p id=>").expectFirst("p");
+        assertTrue(p.hasAttr("id"));
+        assertEquals("", p.attr("id"));
     }
 
     @Test public void parsesUnterminatedTextarea() {

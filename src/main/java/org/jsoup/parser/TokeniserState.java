@@ -243,22 +243,18 @@ enum TokeniserState {
     },
     ScriptDataLessthanSign {
         @Override void read(Tokeniser t, CharacterReader r) {
-            switch (r.consume()) {
+            switch (r.current()) {
                 case '/':
+                    r.advance();
                     t.transition(ScriptDataEndTagOpen);
                     break;
                 case '!':
+                    r.advance();
                     t.emit("<!");
                     t.transition(ScriptDataEscapeStart);
                     break;
-                case eof:
-                    t.emit('<');
-                    t.eofError(this);
-                    t.transition(Data);
-                    break;
                 default:
                     t.emit('<');
-                    r.unconsume();
                     t.transition(ScriptData);
             }
         }
@@ -651,52 +647,40 @@ enum TokeniserState {
     },
     BeforeAttributeValue {
         @Override void read(Tokeniser t, CharacterReader r) {
-            char c = r.consume();
+            char c = r.current();
             switch (c) {
                 case '\t':
                 case '\n':
                 case '\r':
                 case '\f':
                 case ' ':
+                    r.advance();
                     // ignore
                     break;
                 case '"':
+                    r.advance();
                     t.transition(AttributeValue_doubleQuoted);
                     break;
-                case '&':
-                    r.unconsume();
-                    t.transition(AttributeValue_unquoted);
-                    break;
                 case '\'':
+                    r.advance();
                     t.transition(AttributeValue_singleQuoted);
-                    break;
-                case nullChar:
-                    t.error(this);
-                    t.tagPending.appendAttributeValue(replacementChar, r.pos()-1, r.pos());
-                    t.transition(AttributeValue_unquoted);
                     break;
                 case eof:
                     t.eofError(this);
-                    if (t.attributeFragment)
-                        t.emit(new Token.EOF());
-                    else
+                    // follow html spec at eof and drop; but in xml we keep:
+                    if (t.syntax == xml && !t.attributeFragment)
                         t.emitTagPending();
+                    else
+                        t.emit(new Token.EOF());
                     t.transition(Data);
                     break;
                 case '>':
                     t.error(this);
+                    r.advance();
                     t.emitTagPending();
                     t.transition(Data);
                     break;
-                case '<':
-                case '=':
-                case '`':
-                    t.error(this);
-                    t.tagPending.appendAttributeValue(c, r.pos()-1, r.pos());
-                    t.transition(AttributeValue_unquoted);
-                    break;
                 default:
-                    r.unconsume();
                     t.transition(AttributeValue_unquoted);
             }
         }
@@ -1067,18 +1051,15 @@ enum TokeniserState {
     },
     CommentStartDash {
         @Override void read(Tokeniser t, CharacterReader r) {
-            char c = r.consume();
+            char c = r.current();
             switch (c) {
                 case '-':
+                    r.advance();
                     t.transition(CommentEnd);
-                    break;
-                case nullChar:
-                    t.error(this);
-                    t.commentPending.append(replacementChar);
-                    t.transition(Comment);
                     break;
                 case '>':
                     t.error(this);
+                    r.advance();
                     t.emitCommentPending();
                     t.transition(Data);
                     break;
@@ -1088,7 +1069,7 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
-                    t.commentPending.append(c);
+                    t.commentPending.append('-');
                     t.transition(Comment);
             }
         }
