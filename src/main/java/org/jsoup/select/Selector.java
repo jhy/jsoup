@@ -312,14 +312,14 @@ public class Selector {
         Validate.notEmpty(query);
         Validate.notNull(roots);
         QueryMode mode = QueryMode.current();
-        Elements result = select(QueryParser.parse(query, mode == QueryMode.Web), roots);
+        Elements result = selectAcrossRoots(QueryParser.parse(query, mode == QueryMode.Web), roots);
         if (mode == QueryMode.Check && roots instanceof Collection)
-            QueryCompat.check(query, result, evaluator -> select(evaluator, roots));
+            QueryCompat.check(query, result, evaluator -> selectAcrossRoots(evaluator, roots));
         return result;
     }
 
     /** Reuses a compiled query across roots without changing its captured mode or result order. */
-    static Elements select(Evaluator evaluator, Iterable<Element> roots) {
+    static Elements selectAcrossRoots(Evaluator evaluator, Iterable<Element> roots) {
         Elements elements = new Elements();
         HashSet<Element> seenElements = new HashSet<>(); // dedupe elements by identity, as .equals is ==
 

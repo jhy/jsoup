@@ -178,7 +178,7 @@ public class QueryParser implements AutoCloseable {
     }
 
     /** A parsed selector group that can be compiled or rendered in source order. */
-    private final class SelectorGroup {
+    private static final class SelectorGroup {
         final List<ComplexSelector> selectors;
 
         /** Creates a group from its selectors in source order. */

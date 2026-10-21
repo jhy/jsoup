@@ -3,7 +3,7 @@
 ## 1.24.1 (Pending)
 
 ### Improvements
-* Added an opt-in **Web query mode** to align jsoup's selectors with CSS and Web DOM standards. See the [selector migration guide](https://jsoup.org/news/selector-migration?utm_source=jsoup&amp;utm_medium=changelog) for more details.
+* Added an opt-in **Web query mode** to align jsoup's selectors with CSS and Web DOM standards. See the [selector migration guide](https://jsoup.org/news/selector-migration?utm_source=jsoup&amp;utm_medium=changelog) for more details. [#2642](https://github.com/jhy/jsoup/pull/2642)
   * Enable with `System.setProperty("jsoup.queryMode", "web")`. Queries return matching descendants only, can match surrounding ancestors, and follow HTML/XML case rules. Attribute `~=` matches whitespace separated tokens instead of regexes.
   * You can `jsoup.queryMode=check` to help prepare for Web mode. Selectors return legacy results and print differences to `stderr`, with caller locations to help identify affected code.
   * Added `:scope`, `:matchesAttr(name, regex)`, `|=` attribute matching, and attribute case flags `i` and `s`. These work in both legacy and Web modes, so queries can be updated before switching modes.

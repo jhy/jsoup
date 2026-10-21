@@ -547,7 +547,7 @@ public class Elements extends Nodes<Element> {
             }
             return filtered;
         }
-        Elements out = Selector.select(evaluator, this);
+        Elements out = Selector.selectAcrossRoots(evaluator, this);
         return Selector.filterOut(this, out);
     }
     
