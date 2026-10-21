@@ -2,7 +2,10 @@ package org.jsoup.select;
 
 import org.jsoup.helper.Regex;
 import org.jsoup.internal.StringUtil;
+import org.jsoup.internal.QueryMode;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.CssMatching.AttributeOperator;
+import org.jsoup.internal.CssMatching.CaseSensitivity;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
@@ -11,11 +14,11 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.ProcessingInstruction;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.TokenQueue;
-import org.jsoup.select.HasEvaluator.Scope;
 import org.jsoup.select.HasEvaluator.Traversal;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -30,18 +33,20 @@ import static org.jsoup.select.StructuralEvaluator.ImmediateParentRun;
  */
 public class QueryParser implements AutoCloseable {
     private final static char[] Combinators = {'>', '+', '~'}; // ' ' is also a combinator, but found implicitly
-    private final static String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
+    private static final AttributeOperator[] AttributeOperators = AttributeOperator.values();
     private final static char[] SequenceEnders = {',', ')'};
 
     private final TokenQueue tq;
     private final String query;
+    private final boolean web;
     private boolean inNodeContext; // ::comment:contains should act on node value, vs element text
 
     /**
      * Create a new QueryParser.
      * @param query CSS query
      */
-    private QueryParser(String query) {
+    private QueryParser(String query, boolean web) {
+        this.web = web;
         Validate.notEmpty(query);
         query = trimAsciiWhitespace(query);
         this.query = query;
@@ -58,11 +63,17 @@ public class QueryParser implements AutoCloseable {
      @throws Selector.SelectorParseException if the CSS query is invalid
      */
     public static Evaluator parse(String query) {
-        try (QueryParser p = new QueryParser(query)) {
-            return p.parse();
-        } catch (IllegalArgumentException e) {
-            throw new Selector.SelectorParseException(e.getMessage());
-        }
+        return parse(query, QueryMode.current() == QueryMode.Web);
+    }
+
+    static Evaluator parse(String query, boolean web) {
+        return Evaluator.withMode(web, () -> {
+            try (QueryParser p = new QueryParser(query, web)) {
+                return p.parse();
+            } catch (IllegalArgumentException e) {
+                throw new Selector.SelectorParseException(e.getMessage());
+            }
+        });
     }
 
     /**
@@ -97,66 +108,72 @@ public class QueryParser implements AutoCloseable {
         return new SelectorGroup(selectors);
     }
 
-    /** Parses a selector into an evaluator and records its top-level combinators. */
     private ComplexSelector parseSelector() {
-        // Selector ::= [ Combinator ] SimpleSequence ( Combinator SimpleSequence )*
         tq.consumeWhitespace();
-
-        Evaluator left;
-        char leading = 0;
-        int combinators = 0;
-        boolean continuesToSibling = false; // the continuation has a + or ~ combinator, so it may leave the first sibling tree
-        boolean relative = tq.matchesAny(Combinators);
-        if (relative) {
-            // e.g. query is "> div"; left side is the root element
-            left = new StructuralEvaluator.Root();
-        } else {
-            left = parseSimpleSequence();
-        }
-        Evaluator rightmost = left; // keep each right side before it is folded into left
-
+        char leading = tq.matchesAny(Combinators) ? tq.consume() : 0;
+        List<Evaluator> compounds = Collections.singletonList(parseSimpleSequence());
+        List<Character> combinators = Collections.emptyList();
         while (true) {
-            char combinator = 0;
-            if (tq.consumeWhitespace())
-                combinator = ' ';            // maybe descendant?
-            if (tq.matchesAny(Combinators)) // no, explicit
-                combinator = tq.consume();
-            else if (tq.matchesAny(SequenceEnders)) // , - space after simple like "foo , bar"; ) - close of :has()
-                break;
-
-            if (combinator != 0) {
-                if (relative && combinators == 0) leading = combinator;
-                else if (relative && (combinator == '+' || combinator == '~')) continuesToSibling = true;
-                Evaluator right = parseSimpleSequence();
-                rightmost = right;
-                left = combinator(left, combinator, right);
-                combinators++;
-            } else {
-                break;
+            char combinator = tq.consumeWhitespace() ? ' ' : 0;
+            if (tq.matchesAny(Combinators)) combinator = tq.consume();
+            else if (tq.matchesAny(SequenceEnders) || tq.isEmpty()) break;
+            if (combinator == 0) break;
+            if (combinators.isEmpty()) {
+                compounds = new ArrayList<>(compounds);
+                combinators = new ArrayList<>();
             }
+            combinators.add(combinator);
+            compounds.add(parseSimpleSequence());
         }
-        return new ComplexSelector(left, rightmost, leading, combinators, continuesToSibling);
+        return new ComplexSelector(compounds, combinators, leading);
     }
 
-    /**
-     A complex selector compiled with details of its top-level combinators.
-     Nested selectors are parsed separately and do not affect these details.
-     */
-    private static final class ComplexSelector {
-        final Evaluator evaluator; // complete compiled selector
-        final Evaluator rightmost; // evaluator for the final simple sequence
+    /** Stores selector parts and relationships, such as {@code div.product > a}, for ordinary queries and {@code :has()}. */
+    private final class ComplexSelector {
+        final List<Evaluator> compounds;
+        final List<Character> combinators;
         final char leadingCombinator;
-        final int combinatorCount;
-        final boolean continuesToSibling; // the continuation has a top-level + or ~ combinator
 
-        /** Creates a complex selector from its evaluator and top-level combinator details. */
-        ComplexSelector(Evaluator evaluator, Evaluator rightmost, char leadingCombinator, int combinatorCount,
-                        boolean continuesToSibling) {
-            this.evaluator = evaluator;
-            this.rightmost = rightmost;
-            this.leadingCombinator = leadingCombinator;
-            this.combinatorCount = combinatorCount;
-            this.continuesToSibling = continuesToSibling;
+        ComplexSelector(List<Evaluator> compounds, List<Character> combinators, char leading) {
+            this.compounds = compounds;
+            this.combinators = combinators;
+            leadingCombinator = leading;
+        }
+
+        Evaluator evaluator() {
+            return evaluator(leadingCombinator != 0 ? new StructuralEvaluator.QueryRoot() : null);
+        }
+
+        Evaluator relativeEvaluator() {
+            if (compounds.size() == 1 && (leadingCombinator != '+' || !wantsNodes()))
+                return compounds.get(0); // traversal already guarantees the leading relationship
+            return evaluator(leadingCombinator != 0 || web ? new StructuralEvaluator.RelativeAnchor() : null);
+        }
+
+        private Evaluator evaluator(@Nullable Evaluator anchor) {
+            Evaluator left = compounds.get(0);
+            if (anchor != null) left = combinator(anchor, leadingCombinator == 0 ? ' ' : leadingCombinator, left);
+            for (int i = 0; i < combinators.size(); i++)
+                left = combinator(left, combinators.get(i), compounds.get(i + 1));
+            return left;
+        }
+
+        boolean wantsNodes() {
+            for (Evaluator compound : compounds) if (compound.wantsNodes()) return true;
+            return false;
+        }
+
+        @Override public String toString() {
+            StringBuilder out = new StringBuilder();
+            if (leadingCombinator != 0) out.append(leadingCombinator).append(' ');
+            out.append(compounds.get(0));
+            for (int i = 0; i < combinators.size(); i++) {
+                char relation = combinators.get(i);
+                out.append(' ');
+                if (relation != ' ') out.append(relation).append(' ');
+                out.append(compounds.get(i + 1));
+            }
+            return out.toString();
         }
     }
 
@@ -171,7 +188,7 @@ public class QueryParser implements AutoCloseable {
 
         /** Build the selectors into a single evaluator. */
         Evaluator evaluator() {
-            Evaluator first = selectors.get(0).evaluator;
+            Evaluator first = selectors.get(0).evaluator();
             if (selectors.size() == 1)
                 return first;
 
@@ -182,17 +199,12 @@ public class QueryParser implements AutoCloseable {
             else
                 evaluators.add(first);
             for (int i = 1; i < selectors.size(); i++)
-                evaluators.add(selectors.get(i).evaluator);
+                evaluators.add(selectors.get(i).evaluator());
             return new CombiningEvaluator.Or(evaluators);
         }
 
         @Override public String toString() {
-            StringBuilder out = new StringBuilder();
-            for (ComplexSelector selector : selectors) {
-                if (out.length() > 0) out.append(", ");
-                out.append(selector.evaluator);
-            }
-            return out.toString();
+            return StringUtil.join(selectors, ", ");
         }
     }
 
@@ -259,15 +271,6 @@ public class QueryParser implements AutoCloseable {
         else                            return null;
     }
 
-    /** Adds an alternative to an existing Or, or creates one for the first pair. */
-    private static Evaluator addAlternative(Evaluator left, Evaluator right) {
-        if (left instanceof CombiningEvaluator.Or) {
-            ((CombiningEvaluator.Or) left).add(right);
-            return left;
-        }
-        return new CombiningEvaluator.Or(left, right);
-    }
-
     private Evaluator parsePseudoSelector() {
         final String pseudo = tq.consumeCssIdentifier();
         switch (pseudo) {
@@ -293,6 +296,8 @@ public class QueryParser implements AutoCloseable {
                 return containsData();
             case "matches":
                 return matches(false);
+            case "matchesAttr":
+                return matchesAttr();
             case "matchesOwn":
                 return matches(true);
             case "matchesWholeText":
@@ -325,6 +330,8 @@ public class QueryParser implements AutoCloseable {
                 return new Evaluator.IsEmpty();
             case "blank":
                 return new NodeEvaluator.BlankValue();
+            case "scope":
+                return new Evaluator.IsScope();
             case "root":
                 return new Evaluator.IsRoot();
             case "matchText": {
@@ -405,10 +412,7 @@ public class QueryParser implements AutoCloseable {
     }
 
     private Evaluator byTag() {
-        // todo - these aren't dealing perfectly with case sensitivity. For case sensitive parsers, we should also make
-        // the tag in the selector case-sensitive (and also attribute names). But for now, normalize (lower-case) for
-        // consistency - both the selector and the element tag
-        String tagName = asciiLowerCase(tq.consumeElementSelector());
+        String tagName = tq.consumeElementSelector();
         Validate.notEmpty(tagName);
 
         // namespaces:
@@ -429,44 +433,155 @@ public class QueryParser implements AutoCloseable {
     }
 
     private Evaluator byAttribute() {
-        try (TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']'))) {
-            return evaluatorForAttribute(cq);
+        if (!web) return LegacyQueryParser.attribute(tq, query);
+        String attribute = peekCssAttribute(query, tq.pos(), true);
+        try (TokenQueue css = new TokenQueue(attribute)) {
+            Evaluator eval = cssAttribute(css, true);
+            consumeAttribute(tq, attribute);
+            return eval;
         }
     }
 
-    private Evaluator evaluatorForAttribute(TokenQueue cq) {
-        String key = cq.consumeToAny(AttributeEvals); // eq, not, start, end, contain, match, (no val)
-        key = asciiLowerCase(trimAsciiWhitespace(key));
-        Validate.notEmpty(key);
-        Validate.isFalse(key.equals("abs:"), "Absolute attribute key must have a name");
-        cq.consumeWhitespace();
-        final Evaluator eval;
-
-        if (cq.isEmpty()) {
-            if (key.startsWith("^"))
-                eval = new Evaluator.AttributeStarting(key.substring(1));
-            else if (key.equals("*")) // any attribute
-                eval = new Evaluator.AttributeStarting("");
-            else
-                eval = new Evaluator.Attribute(key);
-        } else {
-            if (cq.matchChomp('='))
-                eval = new Evaluator.AttributeWithValue(key, cq.remainder());
-            else if (cq.matchChomp("!="))
-                eval = new Evaluator.AttributeWithValueNot(key, cq.remainder());
-            else if (cq.matchChomp("^="))
-                eval = new Evaluator.AttributeWithValueStarting(key, cq.remainder());
-            else if (cq.matchChomp("$="))
-                eval = new Evaluator.AttributeWithValueEnding(key, cq.remainder());
-            else if (cq.matchChomp("*="))
-                eval = new Evaluator.AttributeWithValueContaining(key, cq.remainder());
-            else if (cq.matchChomp("~="))
-                eval = new Evaluator.AttributeWithValueMatching(key, Regex.compile(cq.remainder()));
-            else
-                throw new Selector.SelectorParseException(
-                    "Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
+    /** Reads the contents of {@code [...]} without advancing the query, allowing legacy parsing to retry. */
+    static String peekCssAttribute(String query, int offset, boolean extendedValues) {
+        int start = offset + 1;
+        char quote = 0;
+        int depth = 1;
+        for (int pos = start; pos < query.length(); pos++) {
+            char c = query.charAt(pos);
+            if (c == '\\') {
+                pos++;
+                continue;
+            }
+            if (quote != 0) {
+                if (c == quote) quote = 0;
+            } else if (c == '\'' || c == '"') {
+                quote = c;
+            } else if (extendedValues && c == '[') {
+                depth++; // preserve unquoted values such as http://[::1]/
+            } else if (c == ']' && --depth == 0) {
+                return query.substring(start, pos);
+            }
         }
-        return eval;
+        throw new Selector.SelectorParseException("Did not find balanced marker at '%s'", query.substring(start));
+    }
+
+    static void consumeAttribute(TokenQueue tq, String attribute) {
+        for (int i = 0; i < attribute.length() + 2; i++) tq.advance();
+    }
+
+    /**
+     Parses an attribute selector. With {@code extendedValues} false, unquoted values must be CSS identifiers
+     so legacy values ending in {@code i} or {@code s} are not mistaken for case flags.
+     */
+    static Evaluator cssAttribute(TokenQueue cq, boolean extendedValues) {
+        cq.consumeWhitespace();
+        boolean prefix = cq.matchChomp('^');
+        if (prefix && cq.isEmpty()) return new Evaluator.AttributeStarting("");
+        String key = consumeAttributeName(cq, cq.matchChomp('*') ? "*" : cq.consumeCssIdentifier());
+        cq.consumeWhitespace();
+        if (cq.isEmpty()) return prefix ? new Evaluator.AttributeStarting(key) : key.equals("*") ?
+            new Evaluator.AttributeStarting("") : new Evaluator.Attribute(key);
+        Validate.isFalse(prefix || key.equals("*"), "Attribute value comparison requires an attribute name");
+        AttributeOperator operator = null;
+        for (AttributeOperator candidate : AttributeOperators) {
+            if (cq.matchChomp(candidate.symbol)) { operator = candidate; break; }
+        }
+        Validate.notNull(operator, "Attribute operator expected");
+        AttributeValue operand = consumeAttributeValue(cq, extendedValues);
+        String value = operand.value;
+        CaseSensitivity flag = operand.flag;
+        switch (operator) {
+            case Equals: return new Evaluator.AttributeWithValue(key, value, flag);
+            case NotEquals: return new Evaluator.AttributeWithValueNot(key, value, flag);
+            case StartsWith: return new Evaluator.AttributeWithValueStarting(key, value, flag);
+            case EndsWith: return new Evaluator.AttributeWithValueEnding(key, value, flag);
+            case Contains: return new Evaluator.AttributeWithValueContaining(key, value, flag);
+            case ContainsToken: return new Evaluator.AttributeWithValueContainingToken(key, value, flag);
+            case DashMatch: return new Evaluator.AttributeWithValueDashPrefix(key, value, flag);
+            default: throw new IllegalArgumentException("Unknown attribute operator: " + operator);
+        }
+    }
+
+    private static AttributeValue consumeAttributeValue(TokenQueue cq, boolean extendedValues) {
+        cq.consumeWhitespace();
+        boolean quoted = cq.matches('\'') || cq.matches('"');
+        String value;
+        CaseSensitivity flag = CaseSensitivity.Default;
+        if (extendedValues && !quoted) {
+            StringBuilder out = new StringBuilder();
+            String whitespace = "";
+            while (!cq.isEmpty()) {
+                String part = cq.consumeCssValue(true);
+                StringBuilder nextWhitespace = new StringBuilder();
+                while (cq.matchesWhitespace()) nextWhitespace.append(cq.consume());
+                CaseSensitivity nextFlag = attributeCase(part);
+                if (cq.isEmpty() && out.length() != 0 && nextFlag != CaseSensitivity.Default)
+                    flag = nextFlag;
+                else
+                    out.append(whitespace).append(part);
+                whitespace = nextWhitespace.toString();
+            }
+            value = out.toString();
+        } else {
+            Validate.isFalse(cq.isEmpty(), "Attribute value expected");
+            value = cq.consumeCssValue();
+            boolean separated = cq.consumeWhitespace();
+            if (!cq.isEmpty()) {
+                Validate.isTrue(quoted || separated, "Attribute flag must follow a quoted value or whitespace");
+                String name = cq.consumeCssIdentifier();
+                flag = attributeCase(name);
+                Validate.isTrue(flag != CaseSensitivity.Default, "Unknown attribute case flag: " + asciiLowerCase(name));
+                cq.consumeWhitespace();
+            }
+        }
+        Validate.isTrue(cq.isEmpty(), "Unexpected token after attribute value");
+        return new AttributeValue(value, flag);
+    }
+
+    private static final class AttributeValue {
+        final String value;
+        final CaseSensitivity flag;
+
+        AttributeValue(String value, CaseSensitivity flag) {
+            this.value = value;
+            this.flag = flag;
+        }
+    }
+
+    private static CaseSensitivity attributeCase(String value) {
+        String name = asciiLowerCase(value);
+        return name.equals("i") ? CaseSensitivity.Insensitive :
+            name.equals("s") ? CaseSensitivity.Sensitive : CaseSensitivity.Default;
+    }
+
+    /**
+     Allows attribute names containing a colon, including {@code abs:href}.
+     */
+    private static String consumeAttributeName(TokenQueue cq, String key) {
+        Validate.notEmpty(key, "Attribute name expected");
+        if (cq.matchChomp(':')) {
+            String local = cq.consumeCssIdentifier();
+            Validate.isFalse(key.equals("abs") && local.isEmpty(), "Absolute attribute key must have a name");
+            Validate.notEmpty(local, "Attribute name expected");
+            key += ":" + local;
+        }
+        return key;
+    }
+
+    /**
+     Parses {@code :matchesAttr()}, leaving regex escapes intact.
+     */
+    private Evaluator matchesAttr() {
+        tq.consume("(");
+        tq.consumeWhitespace();
+        String key = consumeAttributeName(tq, tq.consumeCssIdentifier());
+        tq.consumeWhitespace();
+        Validate.isTrue(tq.matchChomp(','), ":matchesAttr requires an attribute name and regex");
+        tq.consumeWhitespace();
+        String pattern = tq.chompBalancedRemainder('(', ')');
+        Validate.notEmpty(pattern, ":matchesAttr requires a regex");
+        return new Evaluator.AttributeWithValueMatching(key, Regex.compile(pattern));
     }
 
     //pseudo selectors :first-child, :last-child, :nth-child, ...
@@ -522,52 +637,31 @@ public class QueryParser implements AutoCloseable {
     }
 
     /**
-     Chooses where to look and what to test for each {@code :has()} alternative.
-     Alternatives with the same scope share one traversal, so {@code :has(> a, > span)} visits the subject's children once.
+     Groups alternatives that check the same elements.
+     For example, {@code :has(> a, > span)} checks the children once.
      */
-    private static List<Traversal> planTraversals(SelectorGroup group) {
+    private List<Traversal> planTraversals(SelectorGroup group) {
         List<Traversal> traversals = new ArrayList<>();
+        ArrayList<Evaluator> alternatives = new ArrayList<>();
+        boolean startsAtSibling = false, descend = false, nextSiblingOnly = false;
         for (ComplexSelector selector : group.selectors) {
-            Scope scope = traversalScope(selector); // top-level combinators determine how far :has() must traverse
-            Evaluator evaluator = traversalEvaluator(selector, scope);
-            int last = traversals.size() - 1;
-            Traversal previous = last >= 0 ? traversals.get(last) : null;
-            if (previous != null && previous.scope == scope) {
-                traversals.set(last, new Traversal(addAlternative(previous.evaluator, evaluator), scope));
-            } else {
-                traversals.add(new Traversal(evaluator, scope));
+            char leading = selector.leadingCombinator;
+            boolean siblings = leading == '+' || leading == '~';
+            boolean trees = selector.compounds.size() > 1 || !siblings && leading != '>';
+            boolean nextOnly = leading == '+' && !selector.wantsNodes() &&
+                !selector.combinators.contains('+') && !selector.combinators.contains('~');
+            if (!alternatives.isEmpty() &&
+                (siblings != startsAtSibling || trees != descend || nextOnly != nextSiblingOnly)) {
+                traversals.add(new Traversal(alternatives, startsAtSibling, descend, nextSiblingOnly));
+                alternatives = new ArrayList<>();
             }
+            alternatives.add(selector.relativeEvaluator());
+            startsAtSibling = siblings;
+            descend = trees;
+            nextSiblingOnly = nextOnly;
         }
+        traversals.add(new Traversal(alternatives, startsAtSibling, descend, nextSiblingOnly));
         return traversals;
-    }
-
-    /** Uses the rightmost evaluator when the traversal scope already guarantees the leading relationship. */
-    private static Evaluator traversalEvaluator(ComplexSelector selector, Scope scope) {
-        if (selector.combinatorCount != 1)
-            return selector.evaluator;
-
-        char leading = selector.leadingCombinator;
-        if (leading == '>' || leading == '~' || (leading == '+' && scope == Scope.NextSibling))
-            return selector.rightmost;
-        return selector.evaluator;
-    }
-
-    /** Chooses where to traverse for a {@code :has()} alternative. */
-    private static Scope traversalScope(ComplexSelector selector) {
-        char leading = selector.leadingCombinator;
-        if (leading == '>' && selector.combinatorCount == 1)
-            return Scope.Children;
-        if (leading == '+' || leading == '~') {
-            if (selector.combinatorCount > 1) {
-                if (leading == '+' && !selector.continuesToSibling && !selector.evaluator.wantsNodes())
-                    return Scope.NextSiblingTree;
-                return Scope.FollowingSiblingTrees;
-            }
-            if (leading == '+' && !selector.evaluator.wantsNodes())
-                return Scope.NextSibling;
-            return Scope.FollowingSiblings;
-        }
-        return Scope.Descendants;
     }
 
     // pseudo selector :is()

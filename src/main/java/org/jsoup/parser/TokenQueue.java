@@ -32,6 +32,15 @@ public class TokenQueue implements AutoCloseable {
     }
 
     /**
+     Get the current zero-based character offset in the input.
+
+     @since 1.24.1
+     */
+    public int pos() {
+        return reader.pos();
+    }
+
+    /**
      Consume one character off queue.
      @return first character on queue.
      */
@@ -154,8 +163,26 @@ public class TokenQueue implements AutoCloseable {
      @return data matched from the queue
      */
     public String chompBalanced(char open, char close) {
+        return chompBalanced(open, close, 0);
+    }
+
+    /**
+     Consume the remainder of a group whose opening delimiter has already been consumed. The closing delimiter is
+     consumed but excluded from the result. Quotes and escapes follow {@link #chompBalanced(char, char)}.
+     If the group is unbalanced, restore the queue position.
+
+     @param open opener
+     @param close closer
+     @return remaining group contents, excluding the closing delimiter
+     @throws IllegalArgumentException if the group is unbalanced
+     @since 1.24.1
+     */
+    public String chompBalancedRemainder(char open, char close) {
+        return chompBalanced(open, close, 1);
+    }
+
+    private String chompBalanced(char open, char close, int depth) {
         StringBuilder accum = StringUtil.borrowBuilder();
-        int depth = 0;
         char prev = 0;
         boolean inSingle = false;
         boolean inDouble = false;
@@ -363,6 +390,75 @@ public class TokenQueue implements AutoCloseable {
             }
         }
         return StringUtil.releaseBuilder(out);
+    }
+
+    /**
+     Consume a quoted CSS string or an unquoted CSS identifier, resolving escapes and removing surrounding quotes.
+
+     @return the decoded value
+     @throws IllegalArgumentException if a valid value is not at the current position
+     @since 1.24.1
+     */
+    public String consumeCssValue() {
+        if (matches('\'') || matches('"')) return consumeCssString();
+        char first = current();
+        Validate.isTrue(first == Unicode_Null || first == '\\' || first == '-' || first == '_' || Character.isLetter(first) || first >= 0x80,
+            "Attribute value must be a CSS identifier or quoted string");
+        if (first == '-') {
+            advance();
+            char next = current();
+            boolean valid = !isEmpty() && (next == Unicode_Null || next == '-' || next == '_' || next == Esc || Character.isLetter(next) || next >= 0x80);
+            reader.unconsume();
+            Validate.isTrue(valid, "Attribute value must be a CSS identifier or quoted string");
+        }
+        String value = consumeCssIdentifier();
+        Validate.notEmpty(value, "Attribute value expected");
+        return value;
+    }
+
+    /**
+     When {@code extended} is true, consume unquoted text up to unescaped whitespace or the end of input.
+     Resolve CSS escapes, but treat quotes as literal characters. Otherwise, use {@link #consumeCssValue()}.
+
+     @param extended whether to allow unquoted text beyond CSS identifiers
+     @return the decoded value
+     @since 1.24.1
+     */
+    public String consumeCssValue(boolean extended) {
+        if (!extended) return consumeCssValue();
+        StringBuilder out = new StringBuilder();
+        while (!isEmpty() && !matchesWhitespace()) {
+            char c = consume();
+            if (c == Esc) {
+                Validate.isFalse(!isEmpty() && isNewline(current()), "Invalid escape in unquoted attribute value");
+                consumeCssEscapeSequenceInto(out);
+            } else {
+                out.append(c == Unicode_Null ? Replacement : c);
+            }
+        }
+        Validate.isTrue(out.length() != 0, "Attribute value expected");
+        return out.toString();
+    }
+
+    private String consumeCssString() {
+        char quote = consume();
+        Validate.isTrue(quote == '\'' || quote == '"', "CSS string must start with a quote");
+        StringBuilder out = new StringBuilder();
+        while (!isEmpty()) {
+            char c = consume();
+            if (c == quote) return out.toString();
+            if (c == '\\') {
+                if (isEmpty()) break;
+                if (isNewline(current())) {
+                    char newline = consume();
+                    if (newline == '\r' && current() == '\n') advance();
+                } else consumeCssEscapeSequenceInto(out);
+            } else {
+                Validate.isFalse(isNewline(c), "Unescaped newline in CSS string");
+                out.append(c == Unicode_Null ? Replacement : c);
+            }
+        }
+        throw new IllegalArgumentException("Unclosed CSS string");
     }
 
     private void consumeCssEscapeSequenceInto(StringBuilder out) {

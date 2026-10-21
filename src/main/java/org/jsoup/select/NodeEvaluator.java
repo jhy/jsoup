@@ -11,7 +11,6 @@ import static org.jsoup.internal.Normalizer.lowerCase;
 import static org.jsoup.internal.StringUtil.normaliseWhitespace;
 
 abstract class NodeEvaluator extends Evaluator {
-
     @Override
     public boolean matches(Element root, Element element) {
         return evaluateMatch(element);
@@ -32,7 +31,6 @@ abstract class NodeEvaluator extends Evaluator {
         final String selector;
 
         InstanceType(java.lang.Class<? extends Node> type, String selector) {
-            super();
             this.type = type;
             this.selector = "::" + selector;
         }
@@ -77,7 +75,7 @@ abstract class NodeEvaluator extends Evaluator {
     static class ContainsValue extends NodeEvaluator {
         private final String searchText;
 
-        public ContainsValue(String searchText) {
+        ContainsValue(String searchText) {
             this.searchText = lowerCase(normaliseWhitespace(searchText));
         }
 
@@ -101,7 +99,6 @@ abstract class NodeEvaluator extends Evaluator {
      Matches nodes with no value or only whitespace.
      */
     static class BlankValue extends NodeEvaluator {
-
         @Override
         boolean evaluateMatch(Node node) {
             return StringUtil.isBlank(node.nodeValue());
@@ -121,7 +118,7 @@ abstract class NodeEvaluator extends Evaluator {
     static class MatchesValue extends NodeEvaluator {
         private final Regex pattern;
 
-        protected MatchesValue(Regex pattern) {
+        MatchesValue(Regex pattern) {
             this.pattern = pattern;
         }
 

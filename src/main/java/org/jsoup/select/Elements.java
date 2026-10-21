@@ -492,6 +492,7 @@ public class Elements extends Nodes<Element> {
      * Find matching elements within this element list.
      * @param query A {@link Selector} query
      * @return the filtered list of elements, or an empty list if none match.
+     * @see <a href="{@docRoot}/org/jsoup/select/Selector.html#query-compatibility">Query compatibility changes</a>
      */
     public Elements select(String query) {
         return Selector.select(query, this);
@@ -535,9 +536,18 @@ public class Elements extends Nodes<Element> {
      * <p>
      * @param query the selector query whose results should be removed from these elements
      * @return a new elements list that contains only the filtered results
+     * @see <a href="{@docRoot}/org/jsoup/select/Selector.html#query-compatibility">Query compatibility changes</a>
      */
     public Elements not(String query) {
-        Elements out = Selector.select(query, this);
+        Evaluator evaluator = Selector.evaluatorOf(query);
+        if (evaluator.web) {
+            Elements filtered = new Elements();
+            for (Element element : this) {
+                if (!element.is(evaluator)) filtered.add(element);
+            }
+            return filtered;
+        }
+        Elements out = Selector.selectAcrossRoots(evaluator, this);
         return Selector.filterOut(this, out);
     }
     
@@ -556,6 +566,7 @@ public class Elements extends Nodes<Element> {
      * Test if any of the matched elements match the supplied query.
      * @param query A selector
      * @return true if at least one element in the list matches the query.
+     * @see <a href="{@docRoot}/org/jsoup/select/Selector.html#query-compatibility">Query compatibility changes</a>
      */
     public boolean is(String query) {
         Evaluator eval = Selector.evaluatorOf(query);

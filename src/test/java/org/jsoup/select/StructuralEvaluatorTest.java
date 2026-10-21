@@ -72,9 +72,9 @@ class StructuralEvaluatorTest {
             Arguments.of("span + a", true),          // ImmediatePreviousSibling
             Arguments.of("div > span > a", false),   // ImmediateParentRun does not use memoMatches
             Arguments.of("div:has(p)", false),       // HasEvaluator itself has no memo state
-            Arguments.of("div:has(p:not(.missing))", true),
-            Arguments.of(".a:has(+ div span, > p:not(.missing))", true),
-            Arguments.of("div:has(> p, > span)", false)
+            Arguments.of("div:has(p:not(.missing))", false),              // :has() clears the nested Not memo after each traversal
+            Arguments.of(".a:has(+ div span, > p:not(.missing))", false), // each :has() traversal clears its nested memos
+            Arguments.of("div:has(> p, > span)", false)                   // grouped child alternatives do not use memoMatches
         );
     }
 

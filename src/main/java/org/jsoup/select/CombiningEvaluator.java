@@ -4,7 +4,6 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
-import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,7 +25,6 @@ public abstract class CombiningEvaluator extends Evaluator {
         this(new ArrayList<>(evaluators));
     }
 
-    /** Creates a combined evaluator from the supplied evaluators. */
     CombiningEvaluator(ArrayList<Evaluator> evaluators) {
         this.evaluators = evaluators;
         sortedEvaluators = new ArrayList<>(evaluators.size());
@@ -82,7 +80,6 @@ public abstract class CombiningEvaluator extends Evaluator {
             super(evaluators);
         }
 
-        /** Creates an evaluator that requires every supplied evaluator to match. */
         And(ArrayList<Evaluator> evaluators) {
             super(evaluators);
         }
@@ -111,6 +108,15 @@ public abstract class CombiningEvaluator extends Evaluator {
             return true;
         }
 
+        @Override boolean matchesRelative(Element root, Node node, Element anchor) {
+            for (int i = 0; i < num; i++) {
+                Evaluator eval = sortedEvaluators.get(i);
+                if (!eval.matchesRelative(root, node, anchor))
+                    return false;
+            }
+            return true;
+        }
+
         @Override
         public String toString() {
             return StringUtil.join(evaluators, "");
@@ -126,7 +132,6 @@ public abstract class CombiningEvaluator extends Evaluator {
             super(evaluators);
         }
 
-        /** Creates an evaluator that requires at least one supplied evaluator to match. */
         Or(ArrayList<Evaluator> evaluators) {
             super(evaluators);
         }
@@ -148,6 +153,15 @@ public abstract class CombiningEvaluator extends Evaluator {
             for (int i = 0; i < num; i++) {
                 Evaluator eval = sortedEvaluators.get(i);
                 if (eval.matches(root, leaf))
+                    return true;
+            }
+            return false;
+        }
+
+        @Override boolean matchesRelative(Element root, Node node, Element anchor) {
+            for (int i = 0; i < num; i++) {
+                Evaluator eval = sortedEvaluators.get(i);
+                if (eval.matchesRelative(root, node, anchor))
                     return true;
             }
             return false;

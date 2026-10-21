@@ -1,22 +1,21 @@
 package org.jsoup.select;
 
-import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jspecify.annotations.Nullable;
 
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toCollection;
 
 /**
- * Collects a list of elements that match the supplied criteria.
- *
- * @author Jonathan Hedley
- */
+ Collects elements and nodes that match an evaluator.
+ <p>The evaluator determines whether searches include the starting element. See
+ <a href="{@docRoot}/org/jsoup/select/Selector.html#query-compatibility">Query compatibility changes</a>.</p>
+
+ @author Jonathan Hedley */
 public class Collector {
 
     private Collector() {}
@@ -45,8 +44,7 @@ public class Collector {
      @since 1.19.1
      */
     public static Stream<Element> stream(Evaluator evaluator, Element root) {
-        evaluator.reset();
-        return root.stream().filter(evaluator.asPredicate(root));
+        return EvaluatorInternals.stream(evaluator, root, root.stream());
     }
 
     /**
@@ -61,8 +59,7 @@ public class Collector {
      @since 1.21.1
      */
     public static <T extends Node> Stream<T> streamNodes(Evaluator evaluator, Element root, Class<T> type) {
-        evaluator.reset();
-        return root.nodeStream(type).filter(evaluator.asNodePredicate(root));
+        return EvaluatorInternals.stream(evaluator, root, root.nodeStream(type), evaluator.asNodePredicate(root));
     }
 
     /**

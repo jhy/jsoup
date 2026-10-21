@@ -5,6 +5,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.NodeIterator;
 import org.jsoup.nodes.TextNode;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +18,6 @@ final class HasEvaluator extends Evaluator {
     private final boolean wantsNodes;
     private final int cost;
 
-    /** Creates an evaluator from the canonical selector text and its planned traversals. */
     HasEvaluator(String selector, List<Traversal> traversals) {
         this.selector = selector;
         this.traversals = Collections.unmodifiableList(new ArrayList<>(traversals));
@@ -32,8 +32,13 @@ final class HasEvaluator extends Evaluator {
     }
 
     @Override public boolean matches(Element root, Element element) {
-        for (Traversal traversal : traversals) {
-            if (traversal.matchesAny(element)) return true;
+        if (web) {
+            element = documentElementOrSelf(element); // use the document element when testing :has() on a Document
+            if (element == null) return false;
+        }
+        if (!web) root = element;
+        for (int i = 0; i < traversals.size(); i++) {
+            if (traversals.get(i).matchesAny(root, element)) return true;
         }
         return false;
     }
@@ -54,122 +59,67 @@ final class HasEvaluator extends Evaluator {
         return ":has(" + selector + ')';
     }
 
-    /** A traversal shared by one or more {@code :has()} alternatives. */
+    /**
+     Searches the children, descendants, or following siblings needed by a {@code :has()} query.
+     For example, {@code :has(> a)} checks children, while {@code :has(+ div span)} checks the next sibling and its descendants.
+     */
     static final class Traversal {
         static final SoftPool<NodeIterator<Node>> NodeIterPool =
             new SoftPool<>(() -> new NodeIterator<>(new TextNode(""), Node.class)); // restart() replaces the placeholder root
 
         final Evaluator evaluator;
-        final Scope scope;
 
-        /** Creates a traversal that applies the evaluator within the given scope. */
-        Traversal(Evaluator evaluator, Scope scope) {
-            this.evaluator = evaluator;
-            this.scope = scope;
+        final boolean startsAtSibling;
+        final boolean descend;
+        final boolean nextSiblingOnly;
+        private final boolean wantsNodes;
+
+        Traversal(ArrayList<Evaluator> alternatives, boolean startsAtSibling, boolean descend, boolean nextSiblingOnly) {
+            evaluator = alternatives.size() == 1 ? alternatives.get(0) : new CombiningEvaluator.Or(alternatives);
+            this.startsAtSibling = startsAtSibling;
+            this.descend = descend;
+            this.nextSiblingOnly = nextSiblingOnly;
+            wantsNodes = evaluator.wantsNodes();
         }
 
-        /** Traverses relative to the {@code :has()} subject, stopping at the first match. */
-        boolean matchesAny(Element subject) {
-            switch (scope) {
-                case Children: return matchesChild(subject);
-                case NextSibling: return matchesNextSibling(subject);
-                case NextSiblingTree: return matchesNextSiblingTree(subject);
-                case FollowingSiblings: return matchesSibling(subject);
-                case FollowingSiblingTrees: return matchesFollowingSiblingTrees(subject);
-                case Descendants: return matchesDescendants(subject);
-                default: throw new IllegalStateException("Unknown :has() traversal scope: " + scope);
-            }
-        }
-
-        /** Tests only the subject's immediate child nodes. */
-        private boolean matchesChild(Element subject) {
-            for (Node child = subject.firstChild(); child != null; child = child.nextSibling()) {
-                if (evaluator.matches(subject, child))
-                    return true;
-            }
-            return false;
-        }
-
-        /** Tests the subject's next element sibling for a simple {@code +} selector. */
-        private boolean matchesNextSibling(Element subject) {
-            Element sibling = subject.nextElementSibling();
-            return sibling != null && evaluator.matches(subject, sibling);
-        }
-
-        /** Searches the next element sibling tree, as needed by {@code :has(+ div span)}. */
-        private boolean matchesNextSiblingTree(Element subject) {
-            Element sibling = subject.nextElementSibling();
-            return sibling != null && matchesNodeAndDescendants(subject, sibling);
-        }
-
-        /** Tests sibling nodes after the subject, including non-element nodes when the evaluator accepts them. */
-        private boolean matchesSibling(Element subject) {
-            boolean nodes = evaluator.wantsNodes();
-            for (Node sibling = nodes ? subject.nextSibling() : subject.nextElementSibling(); sibling != null;
-                 sibling = nodes ? sibling.nextSibling() : sibling.nextElementSibling()) {
-                if (evaluator.matches(subject, sibling))
-                    return true;
-            }
-            return false;
-        }
-
-        /**
-         Searches following sibling trees for selectors such as {@code + div + section}.
-         The evaluator enforces the sibling relationships within this broader search.
-         */
-        private boolean matchesFollowingSiblingTrees(Element subject) {
-            for (Node sibling = subject.nextSibling(); sibling != null; sibling = sibling.nextSibling()) {
-                if (matchesNodeAndDescendants(subject, sibling)) return true;
-            }
-            return false;
-        }
-
-        /** Tests descendants of the subject, excluding the subject itself. */
-        private boolean matchesDescendants(Element subject) {
-            NodeIterator<Node> it = NodeIterPool.borrow();
+        boolean matchesAny(Element context, Element subject) {
+            Node start = first(subject);
+            if (start == null) return false;
+            @Nullable NodeIterator<Node> nodes = descend ? NodeIterPool.borrow() : null;
             try {
-                it.restart(subject);
-                it.next(); // skip the subject
-                return matchesAnyNode(subject, it);
+                return findMatch(context, subject, start, nodes);
             } finally {
-                NodeIterPool.release(it);
+                if (nodes != null) NodeIterPool.release(nodes);
+                // cached matches are only valid for this starting element
+                evaluator.reset();
             }
         }
 
-        /** Tests the starting node and all of its descendants. */
-        private boolean matchesNodeAndDescendants(Element subject, Node start) {
-            NodeIterator<Node> it = NodeIterPool.borrow();
-            try {
-                it.restart(start);
-                return matchesAnyNode(subject, it);
-            } finally {
-                NodeIterPool.release(it);
-            }
-        }
-
-        /** Tests nodes from the iterator until the evaluator matches one. */
-        private boolean matchesAnyNode(Element subject, NodeIterator<Node> nodes) {
-            while (nodes.hasNext()) {
-                if (evaluator.matches(subject, nodes.next()))
-                    return true;
+        private boolean findMatch(Element context, Element subject, Node start, @Nullable NodeIterator<Node> nodes) {
+            for (; start != null; start = next(start)) {
+                if (nodes != null) {
+                    nodes.restart(start);
+                    if (!startsAtSibling) nodes.next(); // search the whole tree, excluding the subject
+                }
+                do {
+                    Node candidate = nodes != null ? nodes.next() : start;
+                    if (evaluator.matches(context, candidate, subject)) return true;
+                } while (nodes != null && nodes.hasNext());
             }
             return false;
         }
-    }
 
-    /** Where a traversal runs relative to the {@code :has()} subject. */
-    enum Scope {
-        /** The subject's immediate child nodes, as in {@code :has(> div)}. */
-        Children,
-        /** The subject's next element sibling, as in {@code :has(+ div)}. */
-        NextSibling,
-        /** The subject's next element sibling and all of its descendants, as in {@code :has(+ div span)}. */
-        NextSiblingTree,
-        /** The sibling nodes after the subject, as in {@code :has(~ div)}. */
-        FollowingSiblings,
-        /** The sibling nodes after the subject and all of their descendants, as in {@code :has(~ div span)}. */
-        FollowingSiblingTrees,
-        /** The subject's descendants, excluding the subject itself. */
-        Descendants
+        private @Nullable Node first(Element subject) {
+            if (!startsAtSibling) {
+                Node child = subject.firstChild();
+                return descend && child != null ? subject : child;
+            }
+            return nextSiblingOnly || !descend && !wantsNodes ? subject.nextElementSibling() : subject.nextSibling();
+        }
+
+        private @Nullable Node next(Node start) {
+            if (nextSiblingOnly || descend && !startsAtSibling) return null;
+            return startsAtSibling && !descend && !wantsNodes ? start.nextElementSibling() : start.nextSibling();
+        }
     }
 }

@@ -6,6 +6,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.Evaluator;
+import org.jsoup.select.EvaluatorInternals;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.Selector;
 import org.jspecify.annotations.Nullable;
@@ -312,8 +313,7 @@ public class StreamParser implements Closeable {
     public @Nullable Element selectNext(Evaluator eval) throws IOException {
         try {
             final Document doc = document(); // validates the parse was initialized, keeps stack trace out of stream
-            return stream()
-                .filter(eval.asPredicate(doc))
+            return EvaluatorInternals.stream(eval, doc, stream())
                 .findFirst()
                 .orElse(null);
         } catch (UncheckedIOException e) {
