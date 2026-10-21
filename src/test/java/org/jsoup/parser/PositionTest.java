@@ -18,6 +18,8 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.util.List;
@@ -274,6 +276,40 @@ class PositionTest {
             assertEquals("1,4:3-1,6:5=1,7:6-1,10:9", element.attributes().sourceRange("id").toString());
             assertEquals("1,14:13-1,18:17", element.endSourceRange().toString());
         }
+    }
+
+    @ParameterizedTest @ValueSource(booleans = {false, true})
+    void adoptedMixedChildrenRetainSourceRanges(boolean fragment) {
+        String html = "<b id=fmt><p>before<!--marker--><span id=child>inside</span>after</b>tail</p>";
+        Parser parser = Parser.htmlParser().setTrackPosition(true);
+        Element container;
+        if (fragment) {
+            List<Node> nodes = parser.parseFragmentInput(html, new Element("div"), "");
+            container = (Element) nodes.get(0).parent();
+        } else {
+            container = parser.parseInput(html, "").body();
+        }
+        container.ownerDocument().outputSettings().prettyPrint(false);
+        assertEquals("<b id=\"fmt\"></b><p><b id=\"fmt\">before<!--marker--><span id=\"child\">inside</span>after</b>tail</p>",
+            container.html());
+        Element original = container.child(0);
+        Element replacement = container.child(1).child(0);
+        assertEquals(original.sourceRange(), replacement.sourceRange());
+        assertEquals(original.attributes().sourceRange("id"), replacement.attributes().sourceRange("id"));
+        String[] sources = {"before", "<!--marker-->", "<span id=child>", "after"};
+        assertEquals(sources.length, replacement.childNodeSize());
+        for (int i = 0; i < sources.length; i++) {
+            Node child = replacement.childNode(i);
+            assertSame(replacement, child.parent());
+            Range range = child.sourceRange();
+            assertTrue(range.isTracked());
+            assertEquals(sources[i], html.substring(range.startPos(), range.endPos()));
+        }
+        Element span = replacement.child(0);
+        Range end = span.endSourceRange();
+        assertEquals("</span>", html.substring(end.startPos(), end.endPos()));
+        Range.AttributeRange id = span.attributes().sourceRange("id");
+        assertEquals("child", html.substring(id.valueRange().startPos(), id.valueRange().endPos()));
     }
 
     @Test void tracksAdoptedFormattingElementsInsideTemplates() {

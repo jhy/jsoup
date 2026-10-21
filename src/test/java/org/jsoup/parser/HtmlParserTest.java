@@ -1125,6 +1125,55 @@ public class HtmlParserTest {
         assertEquals("<b>1</b>\n<p><b>2</b>3</p>", doc.body().html());
     }
 
+    @ParameterizedTest @MethodSource("adoptionChildCounts")
+    void adoptionPreservesChildOrder(int count, boolean fragment) {
+        StringBuilder children = new StringBuilder();
+        for (int i = 0; i < count; i++)
+            children.append("<span id=\"s").append(i).append("\"></span>");
+        String html = "<b><p>" + children + "</b>tail</p>";
+
+        Document doc = fragment ? Jsoup.parseBodyFragment(html) : Jsoup.parse(html);
+
+        doc.outputSettings().prettyPrint(false);
+        assertEquals("<b></b><p><b>" + children + "</b>tail</p>", doc.body().html());
+        Element paragraph = doc.body().child(1);
+        Element replacement = paragraph.child(0);
+        assertEquals(count, replacement.childNodeSize());
+        for (int i = 0; i < count; i++) {
+            Node child = replacement.childNode(i);
+            assertEquals("s" + i, child.attr("id"));
+            assertSame(replacement, child.parent());
+            assertEquals(i, child.siblingIndex());
+            assertSame(i == 0 ? null : replacement.childNode(i - 1), child.previousSibling());
+            assertSame(i + 1 == count ? null : replacement.childNode(i + 1), child.nextSibling());
+        }
+        assertEquals("tail", paragraph.childNode(1).nodeValue());
+    }
+
+    static Stream<Arguments> adoptionChildCounts() {
+        return Stream.of(0, 1, 1000).flatMap(count -> Stream.of(
+            Arguments.of(count, false), Arguments.of(count, true)
+        ));
+    }
+
+    @ParameterizedTest @ValueSource(booleans = {false, true})
+    void adoptedFormControlsCanBeMovedOutsideForm(boolean fragment) {
+        String html = "<b><form id=f><input name=x value=1></b></form>";
+        Document doc = fragment ? Jsoup.parseBodyFragment(html) : Jsoup.parse(html);
+        FormElement form = (FormElement) doc.expectFirst("form");
+        Element input = doc.expectFirst("input");
+
+        assertSame(form, input.parent().parent());
+        assertEquals(1, form.elements().size());
+        assertSame(input, form.elements().get(0));
+        assertEquals("x=1", form.formData().get(0).toString());
+
+        // adoption must clear the direct-child link, just as individual removal does
+        doc.body().appendChild(input);
+        assertTrue(form.elements().isEmpty());
+        assertTrue(form.formData().isEmpty());
+    }
+
     @Test void sourceTrackingHonorsFormattingElementLimit() {
         String input = "<p><b><b><b><b><p>x";
         Document doc = Parser.htmlParser().setTrackPosition(true).parseInput(input, "");

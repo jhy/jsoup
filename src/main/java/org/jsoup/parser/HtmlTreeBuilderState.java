@@ -933,8 +933,7 @@ enum HtmlTreeBuilderState {
                 // 4.17: Create a replacement for formattingElement, with furthestBlock as the intended parent.
                 Element replacement = tb.recreateElement(formatEl);
                 // 4.18: Append all children of furthestBlock to the new element.
-                for (Node child : furthestBlock.childNodes())
-                    replacement.appendChild(child);
+                replacement.appendChildren(furthestBlock.childNodes());
                 // 4.19: Append that new element to furthestBlock.
                 furthestBlock.appendChild(replacement);
                 // 4.20: Replace formattingElement at the bookmark.

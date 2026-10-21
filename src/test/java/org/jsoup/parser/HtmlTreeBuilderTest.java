@@ -2,8 +2,11 @@ package org.jsoup.parser;
 
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 
@@ -18,6 +21,41 @@ import static org.jsoup.parser.Parser.NamespaceHtml;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HtmlTreeBuilderTest {
+    @Test void adoptionMovesExistingChildNodes() {
+        HtmlTreeBuilder tb = new HtmlTreeBuilder();
+        tb.initialiseParse(new StringReader(""), "", new Parser(tb));
+        tb.initialiseParseFragment(new Element("div"));
+        try {
+            tb.processStartTag("b");
+            Element formatting = tb.currentElement();
+            tb.processStartTag("p");
+            Element block = tb.currentElement();
+            block.appendChild(new TextNode("before"));
+            block.appendChild(new Comment("marker"));
+            block.appendElement("span").text("inside");
+            block.appendChild(new TextNode("after"));
+            List<Node> children = block.childNodes();
+
+            tb.processEndTag("b");
+
+            assertEquals(0, formatting.childNodeSize());
+            assertEquals(1, block.childNodeSize());
+            Element replacement = block.child(0);
+            assertNotSame(formatting, replacement);
+            assertEquals("b", replacement.normalName());
+            assertSame(block, replacement.parent());
+            assertEquals(children.size(), replacement.childNodeSize());
+            for (int i = 0; i < children.size(); i++) {
+                Node child = children.get(i);
+                assertSame(child, replacement.childNode(i));
+                assertSame(replacement, child.parent());
+                assertEquals(i, child.siblingIndex());
+            }
+        } finally {
+            tb.closeParse();
+        }
+    }
+
     @Test void missingStackEntryReportsErrorAndAppends() throws IOException {
         assertAdoptionRecovery(new HtmlTreeBuilder(), tb -> {
             Element replacement = tb.doc.child(0).appendElement("b");

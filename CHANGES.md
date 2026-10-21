@@ -46,6 +46,7 @@
 * Fixed fragment parsing to ignore `<body>` and `<frameset>` start tags when the second open element is not `body`, matching the HTML spec. [#2634](https://github.com/jhy/jsoup/issues/2634)
 * Updated how the tokeniser handles malformed doctypes, to remove duplicative tokens and error messages. [#2635](https://github.com/jhy/jsoup/pull/2635)
 * Corrected HTML tokenisation of malformed comments such as `<!---x` and incomplete start tags such as `<p id=`, and improved their error reporting. [#2636](https://github.com/jhy/jsoup/pull/2636)
+* Fixed `FormElement.empty()` retaining associations with removed controls. If an input node removed by `empty()` was subsequently inserted outside its original form, it could incorrectly reappear in that form's `elements()` and `formData()` results.
 
 ## 1.23.2 (2026-Aug-26)
 
