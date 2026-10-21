@@ -659,6 +659,32 @@ public class HtmlParserTest {
         assertEquals(1, table.siblingIndex());
     }
 
+    @ParameterizedTest @ValueSource(booleans = {false, true})
+    void repeatedFosterInsertionPreservesSiblingOrder(boolean fragment) {
+        int count = 1000;
+        StringBuilder html = new StringBuilder("<table>");
+        for (int i = 0; i < count; i++)
+            html.append("<input id=").append(i).append('>');
+        html.append("</table>");
+        Document doc = fragment ? Jsoup.parseBodyFragment(html.toString()) : Jsoup.parse(html.toString());
+        Element body = doc.body();
+        assertEquals(count + 1, body.childNodeSize());
+        for (int i = 0; i < count; i++) {
+            Node input = body.childNode(i);
+            assertEquals("input", input.nodeName());
+            assertEquals(String.valueOf(i), input.attr("id"));
+            assertSame(body, input.parent());
+            assertEquals(i, input.siblingIndex());
+            assertSame(body.childNode(i + 1), input.nextSibling());
+        }
+        Node table = body.childNode(count);
+        assertEquals("table", table.nodeName());
+        assertSame(body, table.parent());
+        assertEquals(count, table.siblingIndex());
+        assertSame(body.childNode(count - 1), table.previousSibling());
+        assertNull(table.nextSibling());
+    }
+
     @Test public void handlesUnknownNamespaceTags() {
         String h = "<foo:bar id='1' /><abc:def id=2>Foo<p>Hello</p></abc:def><foo:bar>There</foo:bar>";
         Parser parser = Parser.htmlParser();

@@ -14,6 +14,7 @@
 * Query selector parsing now limits nested `:has()`, `:is()`, and `:not()` expressions to a maximum depth of 128.
 * SVG-specific tag and attribute names are now automatically case corrected (e.g. `pathlength` becomes `pathLength`) when parsing HTML. https://github.com/jhy/jsoup/pull/2630
 * Improved the HTML parse across document boundaries by handling whitespace separately from subsequent text. This better preserves the input's whitespace through parse and serialize round-trips. [#2632](https://github.com/jhy/jsoup/issues/2632)
+* Improved HTML parsing performance for documents with misplaced elements, and DOM update performance.
 
 ### Changes
 * Removed APIs previously deprecated and scheduled for removal in 1.24.1. [#2597](https://github.com/jhy/jsoup/pull/2597)

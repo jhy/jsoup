@@ -2179,9 +2179,12 @@ public class Element extends Node implements Iterable<Element> {
         }
     }
 
-    void reindexChildren() {
+    /**
+     Repairs indexes from the insertion point on; preceding indexes must still be valid.
+     */
+    void reindexChildren(int start) {
         final int size = childNodes.size();
-        for (int i = 0; i < size; i++) {
+        for (int i = start; i < size; i++) {
             childNodes.get(i).setSiblingIndex(i);
         }
         childNodes.validChildren = true;

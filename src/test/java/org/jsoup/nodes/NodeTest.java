@@ -332,6 +332,72 @@ public class NodeTest {
         assertEquals("A B C", ul.text());
     }
 
+    @Test void lastChildIndexDoesNotReindexOtherSiblings() {
+        Element parent = new Element("div");
+        Element first = parent.appendElement("a");
+        Element middle = parent.appendElement("b");
+        Element last = parent.appendElement("i");
+        first.remove();
+        assertFalse(parent.hasValidChildren());
+        assertEquals(2, last.siblingIndex);
+
+        assertEquals(1, last.siblingIndex());
+
+        assertEquals(1, last.siblingIndex);
+        assertFalse(parent.hasValidChildren());
+        assertSame(middle, last.previousSibling());
+        assertNull(last.nextSibling());
+        assertFalse(parent.hasValidChildren());
+
+        assertEquals(0, middle.siblingIndex());
+        assertTrue(parent.hasValidChildren());
+        assertSame(last, middle.nextSibling());
+    }
+
+    @Test void onlyChildIndexDoesNotReindexParent() {
+        Element parent = new Element("div");
+        Element first = parent.appendElement("a");
+        Element last = parent.appendElement("b");
+        first.remove();
+
+        assertEquals(0, last.siblingIndex());
+        assertEquals(0, last.siblingIndex);
+        assertNull(last.previousSibling());
+        assertNull(last.nextSibling());
+        assertFalse(parent.hasValidChildren());
+    }
+
+    @Test void detachedNodeRetainsSiblingIndex() {
+        Element parent = new Element("div");
+        parent.appendElement("a");
+        Element last = parent.appendElement("b");
+        last.remove();
+
+        assertEquals(1, last.siblingIndex());
+        assertNull(last.parent());
+        assertNull(last.previousSibling());
+        assertNull(last.nextSibling());
+        assertEquals(0, new Element("p").siblingIndex());
+    }
+
+    @Test void movingSiblingBeforeLastChildPreservesNavigation() {
+        Element parent = new Element("div");
+        Element first = parent.appendElement("a");
+        Element middle = parent.appendElement("b");
+        Element last = parent.appendElement("i");
+
+        last.before(first);
+
+        assertFalse(parent.hasValidChildren());
+        assertSame(middle, parent.childNode(0));
+        assertSame(first, parent.childNode(1));
+        assertSame(last, parent.childNode(2));
+        assertSame(first, last.previousSibling());
+        assertNull(last.nextSibling());
+        assertSame(last, first.nextSibling());
+        assertTrue(parent.hasValidChildren());
+    }
+
     @Test public void after() {
         Document doc = Jsoup.parse("<p>One <b>two</b> three</p>");
         Element newNode = new Element(Tag.valueOf("em"), "");
