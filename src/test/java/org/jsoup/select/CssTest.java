@@ -2,6 +2,8 @@ package org.jsoup.select;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -212,10 +214,70 @@ public class CssTest {
 		assertNotNull(sel.get(0));
 		assertEquals(Tag.valueOf("html"), sel.get(0).tag());
 
+		// :root matches html, which is outside the body search
 		Elements sel2 = html.select("body").select(":root");
-		assertEquals(1, sel2.size());
-		assertNotNull(sel2.get(0));
-		assertEquals(Tag.valueOf("body"), sel2.get(0).tag());
+		assertTrue(sel2.isEmpty());
 	}
+
+    @Test
+    void rootMatchesTheTreeRoot() {
+        Document doc = Jsoup.parse("<!doctype html><section id=panel><p></p></section>");
+        Element panel = doc.getElementById("panel");
+        Element html = doc.firstElementChild();
+        Evaluator root = Selector.evaluatorOf(":root");
+        assertTrue(root.matches(panel, html));
+        assertFalse(root.matches(panel, panel));
+        assertSame(html, doc.selectFirst(root));
+        assertTrue(panel.select(root).isEmpty());
+        assertTrue(panel.select(":root > p").isEmpty());
+        assertTrue(panel.select(":has(:root)").isEmpty());
+        assertFalse(panel.is(root));
+        assertSame(html, panel.closest(root));
+        Document empty = new Document("");
+        assertFalse(empty.is(root));
+        assertTrue(empty.select(root).isEmpty());
+    }
+
+    @Test
+    void rootOfDetachedTree() {
+        Element detached = new Element("div").append("<p id=p>");
+        assertEquals(new Elements(detached), detached.select(":root"));
+        Evaluator root = Selector.evaluatorOf(":root");
+        assertTrue(detached.is(root));
+        assertFalse(detached.child(0).is(root));
+        assertSame(detached, detached.child(0).closest(root));
+        assertEquals("p", detached.selectFirst(":root > p").id());
+    }
+
+    @Test
+    void rootOfXmlDocument() {
+        Document xml = Jsoup.parse("<?xml version='1.0'?><!-- before root --><Root><Child/></Root>", "", Parser.xmlParser());
+        Element rootElement = xml.firstElementChild();
+        Element child = rootElement.child(0);
+        Evaluator root = Selector.evaluatorOf(":root");
+        assertSame(rootElement, xml.selectFirst(root));
+        assertTrue(rootElement.is(root));
+        assertFalse(child.is(root));
+        assertTrue(child.select(root).isEmpty());
+        assertSame(rootElement, child.closest(root));
+        assertTrue(child.is(":root > Child"));
+    }
+
+    @Test
+    void rootFollowsReparentedTree() {
+        Element section = new Element("section").append("<p></p>");
+        Element child = section.child(0);
+        Evaluator root = Selector.evaluatorOf(":root");
+        assertTrue(section.is(root));
+        assertSame(section, child.closest(root));
+
+        html.body().appendChild(section);
+        assertFalse(section.is(root));
+        assertSame(html.firstElementChild(), child.closest(root));
+
+        section.remove();
+        assertTrue(section.is(root));
+        assertSame(section, child.closest(root));
+    }
 
 }

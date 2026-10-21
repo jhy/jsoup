@@ -255,36 +255,39 @@ public class QueryParserTest {
         assertEquals("::pi target must be a CSS identifier", trailing.getMessage());
     }
 
-    @Test void choosesHasTraversalScope() {
-        assertHasScope("> a", HasEvaluator.Scope.Children);
-        assertHasScope("+ div", HasEvaluator.Scope.NextSibling);
-        assertHasScope("+ ::comment", HasEvaluator.Scope.FollowingSiblings);
-        assertHasScope("~ p", HasEvaluator.Scope.FollowingSiblings);
-        assertHasScope("+ div span", HasEvaluator.Scope.NextSiblingTree);
-        assertHasScope("+ div + section", HasEvaluator.Scope.FollowingSiblingTrees);
-        assertHasScope("~ p span", HasEvaluator.Scope.FollowingSiblingTrees);
-        assertHasScope("p", HasEvaluator.Scope.Descendants);
+    @Test void choosesHasTraversalBounds() {
+        assertHasBounds("> a", false, false, false);
+        assertHasBounds("+ div", true, false, true);
+        assertHasBounds("+ ::comment", true, false, false);
+        assertHasBounds("~ p", true, false, false);
+        assertHasBounds("+ div span", true, true, true);
+        assertHasBounds("+ div + section", true, true, false);
+        assertHasBounds("~ p span", true, true, false);
+        assertHasBounds("p", false, true, false);
     }
 
-    @Test void nestedSelectorsDoNotAffectHasTraversalScope() {
-        assertHasScope("> div:is(section > div)", HasEvaluator.Scope.Children);
-        assertHasScope("+ div:has(> p + span)", HasEvaluator.Scope.NextSibling);
-        assertHasScope("+ div:is(section > div) span", HasEvaluator.Scope.NextSiblingTree);
-        assertHasScope("div:is(section > div)", HasEvaluator.Scope.Descendants);
+    @Test void nestedSelectorsDoNotAffectHasTraversalBounds() {
+        assertHasBounds("> div:is(section > div)", false, false, false);
+        assertHasBounds("+ div:has(> p + span)", true, false, true);
+        assertHasBounds("+ div:is(section > div) span", true, true, true);
+        assertHasBounds("div:is(section > div)", false, true, false);
     }
 
-    @Test void groupsHasAlternativesByTraversalScope() {
+    @Test void groupsHasAlternativesByTraversalBounds() {
         HasEvaluator has = (HasEvaluator) QueryParser.parse(":has(> a, > span, + div, ~ p, + div span, p)");
         assertEquals(5, has.traversals.size());
-        assertEquals(HasEvaluator.Scope.Children, has.traversals.get(0).scope);
-        assertInstanceOf(CombiningEvaluator.Or.class, has.traversals.get(0).evaluator);
+        HasEvaluator.Traversal first = has.traversals.get(0);
+        assertFalse(first.startsAtSibling);
+        assertFalse(first.descend);
+        assertFalse(first.nextSiblingOnly);
+        assertEquals(2, ((CombiningEvaluator.Or) first.evaluator).evaluators.size());
         // grouping keeps the original selectors for toString()
-        assertEquals(":has(" + QueryParser.parse("> a, > span, + div, ~ p, + div span, p") + ")", has.toString());
+        assertEquals(":has(> a, > span, + div, ~ p, + div span, p)", has.toString());
     }
 
     @Test void hasRetainsCanonicalSelectorText() {
         Evaluator has = QueryParser.parse(":has( > A, SPAN.foo )");
-        assertEquals(":has(> > a, span.foo)", has.toString());
+        assertEquals(":has(> a, span.foo)", has.toString());
     }
 
     @Test void notRequiresNonEmptySelector() {
@@ -295,20 +298,15 @@ public class QueryParserTest {
         }
     }
 
-    @Test void hasTraversalRemovesOnlyEstablishedRelationship() {
-        assertEquals("a[href]", hasTraversal("> a[href]").evaluator.toString());
-        assertEquals("div", hasTraversal("+ div").evaluator.toString());
-        assertEquals("p", hasTraversal("~ p").evaluator.toString());
-        assertEquals("> + ::comment", hasTraversal("+ ::comment").evaluator.toString());
-        assertEquals("> > section a", hasTraversal("> section a").evaluator.toString());
-    }
-
     private static HasEvaluator.Traversal hasTraversal(String selector) {
         HasEvaluator has = (HasEvaluator) QueryParser.parse(":has(" + selector + ")");
         return has.traversals.get(0);
     }
 
-    private static void assertHasScope(String selector, HasEvaluator.Scope expected) {
-        assertEquals(expected, hasTraversal(selector).scope, selector);
+    private static void assertHasBounds(String selector, boolean startsAtSibling, boolean descend, boolean nextSiblingOnly) {
+        HasEvaluator.Traversal traversal = hasTraversal(selector);
+        assertEquals(startsAtSibling, traversal.startsAtSibling, selector);
+        assertEquals(descend, traversal.descend, selector);
+        assertEquals(nextSiblingOnly, traversal.nextSiblingOnly, selector);
     }
 }

@@ -5,10 +5,13 @@ import org.jsoup.helper.Regex;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
 import java.util.regex.Pattern;
 
+import static org.jsoup.TestQueryMode.mode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.parallel.Resources.SYSTEM_PROPERTIES;
 
 public class EvaluatorTest {
 
@@ -74,10 +77,14 @@ public class EvaluatorTest {
     }
 
     @Test
+    @ResourceLock(SYSTEM_PROPERTIES)
     public void testAttributeWithValueMatchingToString() {
-        Pattern pattern = Pattern.compile("value");
-        Evaluator.AttributeWithValueMatching evaluator = new Evaluator.AttributeWithValueMatching("example", pattern);
-        assertEquals("[example~=value]", evaluator.toString());
+        for (boolean web : new boolean[]{false, true}) mode(web, () -> {
+            Pattern pattern = Pattern.compile("value");
+            Evaluator.AttributeWithValueMatching evaluator = new Evaluator.AttributeWithValueMatching("example", pattern);
+            assertEquals(web ? ":matchesAttr(example, value)" : "[example~=value]", evaluator.toString());
+            return null;
+        });
     }
 
     @Test

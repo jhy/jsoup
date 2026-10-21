@@ -1,6 +1,11 @@
 package org.jsoup.select;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.LegacyMatching;
+import org.jsoup.internal.CssMatching;
+import org.jsoup.internal.CssMatching.AttributeOperator;
+import org.jsoup.internal.CssMatching.CaseSensitivity;
+import org.jsoup.internal.QueryMode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
@@ -11,30 +16,67 @@ import org.jsoup.nodes.ProcessingInstruction;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.helper.Regex;
+import org.jsoup.parser.TokenQueue;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
 import static org.jsoup.internal.Normalizer.asciiLowerCase;
 import static org.jsoup.internal.StringUtil.trimAsciiWhitespace;
 import static org.jsoup.internal.StringUtil.normaliseWhitespace;
+import static org.jsoup.internal.StringUtil.isWhitespace;
 
 
 /**
  An Evaluator tests if an element (or a node) meets the selector's requirements. Obtain an evaluator for a given CSS selector
  with {@link Selector#evaluatorOf(String css)}. If you are executing the same selector on many elements (or documents), it
  can be more efficient to compile and reuse an Evaluator than to reparse the selector on each invocation of select().
+ <p>Each evaluator captures the behavior selected by {@code jsoup.queryMode} when constructed.
+ Standalone evaluators use legacy behavior in {@code check} mode; they do not report compatibility differences.</p>
+ <p>If you construct and combine evaluators yourself, each child keeps the matching rules selected when it was created.
+ The outer evaluator determines whether searches include the starting element and which element supplies the query context.</p>
  <p>Evaluators are thread-safe and may be used concurrently across multiple documents.</p>
- */
+
+ @see <a href="{@docRoot}/org/jsoup/select/Selector.html#query-compatibility">Query compatibility changes</a> */
 public abstract class Evaluator {
+    final boolean web; // web query semantics or legacy
+
+    private static final ThreadLocal<@Nullable Boolean> QueryModeOverride = new ThreadLocal<>();
+
+    /**
+     Sets the mode for evaluators created by the action, then restores the previous mode.
+     */
+    static <T> T withMode(boolean web, Supplier<T> action) {
+        Boolean previous = QueryModeOverride.get();
+        QueryModeOverride.set(web);
+        try {
+            return action.get();
+        } finally {
+            if (previous == null) QueryModeOverride.remove();
+            else QueryModeOverride.set(previous);
+        }
+    }
+
+    /**
+     Returns the supplied element. If it is a Document, returns its first element child instead,
+     or null if it has no element children.
+     */
+    static @Nullable Element documentElementOrSelf(Element element) {
+        return element instanceof Document ? element.firstElementChild() : element;
+    }
+
     protected Evaluator() {
+        Boolean web = QueryModeOverride.get();
+        this.web = web != null ? web : QueryMode.current() == QueryMode.Web;
     }
 
     /**
      Provides a Predicate for this Evaluator, matching the test Element.
-     * @param root the root Element, for match evaluation
+     * @param root the element the query starts from; see {@link #matches(Element, Element)}
      * @return a predicate that accepts an Element to test for matches with this Evaluator
      * @since 1.17.1
      */
@@ -47,14 +89,29 @@ public abstract class Evaluator {
     }
 
     /**
-     * Test if the element meets the evaluator's requirements.
-     *
-     * @param root    Root of the matching subtree
-     * @param element tested element
-     * @return Returns <tt>true</tt> if the requirements are met or
-     * <tt>false</tt> otherwise
+     Tests whether the element matches this evaluator.
+
+     @param root    the query context, used by {@code :scope}; for a Document, {@code :scope} matches its document element
+     @param element the element to test
+     @return whether the element matches
      */
     public abstract boolean matches(Element root, Element element);
+
+    /**
+     Tests a {@code :has()} candidate starting at {@code anchor}, keeping {@code root} as the query context.
+     The caller has already checked whether the query accepts this node type.
+     */
+    boolean matchesRelative(Element root, Node node, Element anchor) {
+        return node instanceof Element ? matches(root, (Element) node) : matches(root, (LeafNode) node);
+    }
+
+    /** Checks node eligibility before relative matching; a null anchor uses ordinary matching. */
+    final boolean matches(Element root, Node node, @Nullable Element anchor) {
+        if (anchor == null) return matches(root, node);
+        if (node instanceof Element || node instanceof LeafNode && wantsNodes())
+            return matchesRelative(root, node, anchor);
+        return false;
+    }
 
     final boolean matches(Element root, Node node) {
         if (node instanceof Element) {
@@ -79,6 +136,10 @@ public abstract class Evaluator {
     protected void reset() {
     }
 
+    final boolean sameType(Node first, Element second) {
+        return web ? CssMatching.sameType(first, second) : first.normalName().equals(second.normalName());
+    }
+
     /**
      A relative evaluator cost function. During evaluation, Evaluators are sorted by ascending cost as an optimization.
      * @return the relative cost of this Evaluator
@@ -94,12 +155,14 @@ public abstract class Evaluator {
         private final String tagName;
 
         public Tag(String tagName) {
-            this.tagName = tagName;
+            this.tagName = web ? tagName : asciiLowerCase(tagName);
         }
 
         @Override
         public boolean matches(Element root, Element element) {
-            return (element.nameIs(tagName));
+            if (!web) return element.nameIs(tagName);
+            return !CssMatching.isHtmlElement(root, element) ? element.tagName().equals(tagName) :
+                element.nameIs(asciiLowerCase(tagName));
         }
 
         @Override protected int cost() {
@@ -124,7 +187,9 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return (element.normalName().startsWith(tagName));
+            boolean insensitive = !web || CssMatching.isHtmlElement(root, element);
+            String name = insensitive ? element.normalName() : element.tagName();
+            return name.startsWith(insensitive ? asciiLowerCase(tagName) : tagName);
         }
 
         @Override
@@ -146,7 +211,9 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return (element.normalName().endsWith(tagName));
+            boolean insensitive = !web || CssMatching.isHtmlElement(root, element);
+            String name = insensitive ? element.normalName() : element.tagName();
+            return name.endsWith(insensitive ? asciiLowerCase(tagName) : tagName);
         }
 
         @Override
@@ -167,7 +234,9 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return (id.equals(element.id()));
+            if (!web) return id.equals(element.id());
+            String actual = CssMatching.attributeValue(element, "id", CssMatching.isHtmlElement(root, element));
+            return actual != null && (CssMatching.isQuirksMode(root) ? org.jsoup.internal.Normalizer.equalsIgnoreAsciiCase(actual, id) : actual.equals(id));
         }
 
         @Override protected int cost() {
@@ -191,7 +260,8 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return (element.hasClass(className));
+            if (!web) return LegacyMatching.hasClass(element, className);
+            return CssMatching.hasClass(root, element, className);
         }
 
         @Override protected int cost() {
@@ -206,18 +276,30 @@ public abstract class Evaluator {
     }
 
     /** Shares attribute matching between elements and processing instructions. */
-    private abstract static class AttributeEvaluator extends Evaluator {
+    abstract static class AttributeEvaluator extends Evaluator {
         @Override public boolean matches(Element root, Element element) {
-            return matchesNode(element);
+            return matchesNode(root, element);
         }
 
         @Override boolean matches(Element root, LeafNode leafNode) {
-            return leafNode instanceof ProcessingInstruction && matchesNode(leafNode);
+            return leafNode instanceof ProcessingInstruction && matchesNode(root, leafNode);
         }
 
         /** Tests this evaluator against a node's attributes. */
-        boolean matchesNode(Node node) {
+        boolean matchesNode(Element root, Node node) {
             return false;
+        }
+
+        @Nullable String attribute(Element root, Node node, String key) {
+            return web ? CssMatching.attributeValue(node, key, CssMatching.isHtmlElement(root, node)) :
+                LegacyMatching.attribute(node, key);
+        }
+
+        boolean matchesValue(Element root, Node node, String key, String value, AttributeOperator operator,
+                             CaseSensitivity flag) {
+            boolean ignoreCase = flag == CaseSensitivity.Insensitive || flag == CaseSensitivity.Default &&
+                CssMatching.isHtmlElement(root, node) && CssMatching.isCaseInsensitiveAttribute(key);
+            return CssMatching.matchesAttributeValue(attribute(root, node, key), value, operator, ignoreCase);
         }
     }
 
@@ -231,8 +313,8 @@ public abstract class Evaluator {
             this.key = key;
         }
 
-        @Override boolean matchesNode(Node node) {
-            return node.hasAttr(key);
+        @Override boolean matchesNode(Element root, Node node) {
+            return web ? attribute(root, node, key) != null : node.hasAttr(asciiLowerCase(key));
         }
 
         @Override protected int cost() {
@@ -253,13 +335,15 @@ public abstract class Evaluator {
 
         public AttributeStarting(String keyPrefix) {
             Validate.notNull(keyPrefix); // OK to be empty - will find elements with any attributes
-            this.keyPrefix = asciiLowerCase(keyPrefix);
+            this.keyPrefix = keyPrefix;
         }
 
-        @Override boolean matchesNode(Node node) {
+        @Override boolean matchesNode(Element root, Node node) {
             List<org.jsoup.nodes.Attribute> values = node.attributes().asList();
             for (org.jsoup.nodes.Attribute attribute : values) {
-                if (asciiLowerCase(attribute.getKey()).startsWith(keyPrefix))
+                boolean insensitive = !web || CssMatching.isHtmlElement(root, node) && attribute.namespace().isEmpty();
+                String name = insensitive ? asciiLowerCase(attribute.getKey()) : attribute.getKey();
+                if (name.startsWith(insensitive ? asciiLowerCase(keyPrefix) : keyPrefix))
                     return true;
             }
             return false;
@@ -284,8 +368,12 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        @Override boolean matchesNode(Node node) {
-            return node.hasAttr(key) && value.equalsIgnoreCase(node.attr(key));
+        AttributeWithValue(String key, String value, CaseSensitivity flag) {
+            super(key, value, flag);
+        }
+
+        @Override boolean matchesNode(Element root, Node node) {
+            return matchesValue(root, node, AttributeOperator.Equals);
         }
 
         @Override protected int cost() {
@@ -294,7 +382,7 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format("[%s=%s]", key, value);
+            return attributeString("=");
         }
 
     }
@@ -307,8 +395,12 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        @Override boolean matchesNode(Node node) {
-            return !value.equalsIgnoreCase(node.attr(key));
+        AttributeWithValueNot(String key, String value, CaseSensitivity flag) {
+            super(key, value, flag);
+        }
+
+        @Override boolean matchesNode(Element root, Node node) {
+            return matchesValue(root, node, AttributeOperator.NotEquals);
         }
 
         @Override protected int cost() {
@@ -317,7 +409,7 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format("[%s!=%s]", key, value);
+            return attributeString("!=");
         }
 
     }
@@ -330,8 +422,12 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        @Override boolean matchesNode(Node node) {
-            return node.hasAttr(key) && lowerCase(node.attr(key)).startsWith(value); // value is lower case already
+        AttributeWithValueStarting(String key, String value, CaseSensitivity flag) {
+            super(key, value, flag);
+        }
+
+        @Override boolean matchesNode(Element root, Node node) {
+            return matchesValue(root, node, AttributeOperator.StartsWith);
         }
 
         @Override protected int cost() {
@@ -340,7 +436,7 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format("[%s^=%s]", key, value);
+            return attributeString("^=");
         }
     }
 
@@ -352,8 +448,12 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        @Override boolean matchesNode(Node node) {
-            return node.hasAttr(key) && lowerCase(node.attr(key)).endsWith(value); // value is lower case
+        AttributeWithValueEnding(String key, String value, CaseSensitivity flag) {
+            super(key, value, flag);
+        }
+
+        @Override boolean matchesNode(Element root, Node node) {
+            return matchesValue(root, node, AttributeOperator.EndsWith);
         }
 
         @Override protected int cost() {
@@ -362,7 +462,7 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format("[%s$=%s]", key, value);
+            return attributeString("$=");
         }
     }
 
@@ -374,8 +474,12 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        @Override boolean matchesNode(Node node) {
-            return node.hasAttr(key) && lowerCase(node.attr(key)).contains(value); // value is lower case
+        AttributeWithValueContaining(String key, String value, CaseSensitivity flag) {
+            super(key, value, flag);
+        }
+
+        @Override boolean matchesNode(Element root, Node node) {
+            return matchesValue(root, node, AttributeOperator.Contains);
         }
 
         @Override protected int cost() {
@@ -384,9 +488,47 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format("[%s*=%s]", key, value);
+            return attributeString("*=");
         }
 
+    }
+
+    /** Matches a complete attribute token, as in [class~=card]. */
+    static final class AttributeWithValueContainingToken extends AttributeKeyPair {
+        AttributeWithValueContainingToken(String key, String value, CaseSensitivity flag) {
+            super(key, value, flag);
+        }
+
+        @Override boolean matchesNode(Element root, Node node) {
+            return matchesValue(root, node, AttributeOperator.ContainsToken);
+        }
+
+        @Override protected int cost() {
+            return 8;
+        }
+
+        @Override public String toString() {
+            return attributeString("~=");
+        }
+    }
+
+    /** Matches an attribute value or its hyphen-separated prefix, as in [lang|=en]. */
+    static final class AttributeWithValueDashPrefix extends AttributeKeyPair {
+        AttributeWithValueDashPrefix(String key, String value, CaseSensitivity flag) {
+            super(key, value, flag);
+        }
+
+        @Override boolean matchesNode(Element root, Node node) {
+            return matchesValue(root, node, AttributeOperator.DashMatch);
+        }
+
+        @Override protected int cost() {
+            return 4;
+        }
+
+        @Override public String toString() {
+            return attributeString("|=");
+        }
     }
 
     /**
@@ -397,16 +539,17 @@ public abstract class Evaluator {
         final Regex pattern;
 
         public AttributeWithValueMatching(String key, Regex pattern) {
-            this.key = asciiLowerCase(trimAsciiWhitespace(key));
+            this.key = trimAsciiWhitespace(key); // preserve key case in serialized queries
             this.pattern = pattern;
         }
 
         public AttributeWithValueMatching(String key, Pattern pattern) {
-            this(key, Regex.fromPattern(pattern)); // api compat
+            this(key, Regex.fromPattern(pattern));
         }
 
-        @Override boolean matchesNode(Node node) {
-            return node.hasAttr(key) && pattern.matcher(node.attr(key)).find();
+        @Override boolean matchesNode(Element root, Node node) {
+            String value = attribute(root, node, key);
+            return value != null && pattern.matcher(value).find();
         }
 
         @Override protected int cost() {
@@ -415,7 +558,11 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format("[%s~=%s]", key, pattern.toString());
+            if (!web) return String.format("[%s~=%s]", key, pattern);
+            String regex = pattern.toString();
+            // protect leading regex whitespace from the selector's whitespace after the comma
+            if (!regex.isEmpty() && isWhitespace(regex.charAt(0))) regex = "(?:)" + regex;
+            return String.format(":matchesAttr(%s, %s)", TokenQueue.escapeCssIdentifier(key), regex);
         }
 
     }
@@ -426,20 +573,50 @@ public abstract class Evaluator {
     public abstract static class AttributeKeyPair extends AttributeEvaluator {
         final String key;
         final String value;
+        final CaseSensitivity flag;
+        private final boolean parsedCss; // parsed operands are already decoded; public inputs retain quote handling
+        private final char quote; // retains input quoting when unquoted output could look like a case flag
 
         public AttributeKeyPair(String key, String value) {
             Validate.notEmpty(key);
             Validate.notNull(value);
 
-            this.key = asciiLowerCase(trimAsciiWhitespace(key));
+            key = trimAsciiWhitespace(key);
+            this.key = web ? key : asciiLowerCase(key);
             boolean quoted = value.startsWith("'") && value.endsWith("'")
                 || value.startsWith("\"") && value.endsWith("\"");
+            quote = quoted ? value.charAt(0) : 0;
             if (quoted) {
                 Validate.isTrue(value.length() > 1, "Quoted value must have content");
                 value = value.substring(1, value.length() - 1);
             }
 
-            this.value = lowerCase(value); // case-insensitive match
+            this.value = web ? value : lowerCase(value);
+            flag = CaseSensitivity.Default;
+            parsedCss = false;
+        }
+
+        AttributeKeyPair(String key, String value, CaseSensitivity flag) {
+            this.key = key;
+            this.value = value;
+            this.flag = flag;
+            parsedCss = true;
+            quote = 0;
+        }
+
+        boolean matchesValue(Element root, Node node, AttributeOperator operator) {
+            if (web) return super.matchesValue(root, node, key, value, operator, flag);
+            return parsedCss ? LegacyMatching.cssAttributeMatches(node, key, value, operator, flag) :
+                LegacyMatching.attributeMatches(node, key, value, operator);
+        }
+
+        String attributeString(String operator) {
+            if (!parsedCss && !web) {
+                return LegacyMatching.attributeString(key, value, operator, quote);
+            }
+            String cssValue = value.isEmpty() ? "\"\"" : TokenQueue.escapeCssIdentifier(value);
+            String suffix = flag == CaseSensitivity.Insensitive ? " i" : flag == CaseSensitivity.Sensitive ? " s" : "";
+            return String.format("[%s%s%s%s]", TokenQueue.escapeCssIdentifier(key), operator, cssValue, suffix);
         }
     }
 
@@ -473,7 +650,7 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return root != element && element.elementSiblingIndex() < index;
+            return (web || root != element) && element.elementSiblingIndex() < index;
         }
 
         @Override
@@ -540,9 +717,10 @@ public abstract class Evaluator {
     }
 
     public static final class IsFirstOfType extends IsNthOfType {
-		public IsFirstOfType() {
-			super(0,1);
-		}
+        public IsFirstOfType() {
+            super(0, 1);
+        }
+
 		@Override
 		public String toString() {
 			return ":first-of-type";
@@ -550,9 +728,10 @@ public abstract class Evaluator {
     }
 
     public static final class IsLastOfType extends IsNthLastOfType {
-		public IsLastOfType() {
-			super(0,1);
-		}
+        public IsLastOfType() {
+            super(0, 1);
+        }
+
 		@Override
 		public String toString() {
 			return ":last-of-type";
@@ -662,7 +841,7 @@ public abstract class Evaluator {
             final int size = parent.childNodeSize();
             for (int i = 0; i < size; i++) {
                 Node node = parent.childNode(i);
-                if (node.normalName().equals(element.normalName())) pos++;
+                if (sameType(node, element)) pos++;
                 if (node == element) break;
             }
             return pos;
@@ -688,7 +867,7 @@ public abstract class Evaluator {
             int pos = 0;
             Element next = element;
             while (next != null) {
-                if (next.normalName().equals(element.normalName()))
+                if (sameType(next, element))
                     pos++;
                 next = next.nextElementSibling();
             }
@@ -725,8 +904,7 @@ public abstract class Evaluator {
     public static final class IsRoot extends Evaluator {
     	@Override
     	public boolean matches(Element root, Element element) {
-    		final Element r = root instanceof Document ? root.firstElementChild() : root;
-    		return element == r;
+            return element == documentElementOrSelf(root.root());
     	}
 
         @Override protected int cost() {
@@ -737,6 +915,23 @@ public abstract class Evaluator {
     	public String toString() {
     		return ":root";
     	}
+    }
+
+    /**
+     Matches the original query scope, including within relative selectors.
+     */
+    static final class IsScope extends Evaluator {
+        @Override public boolean matches(Element root, Element element) {
+            return element == documentElementOrSelf(root);
+        }
+
+        @Override protected int cost() {
+            return 1;
+        }
+
+        @Override public String toString() {
+            return ":scope";
+        }
     }
 
     public static final class IsOnlyChild extends Evaluator {
@@ -760,7 +955,7 @@ public abstract class Evaluator {
 			int pos = 0;
             Element next = p.firstElementChild();
             while (next != null) {
-                if (next.normalName().equals(element.normalName()))
+                if (sameType(next, element))
                     pos++;
                 if (pos > 1)
                     break;
@@ -994,7 +1189,7 @@ public abstract class Evaluator {
         }
 
         public MatchesWholeText(Pattern pattern) {
-            this.pattern = Regex.fromPattern(pattern);
+            this(Regex.fromPattern(pattern));
         }
 
         @Override

@@ -2,6 +2,7 @@ package org.jsoup.select;
 
 import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
+import org.jsoup.helper.Regex;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
@@ -11,6 +12,7 @@ import org.jsoup.nodes.ProcessingInstruction;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -19,8 +21,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.regex.Pattern;
 
 import static org.jsoup.select.EvaluatorDebug.sexpr;
+import static org.jsoup.TestQueryMode.mode;
+import static org.junit.jupiter.api.parallel.Resources.SYSTEM_PROPERTIES;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -1268,7 +1273,7 @@ public class SelectorTest {
         assertNotNull(div);
 
         // want to select One and Three only - the first level children
-        Elements spans = div.select(":root > span");
+        Elements spans = div.select(":scope > span");
         assertEquals(2, spans.size());
         assertEquals("One Two", spans.get(0).text());
         assertEquals("Three Four", spans.get(1).text());
@@ -1530,6 +1535,7 @@ public class SelectorTest {
     // Tests that nested structural and combining evaluators get reset
     private static class ResetTracker extends Evaluator {
         boolean resetCalled = false;
+        int resetCount;
         @Override
         public boolean matches(Element root, Element element) {
             return true;
@@ -1538,6 +1544,7 @@ public class SelectorTest {
         @Override
         protected void reset() {
             resetCalled = true;
+            resetCount++;
             super.reset();
         }
     }
@@ -1572,6 +1579,8 @@ public class SelectorTest {
         run.reset();
         assertTrue(child.resetCalled);
         assertTrue(parent.resetCalled);
+        assertEquals(1, child.resetCount);
+        assertEquals(1, parent.resetCount);
     }
 
     @Test
@@ -1982,6 +1991,222 @@ public class SelectorTest {
         Element el = new Element(new org.jsoup.parser.Tag("x "), "");
         el.text("Space");
         assertEquals("Space", el.select("x\\ :not(p)").text());
+    }
+
+    @Test
+    @ResourceLock(SYSTEM_PROPERTIES)
+    void scopeSyntaxIsAvailableInBothModes() {
+        Document doc = Jsoup.parse("<section id=panel><p id=p></p></section>");
+        Element panel = doc.getElementById("panel");
+        Document xml = Jsoup.parse("<Root><Child/></Root>", "", Parser.xmlParser());
+        for (boolean web : new boolean[]{false, true}) {
+            Evaluator scope = mode(web, () -> Selector.evaluatorOf(":scope"));
+            assertEquals(web ? new Elements() : new Elements(panel), panel.select(scope));
+            assertTrue(scope.matches(panel, panel));
+            assertSame(panel.child(0), panel.selectFirst(mode(web, () -> Selector.evaluatorOf(":scope > p"))));
+            assertSame(doc.firstElementChild(), doc.selectFirst(scope));
+            assertSame(doc.body(), doc.selectFirst(mode(web, () -> Selector.evaluatorOf(":scope > body"))));
+            assertSame(xml.child(0).child(0), xml.selectFirst(mode(web, () -> Selector.evaluatorOf(":scope > Child"))));
+            assertTrue(new Document("").select(scope).isEmpty());
+        }
+    }
+
+    @Test
+    @ResourceLock(SYSTEM_PROPERTIES)
+    void regexSyntaxWorksInBothModes() {
+        for (boolean web : new boolean[]{false, true}) mode(web, () -> {
+            Document doc = Jsoup.parse("<!doctype html><img src='IMAGE.PNG'><img src='a,b'><img src='foo(bar)'><img src='K'><img>");
+            assertEquals(1, doc.select("img:matchesAttr(src, (?i)\\.(png|jpe?g))").size());
+            assertEquals(1, doc.select("img:matchesAttr(src, a,b)").size());
+            assertEquals(1, doc.select("img:matchesAttr(src, [o])").size());
+            assertEquals("Hello", Jsoup.parse("<div><table class=x><td>Hello</td></table></div>")
+                .select("div table:matchesAttr(class, x|y)").text());
+            assertEquals(2, Jsoup.parse("<?marker name=country-options?><?other name=country-more?>")
+                .selectNodes("::pi:matchesAttr(name, ^country-)", ProcessingInstruction.class).size());
+            assertEquals(1, doc.select("img:matchesAttr(src, " + Pattern.quote("foo(bar)") + ")").size());
+            assertEquals(1, doc.select("img:matchesAttr(src, " + (Regex.usingRe2j() ? "(?i)" : "(?iu)") + "^k$)").size());
+            assertEquals(4, doc.select("img:matchesAttr(src, .*)").size());
+            assertEquals(1, doc.getElementsByAttributeValueMatching("src", "(?i)\\.png").size());
+            for (String bad : new String[]{":matchesAttr()", ":matchesAttr(src)", ":matchesAttr(src,)", ":matchesAttr(, foo)", ":matchesAttr(src, [)"})
+                assertThrows(Selector.SelectorParseException.class, () -> doc.select(bad), bad);
+            Evaluator eval = Selector.evaluatorOf("img:matchesAttr(src, a,b)");
+            assertEquals(doc.select(eval), doc.select(eval.toString()));
+            return null;
+        });
+    }
+
+    @Test
+    @ResourceLock(SYSTEM_PROPERTIES)
+    void explicitFlagsOverrideDefaultsInBothModes() {
+        for (boolean web : new boolean[]{false, true}) mode(web, () -> {
+            Document doc = Jsoup.parse("<!doctype html><input type='TEXT' data-x='MiXeD' data-u='K' lang='en-US'>");
+            assertEquals(1, doc.select("[data-x='mixed' I]").size());
+            assertEquals(0, doc.select("[data-x='mixed' s]").size());
+            assertEquals(1, doc.select("[data-x='MiXeD' S]").size());
+            assertEquals(0, doc.select("[data-u=k i]").size());
+            assertEquals(0, doc.select("[type=text s]").size());
+            assertEquals(1, doc.select("[data-x^=mi i][data-x$=ED i][data-x*=xe i]").size());
+            assertEquals(1, doc.select("[lang|=EN i]").size());
+            assertEquals(0, doc.select("[lang|=EN s]").size());
+            for (String query : new String[]{"[data-x=\"mixed\"i]", "[data-x='MiXeD'S]",
+                "[data-x^='mi'i][data-x$='ED'I][data-x*='xe'i]", "[lang|='EN'i]"}) {
+                Evaluator evaluator = Selector.evaluatorOf(query);
+                assertEquals(1, doc.select(evaluator).size(), query);
+                assertEquals(doc.select(evaluator), doc.select(evaluator.toString()), query);
+            }
+            assertEquals(0, doc.select("[data-x='mixed's]").size());
+            assertEquals(0, doc.select("[data-x=mixedi]").size());
+            assertEquals(web ? 1 : 0, doc.select("[data-x~='mixed'i]").size());
+            return null;
+        });
+    }
+
+    @Test
+    @ResourceLock(SYSTEM_PROPERTIES)
+    void qualifiedAttributeNamesUseTheSameLiteralAndRegexParsing() {
+        Element p = new Element("p").attr("ns:name", "Mixed").attr("data,name", "a,b");
+        for (boolean web : new boolean[]{false, true}) mode(web, () -> {
+            for (String query : new String[]{"[ns:name=Mixed s]", "[ns\\:name=Mixed s]",
+                ":matchesAttr(ns:name, ^Mixed$)", ":matchesAttr(ns\\:name, ^Mixed$)", ":matchesAttr(data\\,name, a,b)"}) {
+                Evaluator evaluator = Selector.evaluatorOf(query);
+                assertTrue(p.is(evaluator), query);
+                assertTrue(p.is(evaluator.toString()), query);
+            }
+            if (web)
+                assertThrows(Selector.SelectorParseException.class, () -> Selector.evaluatorOf("[ns:=Mixed s]"));
+            else
+                assertTrue(new Element("p").attr("ns:", "Mixed s").is("[ns:=Mixed s]"));
+            for (String query : new String[]{"[abs:=Mixed s]",
+                ":matchesAttr(ns:, Mixed)", ":matchesAttr(abs:, Mixed)", ":matchesAttr(, Mixed)"})
+                assertThrows(Selector.SelectorParseException.class, () -> Selector.evaluatorOf(query), query);
+            return null;
+        });
+    }
+
+    @Test
+    @ResourceLock(SYSTEM_PROPERTIES)
+    void parsedAttributeValuesRoundTrip() {
+        String[][] values = {
+            {"Mixed", "Mixed"}, {"\"Quoted\"", "'\"Quoted\"'"}, {"'Quoted'", "\"'Quoted'\""},
+            {"a\\b", "'a\\\\b'"}, {"C:\\Query", "'C:\\\\Query'"}, {"C:\\End", "'C:\\\\End'"}, {"Query", "'\\Query'"},
+            {"a]b", "a\\]b"}, {"a\\", "a\\\\"}, {" space i ", "' space i '"}, {"\n\r\f", "'\\a \\d \\c '"},
+            {"1a", "'1a'"}, {"-1", "'-1'"}, {"-", "'-'"}, {"", "''"}
+        };
+        for (boolean web : new boolean[]{false, true}) mode(web, () -> {
+            assertEquals("[data-x=Mixed s]", Selector.evaluatorOf("[data-x='Mixed' s]").toString());
+            Element missing = new Element("p");
+            assertEquals(web, missing.is(new Evaluator.AttributeWithValueNot("data-x", "")));
+            assertTrue(missing.is("[data-x!='' s]"));
+            Element present = new Element("p").attr("data-x", "text");
+            assertEquals(!web, present.is(new Evaluator.AttributeWithValueStarting("data-x", "")));
+            assertFalse(present.is("[data-x^='' s]"));
+            for (String[] value : values) {
+                Element p = new Element("p").attr("data=name", value[0]);
+                assertTrue(p.is("[data\\=name=" + value[1] + " s]"));
+                for (String operator : new String[]{"=", "!=", "^=", "$=", "*=", "|=", "~="}) {
+                    if (!web && operator.equals("~=")) continue; // remains raw regex syntax in the default mode
+                    for (String flag : new String[]{" i", " s"}) {
+                        String query = "[data\\=name" + operator + value[1] + flag + "]";
+                        Evaluator evaluator = Selector.evaluatorOf(query);
+                        assertEquals(p.is(evaluator), p.is(evaluator.toString()), query);
+                        assertEquals(p.is(evaluator), p.is(":is(" + evaluator + ")"), query);
+                        Element parent = new Element("div").appendChild(p);
+                        assertEquals(p.is(evaluator), parent.is(":has(> " + evaluator + ")"), query);
+                    }
+                }
+            }
+            return null;
+        });
+    }
+
+    @Test void absoluteAttributeLookupIgnoresKeyCase() {
+        Document doc = Jsoup.parse("<a href='/path'>link</a>", "https://example.com/");
+        for (String query : new String[]{"[ABS:href]", "[Abs:HREF~=example]", "[ABS:href=https://example.com/path]",
+            "[ABS:href='https://example.com/path' s]", ":matchesAttr(ABS:href, example)"}) {
+            Evaluator evaluator = Selector.evaluatorOf(query);
+            assertEquals(1, doc.select(evaluator).size(), query);
+        }
+        assertEquals("[ABS:href]", Selector.evaluatorOf("[ABS:href]").toString());
+        assertEquals("[Abs:HREF~=example]", Selector.evaluatorOf("[Abs:HREF~=example]").toString());
+    }
+
+    @Test void attributeTokenOperatorUsesRegex() {
+        Document doc = Jsoup.parse("<!doctype html><p class='card featured'></p><p class='cardinal'></p>");
+        assertTrue(doc.selectFirst("p").hasClass("card featured"));
+        assertEquals(2, doc.select("[class~=card]").size());
+        assertEquals(0, doc.select("[class~='card']").size()); // quotes are regex characters
+        assertEquals(2, doc.select("[class~=c.*]").size());
+    }
+
+    @Test void classChecksRetainUnicodeFolding() {
+        Document doc = Jsoup.parse("<!doctype html><p class='K'></p><p class='alpha K beta'></p>");
+        for (Element p : doc.select("p")) {
+            assertTrue(p.hasClass("k"));
+            assertTrue(p.is(".k"));
+        }
+        assertTrue(doc.selectFirst("p").nextElementSibling().hasClass("ALPHA K BETA"));
+    }
+
+    @Test void aLoneOperandIsNotAnExplicitFlag() {
+        Document doc = Jsoup.parse("<!doctype html><p data-x=' i'></p><p data-x='i'></p>");
+        assertEquals(" i", doc.selectFirst("p[data-x= i]").attr("data-x"));
+        assertEquals(1, doc.select("p[data-x= i]").size());
+        assertEquals(1, doc.select("p[data-x=i]").size());
+        assertEquals(1, doc.select("p[data-x=I i]").size());
+    }
+
+    @Test void invalidFlagProbesRetainLiteralValues() {
+        for (String value : new String[]{"two words s", "two words i", "two words S", "two\nwords\ti", "123 s"}) {
+            Element p = new Element("p").attr("data-x", value);
+            assertTrue(p.is("[data-x=" + value + "]"), value);
+        }
+        for (String query : new String[]{"[data-x|=]", "[data-x|=two words s]"})
+            assertThrows(Selector.SelectorParseException.class, () -> Selector.evaluatorOf(query), query);
+    }
+
+    @Test void literalFlagSuffixesRoundTrip() {
+        String[][] values = {
+            {"foo s", "'foo s'"}, {"foo i", "\"foo i\""}, {"foo\tS", "'foo\tS'"},
+            {"\"foo\" s", "'\"foo\" s'"}, {"foo's i", "\"foo's i\""}, {"foo\\ s", "'foo\\ s'"},
+            {"foo\"\\'bar s", "'foo\"\\'bar s'"}, {"K s", "'K s'"},
+            {"foo\"i", "'foo\"i'"}, {"foo's", "\"foo's\""}
+        };
+        for (String[] value : values) {
+            Element p = new Element("p").attr("data-x", value[0]);
+            Element parent = new Element("div").appendChild(p);
+            for (String operator : new String[]{"=", "!=", "^=", "$=", "*="}) {
+                String query = "[data-x" + operator + value[1] + "]";
+                Evaluator evaluator = Selector.evaluatorOf(query);
+                assertEquals(!operator.equals("!="), p.is(evaluator), query);
+                assertEquals(p.is(evaluator), p.is(evaluator.toString()), query);
+                Evaluator has = Selector.evaluatorOf(":has(> " + query + ")");
+                assertEquals(parent.is(has), parent.is(has.toString()), query);
+            }
+            Evaluator direct = new Evaluator.AttributeWithValue("data-x", value[0]);
+            assertTrue(p.is(direct));
+            assertTrue(p.is(direct.toString()));
+        }
+    }
+
+    @Test void processingInstructionAttributesRequireNodeSelection() {
+        Element root = Jsoup.parse("<div><?marker name=target?></div>").body();
+        assertTrue(root.select(Selector.evaluatorOf("div:has([name=target])")).isEmpty());
+        assertEquals(1, root.selectNodes(Selector.evaluatorOf("::pi[name=target]"), ProcessingInstruction.class).size());
+        assertTrue(root.selectNodes(Selector.evaluatorOf("[name=target]")).isEmpty());
+    }
+
+    @Test void documentRelativeTraversalsAnchorAtTheDocument() {
+        Document doc = Jsoup.parse("<!doctype html><p></p>");
+        assertFalse(doc.is(":has(> head)"));
+        assertFalse(doc.is(":has(> body)"));
+        assertTrue(doc.is(":has(> html)"));
+        assertFalse(doc.is(":has(> head + body)"));
+        assertTrue(doc.is(":has(html)"));
+        assertFalse(doc.is(":has(+ html)"));
+        assertFalse(doc.is(":has(~ html)"));
+        Document empty = new Document("");
+        for (String query : new String[]{":has(*)", ":has(> *)", ":has(> * + *)", ":has(+ *)", ":has(~ *)"})
+            assertFalse(empty.is(query), query);
     }
 
 }

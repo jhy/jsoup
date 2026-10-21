@@ -1,7 +1,10 @@
 package org.jsoup.nodes;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.LegacyMatching;
+import org.jsoup.internal.CssMatching;
 import org.jsoup.internal.QuietAppendable;
+import org.jsoup.internal.QueryMode;
 import org.jsoup.helper.Regex;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
@@ -11,6 +14,7 @@ import org.jsoup.parser.TokenQueue;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
+import org.jsoup.select.EvaluatorInternals;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.Nodes;
@@ -46,6 +50,8 @@ import static org.jsoup.select.Selector.evaluatorOf;
  Case-insensitive name lookups and name trimming use ASCII rules.
  <p>
  From an Element, you can extract data, traverse the node graph, and manipulate the HTML.
+ <p>The query and matching methods on this class support an opt-in preview of Web DOM query behavior.
+ See <a href="{@docRoot}/org/jsoup/select/Selector.html#query-compatibility">Query compatibility changes</a> for how to enable it and which behavior changes.</p>
 */
 public class Element extends Node implements Iterable<Element> {
     private static final List<Element> EmptyChildren = Collections.emptyList();
@@ -495,7 +501,7 @@ public class Element extends Node implements Iterable<Element> {
     /**
      * Find elements that match the {@link Selector} CSS query, with this element as the starting context. Matched elements
      * may include this element, or any of its descendents.
-     * <p>If the query starts with a combinator (e.g. {@code *} or {@code >}), that will combine to this element.</p>
+     * <p>If the query starts with a combinator (e.g. {@code >}), that will combine to this element.</p>
      * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
      * multiple filters can be combined, e.g.:</p>
      * <ul>
@@ -506,6 +512,9 @@ public class Element extends Node implements Iterable<Element> {
      * </ul>
      * <p>See the query syntax documentation in {@link org.jsoup.select.Selector}.</p>
      * <p>Also known as {@code querySelectorAll()} in the Web DOM.</p>
+     *
+     * <p>The <a href="{@docRoot}/org/jsoup/select/Selector.html#query-compatibility">Web DOM query preview</a>
+     * excludes this element from query results.</p>
      *
      * @param cssQuery a {@link Selector} CSS-like query
      * @return an {@link Elements} list containing elements that match the query (empty if none match)
@@ -568,6 +577,9 @@ public class Element extends Node implements Iterable<Element> {
      * <p>This is effectively the same as calling {@code element.select(query).first()}, but is more efficient as query
      * execution stops on the first hit.</p>
      * <p>Also known as {@code querySelector()} in the Web DOM.</p>
+     * <p>The <a href="{@docRoot}/org/jsoup/select/Selector.html#query-compatibility">Web DOM query preview</a>
+     * excludes this element from query results.</p>
+     *
      * @param cssQuery cssQuery a {@link Selector} CSS-like query
      * @return the first matching element, or <b>{@code null}</b> if there is no match.
      * @see #expectFirst(String)
@@ -721,7 +733,7 @@ public class Element extends Node implements Iterable<Element> {
      * @return if this element matches the query
      */
     public boolean is(String cssQuery) {
-        return is(evaluatorOf(cssQuery));
+        return EvaluatorInternals.matches(cssQuery, this);
     }
 
     /**
@@ -730,7 +742,7 @@ public class Element extends Node implements Iterable<Element> {
      * @return if this element matches
      */
     public boolean is(Evaluator evaluator) {
-        return evaluator.matches(this.root(), this);
+        return EvaluatorInternals.matches(evaluator, this);
     }
 
     /**
@@ -741,7 +753,7 @@ public class Element extends Node implements Iterable<Element> {
      * found.
      */
     public @Nullable Element closest(String cssQuery) {
-        return closest(evaluatorOf(cssQuery));
+        return EvaluatorInternals.closest(cssQuery, this);
     }
 
     /**
@@ -753,14 +765,7 @@ public class Element extends Node implements Iterable<Element> {
      */
     public @Nullable Element closest(Evaluator evaluator) {
         Validate.notNull(evaluator);
-        Element el = this;
-        final Element root = root();
-        do {
-            if (evaluator.matches(root, el))
-                return el;
-            el = el.parent();
-        } while (el != null);
-        return null;
+        return EvaluatorInternals.closest(evaluator, this);
     }
 
     /**
@@ -1275,11 +1280,11 @@ public class Element extends Node implements Iterable<Element> {
     /**
      * Finds elements, including and recursively under this element, with the specified tag name.
      * @param tagName The tag name to search for (case-insensitive; surrounding whitespace is trimmed).
-     * @return a matching unmodifiable list of elements. Will be empty if this element and none of its children match.
+     * @return a matching list of elements. Will be empty if this element and none of its children match.
      */
     public Elements getElementsByTag(String tagName) {
         Validate.notEmpty(tagName);
-        tagName = asciiLowerCase(StringUtil.trimAsciiWhitespace(tagName));
+        tagName = StringUtil.trimAsciiWhitespace(tagName);
 
         return Collector.collect(new Evaluator.Tag(tagName), this);
     }
@@ -1295,7 +1300,7 @@ public class Element extends Node implements Iterable<Element> {
      */
     public @Nullable Element getElementById(String id) {
         Validate.notEmpty(id);
-        return Collector.findFirst(new Evaluator.Id(id), this);
+        return Collector.findFirst(EvaluatorInternals.byId(id), this);
     }
 
     /**
@@ -1889,27 +1894,8 @@ public class Element extends Node implements Iterable<Element> {
     // performance sensitive
     public boolean hasClass(String className) {
         if (attributes == null) return false;
-
-        final String classAttr = attributes.getIgnoreCase("class");
-        final int len = classAttr.length();
-        final int wantLen = className.length();
-
-        if (len == 0 || len < wantLen) return false;
-
-        // if both lengths are equal, only need to compare the className with the attribute
-        if (len == wantLen) return className.equalsIgnoreCase(classAttr);
-
-        // otherwise, scan for whitespace and compare regions (with no string or list allocations)
-        for (int i = 0; i < len; ) {
-            int start = nextClassStart(classAttr, i, len);
-            if (start == len) return false;
-
-            int end = nextClassEnd(classAttr, start, len);
-            if (end - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) return true;
-            i = end;
-        }
-
-        return false;
+        boolean web = QueryMode.current() == QueryMode.Web;
+        return web ? CssMatching.hasClass(this, className) : LegacyMatching.hasClass(this, className);
     }
 
     /**

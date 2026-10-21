@@ -4,6 +4,7 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -30,10 +31,17 @@ abstract class StructuralEvaluator extends Evaluator {
     // root + element: Boolean matches. ThreadLocal in case the Evaluator is compiled then reused across multi threads
     final ThreadLocal<Map<Node, Map<Node, Boolean>>> threadMemo = ThreadLocal.withInitial(WeakHashMap::new);
 
-    boolean memoMatches(final Element root, final Node node) {
+    /** Memoizes inner matches for the current query or relative traversal. */
+    boolean memoMatches(final Element root, final Node node, @Nullable Element anchor) {
         Map<Node, Map<Node, Boolean>> rootMemo = threadMemo.get();
         Map<Node, Boolean> memo = rootMemo.computeIfAbsent(root, r -> new WeakHashMap<>());
-        return memo.computeIfAbsent(node, test -> evaluator.matches(root, test));
+        // avoid allocating a capturing function for every cached lookup
+        Boolean matches = memo.get(node);
+        if (matches == null) {
+            matches = evaluator.matches(root, node, anchor);
+            memo.put(node, matches);
+        }
+        return matches;
     }
 
     @Override protected void reset() {
@@ -44,20 +52,51 @@ abstract class StructuralEvaluator extends Evaluator {
 
     @Override
     public boolean matches(Element root, Element element) {
-        return evaluateMatch(root, element);
+        return evaluateMatch(root, element, null);
     }
 
     @Override
     boolean matches(Element root, LeafNode leafNode) {
-        return evaluateMatch(root, leafNode);
+        return evaluateMatch(root, leafNode, null);
     }
 
-    abstract boolean evaluateMatch(Element root, Node node);
+    @Override
+    boolean matchesRelative(Element root, Node node, Element anchor) {
+        return evaluateMatch(root, node, anchor);
+    }
 
-    static class Root extends Evaluator {
+    abstract boolean evaluateMatch(Element root, Node node, @Nullable Element anchor);
+
+    /**
+     Anchors jsoup's leading-combinator queries to their query context.
+     */
+    static class QueryRoot extends Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
-            return root == element;
+            return (web ? documentElementOrSelf(root) : root) == element;
+        }
+
+        @Override
+        protected int cost() {
+            return 1;
+        }
+
+        @Override
+        public String toString() {
+            return ">";
+        }
+    }
+
+    /**
+     Anchors only the relative selector being traversed, independently of nested query roots.
+     */
+    static class RelativeAnchor extends Evaluator {
+        @Override public boolean matches(Element root, Element element) {
+            return false;
+        }
+
+        @Override boolean matchesRelative(Element root, Node node, Element anchor) {
+            return node == anchor;
         }
 
         @Override protected int cost() {
@@ -76,7 +115,7 @@ abstract class StructuralEvaluator extends Evaluator {
         }
 
         @Override
-        boolean evaluateMatch(Element root, Node node) {
+        boolean evaluateMatch(Element root, Node node, @Nullable Element anchor) {
             return evaluator.matches(root, node);
         }
 
@@ -96,8 +135,8 @@ abstract class StructuralEvaluator extends Evaluator {
         }
 
         @Override
-        boolean evaluateMatch(Element root, Node node) {
-            return !memoMatches(root, node);
+        boolean evaluateMatch(Element root, Node node, @Nullable Element anchor) {
+            return !memoMatches(root, node, null);
         }
 
         @Override protected int cost() {
@@ -119,14 +158,14 @@ abstract class StructuralEvaluator extends Evaluator {
         }
 
         @Override
-        boolean evaluateMatch(Element root, Node node) {
-            if (root == node)
+        boolean evaluateMatch(Element root, Node node, @Nullable Element anchor) {
+            if (!web && root == node)
                 return false;
 
             for (Node parent = node.parent(); parent != null; parent = parent.parent()) {
-                if (memoMatches(root, parent))
+                if (memoMatches(root, parent, anchor))
                     return true;
-                if (parent == root)
+                if (!web && parent == root)
                     break;
             }
             return false;
@@ -163,18 +202,22 @@ abstract class StructuralEvaluator extends Evaluator {
             wantsNodes |= evaluator.wantsNodes();
         }
 
-        @Override boolean evaluateMatch(Element root, Node node) {
-            if (node == root)
+        @Override boolean evaluateMatch(Element root, Node node, @Nullable Element anchor) {
+            if (!web && node == root)
                 return false; // cannot match as the second eval (first parent test) would be above the root
 
             for (int i = evaluators.size() -1; i >= 0; --i) {
                 if (node == null)
                     return false;
                 Evaluator eval = evaluators.get(i);
-                if (!eval.matches(root, node))
+                boolean matches = anchor != null && node instanceof LeafNode ?
+                    eval.matchesRelative(root, node, anchor) : eval.matches(root, node, anchor);
+                if (!matches)
                     return false;
-                if (i > 0)
+                if (i > 0) {
+                    if (anchor != null && !web && node == root) return false;
                     node = node.parent();
+                }
             }
             return true;
         }
@@ -185,10 +228,10 @@ abstract class StructuralEvaluator extends Evaluator {
 
         @Override
         protected void reset() {
+            threadMemo.remove();
             for (Evaluator evaluator : evaluators) {
                 evaluator.reset();
             }
-            super.reset();
         }
 
         @Override
@@ -203,12 +246,12 @@ abstract class StructuralEvaluator extends Evaluator {
         }
 
         // matches any previous sibling, so can be same in Element only or wantsNodes context
-        @Override boolean evaluateMatch(Element root, Node node) {
-            if (root == node) return false;
+        @Override boolean evaluateMatch(Element root, Node node, @Nullable Element anchor) {
+            if (!web && root == node) return false;
 
             for (Node sib = node.firstSibling(); sib != null; sib = sib.nextSibling()) {
                 if (sib == node) break;
-                if (memoMatches(root, sib)) return true;
+                if (memoMatches(root, sib, anchor)) return true;
             }
 
             return false;
@@ -229,11 +272,11 @@ abstract class StructuralEvaluator extends Evaluator {
             super(evaluator);
         }
 
-        @Override boolean evaluateMatch(Element root, Node node) {
-            if (root == node) return false;
+        @Override boolean evaluateMatch(Element root, Node node, @Nullable Element anchor) {
+            if (!web && root == node) return false;
 
             Node prev = wantsNodes ? node.previousSibling() : node.previousElementSibling();
-            return prev != null && memoMatches(root, prev);
+            return prev != null && memoMatches(root, prev, anchor);
         }
 
         @Override protected int cost() {

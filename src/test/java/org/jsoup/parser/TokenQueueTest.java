@@ -46,6 +46,28 @@ public class TokenQueueTest {
         assertEquals("something(or another)", match);
     }
 
+    @Test public void chompBalancedRemainder() {
+        for (String contents : new String[]{"", "(one (two)) three", "^[^\\)]+$", "\\Qone ) ( two\\E", "'one ) two'"}) {
+            try (TokenQueue tq = new TokenQueue("prefix(" + contents + ") tail")) {
+                tq.consume("prefix(");
+                assertEquals(contents, tq.chompBalancedRemainder('(', ')'));
+                assertEquals(" tail", tq.remainder());
+            }
+        }
+    }
+
+    @Test public void unbalancedRemainderRestoresPosition() {
+        for (String contents : new String[]{"", "one (two)"}) {
+            try (TokenQueue tq = new TokenQueue("prefix(" + contents)) {
+                tq.consume("prefix(");
+                int start = tq.pos();
+                assertThrows(IllegalArgumentException.class, () -> tq.chompBalancedRemainder('(', ')'));
+                assertEquals(start, tq.pos());
+                assertEquals(contents, tq.remainder());
+            }
+        }
+    }
+
     @Test public void unescape() {
         assertEquals("one ( ) \\", TokenQueue.unescape("one \\( \\) \\\\"));
     }
@@ -316,6 +338,15 @@ public class TokenQueueTest {
         TokenQueue emptyQueue = new TokenQueue("");
         Exception exception = assertThrows(IllegalArgumentException.class, emptyQueue::consumeCssIdentifier);
         assertEquals("CSS identifier expected, but end of input found", exception.getMessage());
+    }
+
+    @Test void consumeCssValueReplacesLeadingNull() {
+        for (String value : new String[]{"\u0000", "-\u0000", "\u0000value", "-\u0000value"}) {
+            try (TokenQueue queue = new TokenQueue(value)) {
+                assertEquals(value.replace('\u0000', '\uFFFD'), queue.consumeCssValue());
+                assertTrue(queue.isEmpty());
+            }
+        }
     }
 
     // Some of jsoup's tests depend on this behavior
