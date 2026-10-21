@@ -2512,6 +2512,76 @@ public class HtmlParserTest {
         assertEquals("<html id=\"1\" class=\"foo\"><head></head><body><p>One</p></body></html>", TextUtil.stripNewlines(doc.html()));
     }
 
+    @ParameterizedTest @MethodSource("rootAttributeLimitCases")
+    void limitsAttributesAcrossRepeatedRootTags(String tagName, boolean trackPosition) {
+        StringBuilder html = new StringBuilder("<html><body>");
+        for (int i = 0; i < 522; i++)
+            html.append('<').append(tagName).append(" a").append(i).append("=v").append(i).append('>');
+        html.append("<p>tail</p>");
+        Parser parser = Parser.htmlParser().setTrackPosition(trackPosition);
+
+        Document doc = Jsoup.parse(html.toString(), parser);
+
+        Element root = doc.expectFirst(tagName);
+        assertEquals(512, root.attributesSize());
+        for (int i = 0; i < 512; i++)
+            assertEquals("v" + i, root.attr("a" + i));
+        assertFalse(root.hasAttr("a512"));
+        assertFalse(root.hasAttr("a521"));
+        assertEquals(trackPosition, root.attributes().sourceRange("a0").isTracked());
+        assertEquals(trackPosition, root.attributes().sourceRange("a511").isTracked());
+        assertEquals("tail", doc.expectFirst("p").text());
+
+        // the parser limit does not restrict attributes added through the DOM API
+        root.attr("added", "yes");
+        assertEquals(513, root.attributesSize());
+        assertEquals("yes", root.attr("added"));
+    }
+
+    @ParameterizedTest @MethodSource("rootAttributeLimitCases")
+    void limitsMergedRootAttributesWithinOneTag(String tagName, boolean trackPosition) {
+        StringBuilder input = new StringBuilder("<" + tagName);
+        for (int i = 0; i < 511; i++)
+            input.append(" a").append(i).append("=v").append(i);
+        input.append("><p>before</p>");
+        // a duplicate must not consume the final slot; only the first new attribute fits
+        input.append('<').append(tagName).append(" a0=replaced a511=last a512=excess>");
+        input.append('<').append(tagName).append(" a511=replaced a513=excess><p>after</p>");
+        String html = input.toString();
+        Parser parser = Parser.htmlParser().setTrackPosition(trackPosition);
+
+        Document doc = Jsoup.parse(html, parser);
+
+        Element root = doc.expectFirst(tagName);
+        assertEquals(512, root.attributesSize());
+        assertEquals("v0", root.attr("a0"));
+        assertEquals("v510", root.attr("a510"));
+        assertEquals("last", root.attr("a511"));
+        assertFalse(root.hasAttr("a512"));
+        assertFalse(root.hasAttr("a513"));
+        assertEquals("before after", doc.body().text());
+        Range.AttributeRange first = root.attributes().sourceRange("a0");
+        Range.AttributeRange last = root.attributes().sourceRange("a511");
+        assertEquals(trackPosition, first.isTracked());
+        assertEquals(trackPosition, last.isTracked());
+        assertFalse(root.attributes().sourceRange("a512").isTracked());
+        if (trackPosition) {
+            assertEquals(html.indexOf("a0="), first.nameRange().startPos());
+            assertEquals("v0", html.substring(first.valueRange().startPos(), first.valueRange().endPos()));
+            assertEquals(html.indexOf("a511=last"), last.nameRange().startPos());
+            assertEquals("last", html.substring(last.valueRange().startPos(), last.valueRange().endPos()));
+        }
+    }
+
+    static Stream<Arguments> rootAttributeLimitCases() {
+        return Stream.of(
+            Arguments.of("html", false),
+            Arguments.of("html", true),
+            Arguments.of("body", false),
+            Arguments.of("body", true)
+        );
+    }
+
     @Test void supportsRuby() {
         String html = "<ruby><rbc><rb>10</rb><rb>31</rb><rb>2002</rb></rbc><rtc><rt>Month</rt><rt>Day</rt><rt>Year</rt></rtc><rtc><rt>Expiration Date</rt><rp>(*)</rtc></ruby>";
         Parser parser = Parser.htmlParser();
