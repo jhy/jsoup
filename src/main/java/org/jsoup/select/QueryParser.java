@@ -35,11 +35,13 @@ public class QueryParser implements AutoCloseable {
     private final static char[] Combinators = {'>', '+', '~'}; // ' ' is also a combinator, but found implicitly
     private static final AttributeOperator[] AttributeOperators = AttributeOperator.values();
     private final static char[] SequenceEnders = {',', ')'};
+    static final int MaxNestingDepth = 128;
 
     private final TokenQueue tq;
     private final String query;
     private final boolean web;
     private boolean inNodeContext; // ::comment:contains should act on node value, vs element text
+    private int nestingDepth;
 
     /**
      * Create a new QueryParser.
@@ -679,7 +681,10 @@ public class QueryParser implements AutoCloseable {
         Validate.isTrue(tq.matchChomp('('), err);
         tq.consumeWhitespace();
         Validate.isTrue(!tq.isEmpty() && !tq.matches(')'), err);
+        Validate.isTrue(nestingDepth < MaxNestingDepth, "Selector nesting depth exceeds maximum of " + MaxNestingDepth);
+        nestingDepth++;
         SelectorGroup group = parseSelectorGroup();
+        nestingDepth--;
         Validate.isTrue(tq.matchChomp(')'), err);
         return group;
     }

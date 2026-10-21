@@ -6,6 +6,7 @@ import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 
 import static org.jsoup.select.EvaluatorDebug.sexpr;
+import static org.jsoup.select.QueryParser.MaxNestingDepth;
 import static org.jsoup.select.Selector.SelectorParseException;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -296,6 +297,29 @@ public class QueryParserTest {
                 () -> QueryParser.parse(query));
             assertEquals(":not(selector) subselect must not be empty", exception.getMessage());
         }
+    }
+
+    @Test void limitsNestedSelectors() {
+        for (boolean web : new boolean[] {false, true}) {
+            for (String pseudo : new String[] {"has", "is", "not"}) {
+                String maximum = nestedSelector(pseudo, MaxNestingDepth);
+                Evaluator evaluator = assertDoesNotThrow(() -> QueryParser.parse(maximum, web), pseudo);
+                assertDoesNotThrow(() -> Jsoup.parse("<x></x>").select(evaluator), pseudo);
+
+                String excessive = nestedSelector(pseudo, MaxNestingDepth +1 );
+                SelectorParseException exception = assertThrows(SelectorParseException.class,
+                    () -> QueryParser.parse(excessive, web), pseudo);
+                assertEquals("Selector nesting depth exceeds maximum of " + MaxNestingDepth, exception.getMessage());
+            }
+        }
+    }
+
+    private static String nestedSelector(String pseudo, int depth) {
+        StringBuilder query = new StringBuilder();
+        for (int i = 0; i < depth; i++) query.append(':').append(pseudo).append('(');
+        query.append('x');
+        for (int i = 0; i < depth; i++) query.append(')');
+        return query.toString();
     }
 
     private static HasEvaluator.Traversal hasTraversal(String selector) {
