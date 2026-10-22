@@ -2011,6 +2011,24 @@ public class SelectorTest {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+        ":matches", ":matches()", ":matches(", ":matches.foo", ":matches.",
+        ":matchesOwn", ":matchesOwn()", ":matchesOwn(", ":matchesOwn.foo", ":matchesOwn.",
+        ":matchesWholeText", ":matchesWholeText()", ":matchesWholeText(", ":matchesWholeText.foo", ":matchesWholeText.",
+        ":matchesWholeOwnText", ":matchesWholeOwnText()", ":matchesWholeOwnText(", ":matchesWholeOwnText.foo", ":matchesWholeOwnText.",
+        ":matchesAttr", ":matchesAttr()", ":matchesAttr(", ":matchesAttr.foo", ":matchesAttr.",
+        ":contains.", ":containsOwn.", ":containsWholeText.", ":containsWholeOwnText.", ":containsData.",
+        ":lt.", ":gt.", ":eq.", ":nth-child.", ":nth-last-child.", ":nth-of-type.", ":nth-last-of-type."
+    })
+    @ResourceLock(SYSTEM_PROPERTIES)
+    void functionalSelectorsRejectMalformedArgumentsInBothModes(String query) {
+        for (boolean web : new boolean[]{false, true}) mode(web, () -> {
+            assertThrows(Selector.SelectorParseException.class, () -> Selector.evaluatorOf(query), query);
+            return null;
+        });
+    }
+
     @Test
     @ResourceLock(SYSTEM_PROPERTIES)
     void regexSyntaxWorksInBothModes() {

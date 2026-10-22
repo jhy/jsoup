@@ -575,7 +575,7 @@ public class QueryParser implements AutoCloseable {
      Parses {@code :matchesAttr()}, leaving regex escapes intact.
      */
     private Evaluator matchesAttr() {
-        tq.consume("(");
+        Validate.isTrue(tq.matchChomp('('), ":matchesAttr requires an attribute name and regex");
         tq.consumeWhitespace();
         String key = consumeAttributeName(tq, tq.consumeCssIdentifier());
         tq.consumeWhitespace();
@@ -621,7 +621,9 @@ public class QueryParser implements AutoCloseable {
             : (last ? new Evaluator.IsNthLastChild(step, offset) : new Evaluator.IsNthChild(step, offset));
     }
 
+    /** Consumes a parenthesized argument, requiring its opening delimiter. */
     private String consumeParens() {
+        Validate.isTrue(tq.matches('('), "Expected '(' in query '" + query + "'");
         return tq.chompBalanced('(', ')');
     }
 
@@ -722,9 +724,7 @@ public class QueryParser implements AutoCloseable {
     // :matches(regex), matchesOwn(regex)
     private Evaluator matches(boolean own) {
         String query = own ? ":matchesOwn" : ":matches";
-        String regex = consumeParens(); // don't unescape, as regex bits will be escaped
-        Validate.notEmpty(regex, query + "(regex) query must not be empty");
-        Regex pattern = Regex.compile(regex);
+        Regex pattern = consumeRegex(query);
 
         if (inNodeContext)
             return new NodeEvaluator.MatchesValue(pattern);
@@ -734,16 +734,20 @@ public class QueryParser implements AutoCloseable {
             : new Evaluator.Matches(pattern);
     }
 
-    // :matches(regex), matchesOwn(regex)
+    // :matchesWholeText(regex), matchesWholeOwnText(regex)
     private Evaluator matchesWholeText(boolean own) {
         String query = own ? ":matchesWholeOwnText" : ":matchesWholeText";
-        String regex = consumeParens(); // don't unescape, as regex bits will be escaped
-        Validate.notEmpty(regex, query + "(regex) query must not be empty");
-
-        Regex pattern = Regex.compile(regex);
+        Regex pattern = consumeRegex(query);
         return own
             ? new Evaluator.MatchesWholeOwnText(pattern)
             : new Evaluator.MatchesWholeText(pattern);
+    }
+
+    /** Consumes and compiles a non-empty regex argument, preserving its escapes. */
+    private Regex consumeRegex(String pseudo) {
+        String regex = consumeParens();
+        Validate.notEmpty(regex, pseudo + "(regex) query must not be empty");
+        return Regex.compile(regex);
     }
 
     /** Parses the selector group negated by {@code :not()}. */
