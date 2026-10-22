@@ -21,7 +21,10 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static org.jsoup.parser.HtmlTreeBuilder.MaxFormattingElements;
+import static org.jsoup.parser.HtmlTreeBuilder.MaxUsedFormattingElements;
 import static org.jsoup.parser.ParseSettings.preserveCase;
+import static org.jsoup.parser.Token.Tag.MaxAttributes;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -1180,6 +1183,107 @@ public class HtmlParserTest {
 
         assertEquals("<b><b><b><b></b></b></b></b>", doc.body().child(0).html());
         assertEquals("<b><b><b>x</b></b></b>", doc.body().child(1).html());
+    }
+
+    @ParameterizedTest(name = "fragment={0}, trackPosition={1}")
+    @MethodSource("formattingParseModes")
+    void adoptionRetainsOlderFormattingHistory(boolean fragment, boolean trackPosition) {
+        StringBuilder input = new StringBuilder("<b id=outer>");
+        for (int i = 0; i < MaxUsedFormattingElements; i++) input.append("<i x=").append(i).append('>');
+        input.append("<p>X</b>Y");
+        Document doc = parseFormattingInput(input.toString(), fragment, Parser.htmlParser().setTrackPosition(trackPosition));
+
+        assertEquals("<b id=\"outer\">X</b>Y", doc.expectFirst("p").html());
+        assertEquals(trackPosition, doc.expectFirst("p > b").sourceRange().isTracked());
+    }
+
+    @ParameterizedTest(name = "fragment={0}, trackPosition={1}")
+    @MethodSource("formattingParseModes")
+    void reconstructionRetainsOlderHistoryUntilOverflow(boolean fragment, boolean trackPosition) {
+        // removing newer entries can expose one older than the reconstruction window
+        for (int count : new int[]{MaxUsedFormattingElements, MaxFormattingElements - 1, MaxFormattingElements}) {
+            StringBuilder input = new StringBuilder("<div><b id=old></div>");
+            for (int i = 0; i < count; i++) input.append("<div><i x=").append(i).append("></div>");
+            for (int i = 0; i < count; i++) input.append("</i>");
+            input.append("Z<p>After</p>");
+            Document doc = parseFormattingInput(input.toString(), fragment, Parser.htmlParser().setTrackPosition(trackPosition));
+
+            assertEquals(count + 1, doc.body().getElementsByTag("div").size());
+            if (count < MaxFormattingElements) {
+                Element restored = doc.expectFirst("body > b:last-of-type");
+                assertEquals("Z", restored.ownText());
+                assertEquals("old", restored.id());
+                if (trackPosition) assertEquals(5, restored.sourceRange().startPos());
+            } else {
+                assertEquals("Z", doc.body().childNode(count + 1).outerHtml());
+                assertEquals("<p>After</p>", doc.body().lastChild().outerHtml());
+            }
+            assertEquals("After", doc.expectFirst("p").text());
+        }
+    }
+
+    @ParameterizedTest(name = "fragment={0}, trackPosition={1}")
+    @MethodSource("formattingParseModes")
+    void limitsStaleFormattingHistoryDuringParsing(boolean fragment, boolean trackPosition) {
+        StringBuilder input = new StringBuilder();
+        int count = MaxFormattingElements * 4;
+        for (int i = 0; i < count; i++) input.append("<div><b x=").append(i).append("></div>");
+        for (int i = 0; i < count; i++) input.append("</i>");
+        input.append("<p>After</p>");
+        HtmlTreeBuilder tb = new FormattingLimitTreeBuilder();
+        Document doc = parseFormattingInput(input.toString(), fragment, new Parser(tb).setTrackPosition(trackPosition));
+
+        assertEquals(MaxFormattingElements, tb.formattingElements.size());
+        assertEquals(count, doc.body().getElementsByTag("div").size());
+        assertEquals("After", doc.text());
+        Elements reconstructed = doc.expectFirst("p").getElementsByTag("b");
+        assertEquals(MaxUsedFormattingElements, reconstructed.size());
+        assertEquals(Integer.toString(count - MaxUsedFormattingElements), reconstructed.first().attr("x"));
+        Element last = reconstructed.last();
+        assertEquals(Integer.toString(count - 1), last.attr("x"));
+        if (trackPosition) assertEquals(input.indexOf("<b x=" + (count - 1) + ">"), last.sourceRange().startPos());
+    }
+
+    @ParameterizedTest(name = "fragment={0}, trackPosition={1}")
+    @MethodSource("formattingParseModes")
+    void limitsFormattingMarkersDuringParsing(boolean fragment, boolean trackPosition) {
+        StringBuilder input = new StringBuilder();
+        int count = MaxFormattingElements * 4;
+        for (int i = 0; i < count; i++) input.append("<object>");
+        input.append("<i>Inside</i>");
+        for (int i = 0; i < count; i++) input.append("</object>");
+        input.append("<p>After</p>");
+        HtmlTreeBuilder tb = new FormattingLimitTreeBuilder();
+        Document doc = parseFormattingInput(input.toString(), fragment, new Parser(tb).setTrackPosition(trackPosition));
+
+        assertEquals(count, doc.body().getElementsByTag("object").size());
+        assertEquals(1, doc.body().getElementsByTag("i").size());
+        assertEquals("Inside", doc.expectFirst("i").text());
+        assertEquals("<p>After</p>", doc.expectFirst("p").outerHtml());
+    }
+
+    static Stream<Arguments> formattingParseModes() {
+        return Stream.of(Arguments.of(false, false), Arguments.of(false, true), Arguments.of(true, false), Arguments.of(true, true));
+    }
+
+    private static class FormattingLimitTreeBuilder extends HtmlTreeBuilder {
+        @Override protected boolean process(Token token) {
+            boolean processed = super.process(token);
+            assertTrue(formattingElements.size() <= MaxFormattingElements);
+            return processed;
+        }
+    }
+
+    private static Document parseFormattingInput(String input, boolean fragment, Parser parser) {
+        Document doc;
+        if (fragment) {
+            doc = Document.createShell("");
+            doc.body().appendChildren(parser.parseFragmentInput(input, doc.body(), ""));
+        } else {
+            doc = parser.parseInput(input, "");
+        }
+        doc.outputSettings().prettyPrint(false);
+        return doc;
     }
 
     @ParameterizedTest(name = "fragment={0}")
@@ -2564,7 +2668,8 @@ public class HtmlParserTest {
     @ParameterizedTest @MethodSource("rootAttributeLimitCases")
     void limitsAttributesAcrossRepeatedRootTags(String tagName, boolean trackPosition) {
         StringBuilder html = new StringBuilder("<html><body>");
-        for (int i = 0; i < 522; i++)
+        int count = MaxAttributes + 10;
+        for (int i = 0; i < count; i++)
             html.append('<').append(tagName).append(" a").append(i).append("=v").append(i).append('>');
         html.append("<p>tail</p>");
         Parser parser = Parser.htmlParser().setTrackPosition(trackPosition);
@@ -2572,53 +2677,53 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(html.toString(), parser);
 
         Element root = doc.expectFirst(tagName);
-        assertEquals(512, root.attributesSize());
-        for (int i = 0; i < 512; i++)
+        assertEquals(MaxAttributes, root.attributesSize());
+        for (int i = 0; i < MaxAttributes; i++)
             assertEquals("v" + i, root.attr("a" + i));
-        assertFalse(root.hasAttr("a512"));
-        assertFalse(root.hasAttr("a521"));
+        assertFalse(root.hasAttr("a" + MaxAttributes));
+        assertFalse(root.hasAttr("a" + (count - 1)));
         assertEquals(trackPosition, root.attributes().sourceRange("a0").isTracked());
-        assertEquals(trackPosition, root.attributes().sourceRange("a511").isTracked());
+        assertEquals(trackPosition, root.attributes().sourceRange("a" + (MaxAttributes - 1)).isTracked());
         assertEquals("tail", doc.expectFirst("p").text());
 
         // the parser limit does not restrict attributes added through the DOM API
         root.attr("added", "yes");
-        assertEquals(513, root.attributesSize());
+        assertEquals(MaxAttributes + 1, root.attributesSize());
         assertEquals("yes", root.attr("added"));
     }
 
     @ParameterizedTest @MethodSource("rootAttributeLimitCases")
     void limitsMergedRootAttributesWithinOneTag(String tagName, boolean trackPosition) {
         StringBuilder input = new StringBuilder("<" + tagName);
-        for (int i = 0; i < 511; i++)
+        for (int i = 0; i < MaxAttributes - 1; i++)
             input.append(" a").append(i).append("=v").append(i);
         input.append("><p>before</p>");
         // a duplicate must not consume the final slot; only the first new attribute fits
-        input.append('<').append(tagName).append(" a0=replaced a511=last a512=excess>");
-        input.append('<').append(tagName).append(" a511=replaced a513=excess><p>after</p>");
+        input.append('<').append(tagName).append(" a0=replaced last=kept excess=ignored>");
+        input.append('<').append(tagName).append(" last=replaced later=ignored><p>after</p>");
         String html = input.toString();
         Parser parser = Parser.htmlParser().setTrackPosition(trackPosition);
 
         Document doc = Jsoup.parse(html, parser);
 
         Element root = doc.expectFirst(tagName);
-        assertEquals(512, root.attributesSize());
+        assertEquals(MaxAttributes, root.attributesSize());
         assertEquals("v0", root.attr("a0"));
-        assertEquals("v510", root.attr("a510"));
-        assertEquals("last", root.attr("a511"));
-        assertFalse(root.hasAttr("a512"));
-        assertFalse(root.hasAttr("a513"));
+        assertEquals("v" + (MaxAttributes - 2), root.attr("a" + (MaxAttributes - 2)));
+        assertEquals("kept", root.attr("last"));
+        assertFalse(root.hasAttr("excess"));
+        assertFalse(root.hasAttr("later"));
         assertEquals("before after", doc.body().text());
         Range.AttributeRange first = root.attributes().sourceRange("a0");
-        Range.AttributeRange last = root.attributes().sourceRange("a511");
+        Range.AttributeRange last = root.attributes().sourceRange("last");
         assertEquals(trackPosition, first.isTracked());
         assertEquals(trackPosition, last.isTracked());
-        assertFalse(root.attributes().sourceRange("a512").isTracked());
+        assertFalse(root.attributes().sourceRange("excess").isTracked());
         if (trackPosition) {
             assertEquals(html.indexOf("a0="), first.nameRange().startPos());
             assertEquals("v0", html.substring(first.valueRange().startPos(), first.valueRange().endPos()));
-            assertEquals(html.indexOf("a511=last"), last.nameRange().startPos());
-            assertEquals("last", html.substring(last.valueRange().startPos(), last.valueRange().endPos()));
+            assertEquals(html.indexOf("last=kept"), last.nameRange().startPos());
+            assertEquals("kept", html.substring(last.valueRange().startPos(), last.valueRange().endPos()));
         }
     }
 

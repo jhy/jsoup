@@ -45,7 +45,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private @Nullable FormElement formElement; // the current form element
     private @Nullable Element contextElement; // context copy and fragment output container; not on the stack
     private @Nullable Element fragmentRoot; // internal stack root; contextElement receives fragment nodes
-    ArrayList<Element> formattingElements; // active (open) formatting elements
+    ArrayList<@Nullable Element> formattingElements; // active formatting elements and null scope markers
     private ArrayList<HtmlTreeBuilderState> tmplInsertMode; // stack of Template Insertion modes
     private @Nullable NoscriptState noscriptState; // active noscript island state
     private List<Token.Character> pendingTableCharacters; // chars in table to be shifted out
@@ -826,7 +826,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
         }
     }
 
-    private static void replaceInQueue(ArrayList<Element> queue, Element out, Element in) {
+    /** Replaces an existing element without changing any scope markers. */
+    private static void replaceInQueue(ArrayList<@Nullable Element> queue, Element out, Element in) {
         int i = queue.lastIndexOf(out);
         Validate.isTrue(i != -1);
         queue.set(i, in);
@@ -1134,11 +1135,13 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return el.tag().hasParserOption(HtmlTagOptions.Special);
     }
 
-    Element lastFormattingElement() {
+    /** Returns the last entry, or null for a scope marker or an empty list. */
+    @Nullable Element lastFormattingElement() {
         return formattingElements.size() > 0 ? formattingElements.get(formattingElements.size()-1) : null;
     }
 
-    Element removeLastFormattingElement() {
+    /** Removes the last entry, returning null for a scope marker or an empty list. */
+    @Nullable Element removeLastFormattingElement() {
         int size = formattingElements.size();
         if (size > 0)
             return formattingElements.remove(size-1);
@@ -1149,7 +1152,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
     // active formatting elements
     void pushActiveFormattingElements(Element in) {
         checkActiveFormattingElements(in);
-        formattingElements.add(in);
+        addFormattingElement(formattingElements.size(), in);
+    }
+
+    /** Inserts a formatting element or null scope marker, dropping the oldest entry if over the limit. */
+    private void addFormattingElement(int pos, @Nullable Element element) {
+        formattingElements.add(pos, element);
+        if (formattingElements.size() > MaxFormattingElements)
+            formattingElements.remove(0);
     }
 
     /** Replaces a formatting entry at its original position or after a moved bookmark. */
@@ -1158,19 +1168,19 @@ public class HtmlTreeBuilder extends TreeBuilder {
         if (pos == -1) {
             error("Unable to restore formatting order for <%s>", out.tagName());
             removeFromActiveFormattingElements(out);
-            formattingElements.add(in);
+            addFormattingElement(formattingElements.size(), in);
         } else if (bookmark == out) {
             formattingElements.set(pos, in);
         } else {
             removeFromActiveFormattingElements(out);
-            formattingElements.add(formattingElements.indexOf(bookmark) + 1, in);
+            addFormattingElement(formattingElements.indexOf(bookmark) + 1, in);
         }
     }
 
     void checkActiveFormattingElements(Element in){
         int numSeen = 0;
         final int size = formattingElements.size() -1;
-        int ceil = size - maxUsedFormattingElements; if (ceil <0) ceil = 0;
+        int ceil = size - MaxUsedFormattingElements; if (ceil <0) ceil = 0;
 
         for (int pos = size; pos >= ceil; pos--) {
             Element el = formattingElements.get(pos);
@@ -1202,7 +1212,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
         Element entry = last;
         int size = formattingElements.size();
-        int ceil = size - maxUsedFormattingElements; if (ceil <0) ceil = 0;
+        int ceil = size - MaxUsedFormattingElements; if (ceil <0) ceil = 0;
         int pos = size - 1;
         boolean skip = false;
         while (true) {
@@ -1217,7 +1227,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         while(true) {
             if (!skip) // step 7: on later than entry
                 entry = formattingElements.get(++pos);
-            Validate.notNull(entry); // should not occur, as we break at last element
+            entry = Validate.expectNotNull(entry); // should not occur, as we break at last element
 
             // 8. create new element from element, 9 insert into current node, onto stack
             skip = false; // can only skip increment from 4.
@@ -1240,7 +1250,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return element;
     }
 
-    private static final int maxUsedFormattingElements = 12; // limit how many elements get recreated
+    static final int MaxFormattingElements = 512; // includes markers, which also consume recovery history
+    static final int MaxUsedFormattingElements = 12; // limit how many elements get recreated
 
     void clearFormattingElementsToLastMarker() {
         while (!formattingElements.isEmpty()) {
@@ -1281,7 +1292,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void insertMarkerToFormattingElements() {
-        formattingElements.add(null);
+        addFormattingElement(formattingElements.size(), null);
     }
 
     // Template Insertion Mode stack
