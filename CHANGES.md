@@ -14,6 +14,7 @@
 * Query selector parsing now limits nested `:has()`, `:is()`, and `:not()` expressions to a maximum depth of 128.
 * SVG-specific tag and attribute names are now automatically case corrected (e.g. `pathlength` becomes `pathLength`) when parsing HTML. https://github.com/jhy/jsoup/pull/2630
 * Improved the HTML parse across document boundaries by handling whitespace separately from subsequent text. This better preserves the input's whitespace through parse and serialize round-trips. [#2632](https://github.com/jhy/jsoup/issues/2632)
+* Improved HTML parsing performance for documents with misplaced elements, and DOM update performance. [#2646](https://github.com/jhy/jsoup/pull/2646)
 
 ### Changes
 * Removed APIs previously deprecated and scheduled for removal in 1.24.1. [#2597](https://github.com/jhy/jsoup/pull/2597)
@@ -45,6 +46,7 @@
 * Fixed fragment parsing to ignore `<body>` and `<frameset>` start tags when the second open element is not `body`, matching the HTML spec. [#2634](https://github.com/jhy/jsoup/issues/2634)
 * Updated how the tokeniser handles malformed doctypes, to remove duplicative tokens and error messages. [#2635](https://github.com/jhy/jsoup/pull/2635)
 * Corrected HTML tokenisation of malformed comments such as `<!---x` and incomplete start tags such as `<p id=`, and improved their error reporting. [#2636](https://github.com/jhy/jsoup/pull/2636)
+* Fixed `FormElement.empty()` retaining associations with removed controls. If an input node removed by `empty()` was subsequently inserted outside its original form, it could incorrectly reappear in that form's `elements()` and `formData()` results. [#2646](https://github.com/jhy/jsoup/pull/2646)
 
 ## 1.23.2 (2026-Aug-26)
 

@@ -166,6 +166,26 @@ public class FormElementTest {
         assertEquals("login", data.get(2).key());
     }
 
+    @Test void emptyDropsDirectChildLinksAndRetainsOutsideControls() {
+        Document doc = Jsoup.parse("<form><input id=direct name=direct value=one></form><input id=outside name=outside value=two>");
+        FormElement form = (FormElement) doc.expectFirst("form");
+        Element direct = doc.expectFirst("#direct");
+        Element outside = doc.expectFirst("#outside");
+        form.addElement(outside);
+
+        assertSame(form, form.empty());
+
+        assertEquals(0, form.childNodeSize());
+        assertNull(direct.parent());
+        assertSame(doc.body(), outside.parent());
+        // reattaching a removed child elsewhere must not restore its old form association
+        doc.body().appendChild(direct);
+        SelectorTest.assertSelectedIds(form.elements(), "outside");
+        List<Connection.KeyVal> data = form.formData();
+        assertEquals(1, data.size());
+        assertEquals("outside=two", data.get(0).toString());
+    }
+
     @Test public void removeFormElement() {
         String html = "<html>\n" +
                 "  <body> \n" +

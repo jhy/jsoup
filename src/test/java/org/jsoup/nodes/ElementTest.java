@@ -1347,6 +1347,116 @@ public class ElementTest {
         assertEquals("<div id=\"1\"></div>\n<div id=\"2\">\n Text\n <p>One</p>\n Text\n <p>Two</p>\n</div>", doc.body().html());
     }
 
+    @ParameterizedTest @ValueSource(ints = {0, 1, 3})
+    void indexedInsertionPreservesValidSiblingIndexes(int index) {
+        Element parent = new Element("div");
+        parent.appendElement("p");
+        parent.appendElement("p");
+        parent.appendElement("p");
+        Node text = new TextNode("text");
+        Element span = new Element("span");
+
+        parent.insertChildren(index, text, span);
+
+        assertTrue(parent.hasValidChildren());
+        assertSame(text, parent.childNode(index));
+        assertSame(span, parent.childNode(index + 1));
+        assertStoredSiblingIndexes(parent);
+    }
+
+    @ParameterizedTest @ValueSource(booleans = {false, true})
+    void repeatedInsertionBeforeTablePreservesValidSiblingIndexes(boolean followingSibling) {
+        Element parent = new Element("div");
+        Element prefix = parent.appendElement("p");
+        Element table = parent.appendElement("table");
+        Element tail = followingSibling ? parent.appendElement("p") : null;
+
+        for (int i = 0; i < 32; i++) {
+            Element input = new Element("input");
+            table.before(input);
+
+            // check stored indexes before navigation could repair them
+            assertTrue(parent.hasValidChildren());
+            assertSame(prefix, parent.childNode(0));
+            assertEquals(i + 1, input.siblingIndex);
+            assertEquals(i + 2, table.siblingIndex);
+            assertSame(input, table.previousSibling());
+            assertSame(tail, table.nextSibling());
+            assertStoredSiblingIndexes(parent);
+        }
+    }
+
+    @ParameterizedTest @ValueSource(booleans = {false, true})
+    void bulkChildTransferPreservesDestinationIndexValidity(boolean invalidDestination) {
+        Element source = new Element("div").appendText("text");
+        source.appendElement("span");
+        List<Node> children = source.childNodes();
+        Element destination = new Element("div");
+        Element first = destination.appendElement("p");
+        destination.appendElement("p");
+        destination.appendElement("p");
+        if (invalidDestination) first.remove();
+
+        destination.insertChildren(1, children);
+
+        assertEquals(0, source.childNodeSize());
+        assertEquals(!invalidDestination, destination.hasValidChildren());
+        assertSame(children.get(0), destination.childNode(1));
+        assertSame(children.get(1), destination.childNode(2));
+        if (invalidDestination) {
+            assertEquals(0, destination.childNode(0).siblingIndex());
+            assertTrue(destination.hasValidChildren());
+        }
+        assertStoredSiblingIndexes(destination);
+    }
+
+    @Test void indexedInsertionLeavesExistingInvalidIndexesForRepair() {
+        Element parent = new Element("div");
+        Element first = parent.appendElement("p");
+        Element second = parent.appendElement("p");
+        Element last = parent.appendElement("p");
+        first.remove();
+        Element input = new Element("input");
+
+        parent.insertChildren(1, input);
+
+        assertFalse(parent.hasValidChildren());
+        assertSame(second, parent.childNode(0));
+        assertSame(input, parent.childNode(1));
+        assertSame(last, parent.childNode(2));
+        assertEquals(0, second.siblingIndex());
+        assertTrue(parent.hasValidChildren());
+        assertStoredSiblingIndexes(parent);
+    }
+
+    @Test void indexedSiblingMoveLeavesIndexesForRepair() {
+        Element parent = new Element("div");
+        Element first = parent.appendElement("p");
+        Element second = parent.appendElement("p");
+        Element third = parent.appendElement("p");
+        Element last = parent.appendElement("p");
+
+        parent.insertChildren(1, third);
+
+        // detaching the incoming sibling invalidates indexes before insertion
+        assertFalse(parent.hasValidChildren());
+        assertSame(first, parent.childNode(0));
+        assertSame(third, parent.childNode(1));
+        assertSame(second, parent.childNode(2));
+        assertSame(last, parent.childNode(3));
+        assertEquals(1, third.siblingIndex());
+        assertTrue(parent.hasValidChildren());
+        assertStoredSiblingIndexes(parent);
+    }
+
+    private static void assertStoredSiblingIndexes(Element parent) {
+        for (int i = 0; i < parent.childNodeSize(); i++) {
+            Node child = parent.childNode(i);
+            assertEquals(i, child.siblingIndex);
+            assertSame(parent, child.parent());
+        }
+    }
+
     @Test
     public void insertChildrenArgumentValidation() {
         Document doc = Jsoup.parse("<div id=1>Text <p>One</p> Text <p>Two</p></div><div id=2></div>");

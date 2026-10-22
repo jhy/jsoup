@@ -2,10 +2,18 @@ package org.jsoup.parser;
 
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jspecify.annotations.NullMarked;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -14,10 +22,172 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static org.jsoup.parser.HtmlTreeBuilder.MaxFormattingElements;
 import static org.jsoup.parser.Parser.NamespaceHtml;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HtmlTreeBuilderTest {
+    @Nested class FormattingHistory {
+        private final HtmlTreeBuilder tb = new HtmlTreeBuilder();
+
+        @BeforeEach void initialise() {
+            tb.initialiseParse(new StringReader(""), "", new Parser(tb));
+            tb.initialiseParseFragment(new Element("div"));
+        }
+
+        @AfterEach void close() {
+            tb.closeParse();
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {MaxFormattingElements - 1, MaxFormattingElements, MaxFormattingElements + 1, MaxFormattingElements * 4})
+        void limitsFormattingHistoryWithoutRemovingDomNodes(int count) {
+            Element parent = new Element("div");
+            for (int i = 0; i < count; i++) {
+                Element el = parent.appendElement("b").attr("x", Integer.toString(i));
+                tb.pushActiveFormattingElements(el);
+                assertEquals(Math.min(i + 1, MaxFormattingElements), tb.formattingElements.size());
+            }
+
+            int retained = Math.min(count, MaxFormattingElements);
+            assertEquals(count, parent.childrenSize());
+            for (int i = 0; i < retained; i++)
+                assertSame(parent.child(count - retained + i), tb.formattingElements.get(i));
+        }
+
+        @Test void limitsFormattingMarkers() {
+            for (int i = 0; i < MaxFormattingElements * 4; i++) {
+                tb.insertMarkerToFormattingElements();
+                assertEquals(Math.min(i + 1, MaxFormattingElements), tb.formattingElements.size());
+                assertNull(tb.lastFormattingElement());
+            }
+            tb.clearFormattingElementsToLastMarker();
+            assertEquals(MaxFormattingElements - 1, tb.formattingElements.size());
+            Element recent = new Element("b");
+            tb.pushActiveFormattingElements(recent);
+            assertSame(recent, tb.getActiveFormattingElement("b"));
+            tb.clearFormattingElementsToLastMarker();
+            assertEquals(MaxFormattingElements - 2, tb.formattingElements.size());
+        }
+
+        @Test void formattingOverflowPreservesRetainedMarkerBoundaries() {
+            tb.pushActiveFormattingElements(new Element("b"));
+            tb.insertMarkerToFormattingElements();
+            for (int i = 0; i < MaxFormattingElements - 3; i++)
+                tb.pushActiveFormattingElements(new Element("i").attr("x", Integer.toString(i)));
+            Element first = tb.formattingElements.get(2);
+            Element last = tb.lastFormattingElement();
+            tb.insertMarkerToFormattingElements();
+            tb.pushActiveFormattingElements(new Element("u").attr("x", "1"));
+            tb.pushActiveFormattingElements(new Element("u").attr("x", "2"));
+
+            // the old b and its following marker have left the retained prefix
+            assertEquals(MaxFormattingElements, tb.formattingElements.size());
+            assertSame(first, tb.formattingElements.get(0));
+            assertNull(tb.getActiveFormattingElement("b"));
+            assertNull(tb.getActiveFormattingElement("i"));
+            tb.clearFormattingElementsToLastMarker();
+            assertEquals(MaxFormattingElements - 3, tb.formattingElements.size());
+            assertSame(last, tb.getActiveFormattingElement("i"));
+            tb.clearFormattingElementsToLastMarker();
+            assertTrue(tb.formattingElements.isEmpty());
+        }
+
+        @Test void formattingDuplicateRemovalFreesCapacityBeforeEviction() {
+            fillFormattingElements(tb, MaxFormattingElements - 3);
+            Element oldest = tb.formattingElements.get(0);
+            Element duplicate = new Element("i");
+            tb.pushActiveFormattingElements(duplicate);
+            tb.pushActiveFormattingElements(new Element("i"));
+            tb.pushActiveFormattingElements(new Element("i"));
+            tb.pushActiveFormattingElements(new Element("i"));
+
+            assertEquals(MaxFormattingElements, tb.formattingElements.size());
+            assertSame(oldest, tb.formattingElements.get(0));
+            assertFalse(tb.isInActiveFormattingElements(duplicate));
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
+        void adoptionInsertionAtCapacityPreservesBookmark(boolean originalPresent) {
+            fillFormattingElements(tb, MaxFormattingElements);
+            Element first = tb.formattingElements.get(originalPresent ? 0 : 1);
+            Element original = originalPresent ? tb.formattingElements.get(MaxFormattingElements / 4) : new Element("b");
+            Element bookmark = tb.formattingElements.get(MaxFormattingElements / 2);
+            Element replacement = new Element("i");
+            tb.replaceFormattingElement(original, replacement, bookmark);
+
+            assertEquals(MaxFormattingElements, tb.formattingElements.size());
+            assertSame(first, tb.formattingElements.get(0));
+            assertFalse(tb.isInActiveFormattingElements(original));
+            int pos = tb.formattingElements.indexOf(bookmark) + 1;
+            assertSame(replacement, tb.formattingElements.get(pos));
+
+            Element next = new Element("u");
+            tb.replaceFormattingElement(replacement, next, replacement);
+            assertEquals(MaxFormattingElements, tb.formattingElements.size());
+            assertSame(first, tb.formattingElements.get(0));
+            assertSame(next, tb.formattingElements.get(pos));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void adoptionFallbackAtCapacityRetainsRecentEntries(boolean originalPresent) throws IOException {
+        assertAdoptionRecovery(new HtmlTreeBuilder(), tb -> {
+            fillFormattingElements(tb, MaxFormattingElements);
+            Element first = tb.formattingElements.get(originalPresent ? 0 : 1);
+            Element original = originalPresent ? tb.formattingElements.get(MaxFormattingElements / 4) : new Element("b");
+            Element replacement = new Element("i");
+            tb.replaceFormattingElement(original, replacement, new Element("u"));
+
+            assertEquals(MaxFormattingElements, tb.formattingElements.size());
+            assertSame(first, tb.formattingElements.get(0));
+            assertSame(replacement, tb.lastFormattingElement());
+            assertFalse(tb.isInActiveFormattingElements(original));
+        }, "Unable to restore formatting order for <b>");
+    }
+
+    private static void fillFormattingElements(HtmlTreeBuilder tb, int count) {
+        for (int i = 0; i < count; i++)
+            tb.pushActiveFormattingElements(new Element("b").attr("x", Integer.toString(i)));
+    }
+
+    @Test void adoptionMovesExistingChildNodes() {
+        HtmlTreeBuilder tb = new HtmlTreeBuilder();
+        tb.initialiseParse(new StringReader(""), "", new Parser(tb));
+        tb.initialiseParseFragment(new Element("div"));
+        try {
+            tb.processStartTag("b");
+            Element formatting = tb.currentElement();
+            tb.processStartTag("p");
+            Element block = tb.currentElement();
+            block.appendChild(new TextNode("before"));
+            block.appendChild(new Comment("marker"));
+            block.appendElement("span").text("inside");
+            block.appendChild(new TextNode("after"));
+            List<Node> children = block.childNodes();
+
+            tb.processEndTag("b");
+
+            assertEquals(0, formatting.childNodeSize());
+            assertEquals(1, block.childNodeSize());
+            Element replacement = block.child(0);
+            assertNotSame(formatting, replacement);
+            assertEquals("b", replacement.normalName());
+            assertSame(block, replacement.parent());
+            assertEquals(children.size(), replacement.childNodeSize());
+            for (int i = 0; i < children.size(); i++) {
+                Node child = children.get(i);
+                assertSame(child, replacement.childNode(i));
+                assertSame(replacement, child.parent());
+                assertEquals(i, child.siblingIndex());
+            }
+        } finally {
+            tb.closeParse();
+        }
+    }
+
     @Test void missingStackEntryReportsErrorAndAppends() throws IOException {
         assertAdoptionRecovery(new HtmlTreeBuilder(), tb -> {
             Element replacement = tb.doc.child(0).appendElement("b");

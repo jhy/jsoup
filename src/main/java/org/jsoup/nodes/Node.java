@@ -601,7 +601,7 @@ public abstract class Node implements Cloneable {
     }
 
     protected void addChildren(Node... children) {
-        //most used. short circuit addChildren(int), which hits reindex children and array copy
+        // appending only assigns new indexes; existing siblings do not move
         validateChildren(children);
 
         final List<Node> nodes = ensureChildNodes();
@@ -645,7 +645,8 @@ public abstract class Node implements Cloneable {
                 while (i-- > 0) {
                     children[i].setParentNodeUnchecked(parent);
                 }
-                parent.invalidateChildren();
+                if (parent.hasValidChildren())
+                    parent.reindexChildren(index);
                 return;
             }
         }
@@ -654,7 +655,9 @@ public abstract class Node implements Cloneable {
             child.setParentNodeUnchecked(parent);
         }
         nodes.addAll(index, Arrays.asList(children));
-        parent.invalidateChildren();
+        // detaching incoming siblings may have invalidated the unchanged prefix
+        if (parent.hasValidChildren())
+            parent.reindexChildren(index);
     }
     
     protected void reparentChild(Node child) {
@@ -717,8 +720,13 @@ public abstract class Node implements Cloneable {
      * @see org.jsoup.nodes.Element#elementSiblingIndex()
      */
     public int siblingIndex() {
-        if (parentNode != null && !parentNode.childNodes.validChildren)
-            parentNode.reindexChildren();
+        if (parentNode != null && !parentNode.childNodes.validChildren) {
+            // the last child's position is known without repairing other siblings
+            if (parentNode.lastChild() == this)
+                siblingIndex = parentNode.childNodeSize() - 1;
+            else
+                parentNode.reindexChildren(0);
+        }
 
         return siblingIndex;
     }

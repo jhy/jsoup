@@ -20,7 +20,7 @@ import java.util.List;
  * form to easily be submitted.
  */
 public class FormElement extends Element {
-    private final Elements linkedEls = new Elements();
+    private final ArrayList<Element> linkedEls = new ArrayList<>();
     // contains form submittable elements that were linked during the parse (and due to parse rules, may no longer be a child of this form)
     private static final Evaluator submittable = Selector.evaluatorOf(StringUtil.join(SharedConstants.FormSubmitTags, ", "));
 
@@ -65,6 +65,19 @@ public class FormElement extends Element {
     protected void removeChild(Node out) {
         super.removeChild(out);
         linkedEls.remove(out);
+    }
+
+    /**
+     Removes all child nodes from this form in the DOM, leaving the form itself in place.
+     Controls associated with this form but located elsewhere in the document remain unchanged.
+
+     @return this form
+     */
+    @Override
+    public Element empty() {
+        // clear direct-child associations before their parent links are removed
+        linkedEls.removeIf(el -> el.parent() == this);
+        return super.empty();
     }
 
     /**

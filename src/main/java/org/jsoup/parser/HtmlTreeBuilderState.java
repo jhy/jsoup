@@ -933,8 +933,7 @@ enum HtmlTreeBuilderState {
                 // 4.17: Create a replacement for formattingElement, with furthestBlock as the intended parent.
                 Element replacement = tb.recreateElement(formatEl);
                 // 4.18: Append all children of furthestBlock to the new element.
-                for (Node child : furthestBlock.childNodes())
-                    replacement.appendChild(child);
+                replacement.appendChildren(furthestBlock.childNodes());
                 // 4.19: Append that new element to furthestBlock.
                 furthestBlock.appendChild(replacement);
                 // 4.20: Replace formattingElement at the bookmark.
@@ -1717,9 +1716,10 @@ enum HtmlTreeBuilderState {
 
     private static void mergeAttributes(Token.StartTag source, Element dest) {
         if (!source.hasAttributes()) return;
+        Attributes destAttrs = dest.attributes();
         source.finaliseAttributeRanges(source.treeBuilder.settings);
         for (Attribute attr : source.attributes) { // only iterates public attributes
-            Attributes destAttrs = dest.attributes();
+            if (destAttrs.size() >= Token.Tag.MaxAttributes) break; // repeated html and body tags share the same limit as a single start tag
             if (!destAttrs.hasKey(attr.getKey())) {
                 Range.AttributeRange range = attr.sourceRange(); // grab before its parent changes
                 destAttrs.put(attr);
