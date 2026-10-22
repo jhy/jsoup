@@ -75,9 +75,16 @@ public class FormElement extends Element {
      */
     @Override
     public Element empty() {
-        // clear direct-child associations before their parent links are removed
-        linkedEls.removeIf(el -> el.parent() == this);
+        // clear descendant associations before their parent links are removed
+        linkedEls.removeIf(this::isDescendant);
         return super.empty();
+    }
+
+    private boolean isDescendant(Element element) {
+        for (Element parent = element.parent(); parent != null; parent = parent.parent()) {
+            if (parent == this) return true;
+        }
+        return false;
     }
 
     /**

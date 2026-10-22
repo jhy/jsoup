@@ -166,24 +166,28 @@ public class FormElementTest {
         assertEquals("login", data.get(2).key());
     }
 
-    @Test void emptyDropsDirectChildLinksAndRetainsOutsideControls() {
-        Document doc = Jsoup.parse("<form><input id=direct name=direct value=one></form><input id=outside name=outside value=two>");
+    @Test void emptyDropsDescendantLinksAndRetainsOutsideControls() {
+        Document doc = Jsoup.parse("<form><input id=direct name=direct value=one><div><input id=nested name=nested value=two></div></form>" +
+            "<input id=outside name=outside value=three>");
         FormElement form = (FormElement) doc.expectFirst("form");
         Element direct = doc.expectFirst("#direct");
+        Element nested = doc.expectFirst("#nested");
         Element outside = doc.expectFirst("#outside");
         form.addElement(outside);
+        SelectorTest.assertSelectedIds(form.elements(), "direct", "nested", "outside");
 
         assertSame(form, form.empty());
 
         assertEquals(0, form.childNodeSize());
         assertNull(direct.parent());
         assertSame(doc.body(), outside.parent());
-        // reattaching a removed child elsewhere must not restore its old form association
+        // reattaching removed descendants elsewhere must not restore their old form associations
         doc.body().appendChild(direct);
+        doc.body().appendChild(nested);
         SelectorTest.assertSelectedIds(form.elements(), "outside");
         List<Connection.KeyVal> data = form.formData();
         assertEquals(1, data.size());
-        assertEquals("outside=two", data.get(0).toString());
+        assertEquals("outside=three", data.get(0).toString());
     }
 
     @Test public void removeFormElement() {
