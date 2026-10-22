@@ -377,12 +377,14 @@ public class TokenQueue implements AutoCloseable {
                 advance();
                 out.append(Replacement);
             } else if (c == Esc) {
+                reader.mark(); // keep the backslash available if newline lookahead reaches a buffer boundary
                 advance();
                 if (!isEmpty() && isNewline(current())) {
                     // Not a valid escape sequence. This is treated as the end of the CSS identifier.
-                    reader.unconsume();
+                    reader.rewindToMark();
                     break;
                 } else {
+                    reader.unmark();
                     consumeCssEscapeSequenceInto(out);
                 }
             } else {
@@ -405,10 +407,11 @@ public class TokenQueue implements AutoCloseable {
         Validate.isTrue(first == Unicode_Null || first == '\\' || first == '-' || first == '_' || Character.isLetter(first) || first >= 0x80,
             "Attribute value must be a CSS identifier or quoted string");
         if (first == '-') {
+            reader.mark(); // keep the hyphen available while checking the next character
             advance();
             char next = current();
             boolean valid = !isEmpty() && (next == Unicode_Null || next == '-' || next == '_' || next == Esc || Character.isLetter(next) || next >= 0x80);
-            reader.unconsume();
+            reader.rewindToMark();
             Validate.isTrue(valid, "Attribute value must be a CSS identifier or quoted string");
         }
         String value = consumeCssIdentifier();

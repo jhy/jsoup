@@ -1,11 +1,13 @@
 package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -338,6 +340,62 @@ public class TokenQueueTest {
         TokenQueue emptyQueue = new TokenQueue("");
         Exception exception = assertThrows(IllegalArgumentException.class, emptyQueue::consumeCssIdentifier);
         assertEquals("CSS identifier expected, but end of input found", exception.getMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"\\\n", "\\\r", "\\\f", "\\\r\n"})
+    void invalidIdentifierEscapeAcrossBufferBoundary(String escape) {
+        for (int offset : new int[]{-1, 0, 1}) {
+            String prefix = StringUtil.padding(CharacterReader.RefillPoint - 1 + offset, -1).replace(' ', 'a');
+            String padding = StringUtil.padding(CharacterReader.BufferSize, -1);
+            try (TokenQueue queue = new TokenQueue(prefix + escape + padding + "tail")) {
+                assertEquals(prefix, queue.consumeCssIdentifier());
+                for (char c : escape.toCharArray()) assertEquals(c, queue.consume());
+                assertTrue(queue.consumeWhitespace());
+                assertEquals("tail", queue.consumeCssIdentifier());
+                assertTrue(queue.isEmpty());
+            }
+        }
+    }
+
+    @Test void validIdentifierEscapeAcrossBufferBoundary() {
+        for (int offset : new int[]{-1, 0, 1}) {
+            String prefix = StringUtil.padding(CharacterReader.RefillPoint - 1 + offset, -1).replace(' ', 'a');
+            String suffix = StringUtil.padding(CharacterReader.BufferSize * 2, -1).replace(' ', 'b');
+            try (TokenQueue queue = new TokenQueue(prefix + "\\!" + suffix + " tail")) {
+                // reading beyond the next buffer also checks that successful lookahead releases its mark
+                assertEquals(prefix + "!" + suffix, queue.consumeCssIdentifier());
+                assertTrue(queue.consumeWhitespace());
+                assertEquals("tail", queue.consumeCssIdentifier());
+                assertTrue(queue.isEmpty());
+            }
+        }
+    }
+
+    @Test void hyphenatedCssValuesAcrossBufferBoundary() {
+        for (int offset : new int[]{-1, 0, 1}) {
+            String prefix = StringUtil.padding(CharacterReader.RefillPoint - 1 + offset, -1);
+            String padding = StringUtil.padding(CharacterReader.BufferSize * 2, -1);
+            try (TokenQueue queue = new TokenQueue(prefix + "-a " + padding + "tail")) {
+                assertTrue(queue.consumeWhitespace());
+                assertEquals("-a", queue.consumeCssValue());
+                assertTrue(queue.consumeWhitespace());
+                assertEquals("tail", queue.consumeCssIdentifier());
+                assertTrue(queue.isEmpty());
+            }
+        }
+    }
+
+    @Test void invalidHyphenatedCssValuesAcrossBufferBoundary() {
+        for (int offset : new int[]{-1, 0, 1}) {
+            String prefix = StringUtil.padding(CharacterReader.RefillPoint - 1 + offset, -1);
+            String padding = StringUtil.padding(CharacterReader.BufferSize, -1);
+            try (TokenQueue queue = new TokenQueue(prefix + "-1" + padding)) {
+                assertTrue(queue.consumeWhitespace());
+                assertThrows(IllegalArgumentException.class, queue::consumeCssValue);
+                assertEquals('-', queue.consume());
+            }
+        }
     }
 
     @Test void consumeCssValueReplacesLeadingNull() {

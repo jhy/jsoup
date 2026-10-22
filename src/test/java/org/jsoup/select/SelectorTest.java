@@ -3,6 +3,7 @@ package org.jsoup.select;
 import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.helper.Regex;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
@@ -2049,6 +2050,32 @@ public class SelectorTest {
                 assertThrows(Selector.SelectorParseException.class, () -> doc.select(bad), bad);
             Evaluator eval = Selector.evaluatorOf("img:matchesAttr(src, a,b)");
             assertEquals(doc.select(eval), doc.select(eval.toString()));
+            return null;
+        });
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    @ResourceLock(SYSTEM_PROPERTIES)
+    void malformedIdentifierAtBufferBoundary(boolean web) {
+        mode(web, () -> {
+            String prefix = StringUtil.padding(1022, -1).replace(' ', 'a');
+            String suffix = StringUtil.padding(1023, -1).replace(' ', 'x');
+            String query = "." + prefix + "\\\n" + suffix;
+            assertThrows(Selector.SelectorParseException.class, () -> Selector.evaluatorOf(query));
+            return null;
+        });
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    @ResourceLock(SYSTEM_PROPERTIES)
+    void hyphenatedAttributeValueAtBufferBoundary(boolean web) {
+        mode(web, () -> {
+            Document doc = Jsoup.parse("<p x=-a>hit</p><p x=a>miss</p>");
+            String padding = StringUtil.padding(1021, -1);
+            String query = "[x=" + padding + "-a " + padding + "i]";
+            assertEquals("hit", doc.select(query).text());
             return null;
         });
     }
