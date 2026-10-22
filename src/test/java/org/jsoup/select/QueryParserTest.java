@@ -4,9 +4,13 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.Collections;
 
 import static org.jsoup.select.EvaluatorDebug.sexpr;
-import static org.jsoup.select.QueryParser.MaxNestingDepth;
+import static org.jsoup.select.QueryParser.MaxQueryComplexity;
 import static org.jsoup.select.Selector.SelectorParseException;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -300,17 +304,53 @@ public class QueryParserTest {
     }
 
     @Test void limitsNestedSelectors() {
-        for (boolean web : new boolean[] {false, true}) {
-            for (String pseudo : new String[] {"has", "is", "not"}) {
-                String maximum = nestedSelector(pseudo, MaxNestingDepth);
-                Evaluator evaluator = assertDoesNotThrow(() -> QueryParser.parse(maximum, web), pseudo);
-                assertDoesNotThrow(() -> Jsoup.parse("<x></x>").select(evaluator), pseudo);
+        for (String pseudo : new String[] {"has", "is", "not"})
+            assertComplexityLimit(nestedSelector(pseudo, MaxQueryComplexity), nestedSelector(pseudo, MaxQueryComplexity + 1));
+    }
 
-                String excessive = nestedSelector(pseudo, MaxNestingDepth +1 );
-                SelectorParseException exception = assertThrows(SelectorParseException.class,
-                    () -> QueryParser.parse(excessive, web), pseudo);
-                assertEquals("Selector nesting depth exceeds maximum of " + MaxNestingDepth, exception.getMessage());
-            }
+    @Test void limitsNodeSelectors() {
+        String maximum = String.join("", Collections.nCopies(MaxQueryComplexity, "::text"));
+        assertComplexityLimit(maximum, maximum + "::text");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {" ", ">", "+", "~"})
+    void limitsCombinatorChains(String combinator) {
+        String maximum = String.join("", Collections.nCopies(MaxQueryComplexity, "x" + combinator)) + "x";
+        assertComplexityLimit(maximum, maximum + combinator + "x");
+    }
+
+    @Test void limitsLeadingCombinators() {
+        String maximum = ">" + String.join("", Collections.nCopies(MaxQueryComplexity - 1, "x>")) + "x";
+        assertComplexityLimit(maximum, maximum + ">x");
+    }
+
+    @Test void sharesComplexityBudget() {
+        String mixed = "x";
+        for (int i = 0; i < MaxQueryComplexity / 4; i++) mixed = "::node:not(" + mixed + ") x+x";
+        assertComplexityLimit(mixed, mixed + " x");
+
+        String alternatives = String.join(",", Collections.nCopies(MaxQueryComplexity, ":is(x)"));
+        assertComplexityLimit(alternatives, alternatives + ",:is(x)");
+    }
+
+    @Test void flatSelectorsAndLiteralValuesDoNotConsumeComplexityBudget() {
+        String classes = "x" + String.join("", Collections.nCopies(MaxQueryComplexity + 1, ".a"));
+        String value = String.join("", Collections.nCopies(MaxQueryComplexity + 1, ">"));
+        for (boolean web : new boolean[]{false, true}) {
+            assertDoesNotThrow(() -> QueryParser.parse(classes, web));
+            assertDoesNotThrow(() -> QueryParser.parse(":matches(" + value + ")[x='" + value + "']", web));
+        }
+    }
+
+    private static void assertComplexityLimit(String maximum, String excessive) {
+        for (boolean web : new boolean[]{false, true}) {
+            Evaluator evaluator = assertDoesNotThrow(() -> QueryParser.parse(maximum, web));
+            assertDoesNotThrow(evaluator::toString);
+            assertDoesNotThrow(() -> Jsoup.parse("<x></x>").select(evaluator));
+            SelectorParseException exception = assertThrows(SelectorParseException.class,
+                () -> QueryParser.parse(excessive, web));
+            assertEquals("Query complexity exceeds maximum of " + MaxQueryComplexity, exception.getMessage());
         }
     }
 

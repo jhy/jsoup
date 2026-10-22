@@ -35,13 +35,13 @@ public class QueryParser implements AutoCloseable {
     private final static char[] Combinators = {'>', '+', '~'}; // ' ' is also a combinator, but found implicitly
     private static final AttributeOperator[] AttributeOperators = AttributeOperator.values();
     private final static char[] SequenceEnders = {',', ')'};
-    static final int MaxNestingDepth = 128;
+    static final int MaxQueryComplexity = 128;
 
     private final TokenQueue tq;
     private final String query;
     private final boolean web;
     private boolean inNodeContext; // ::comment:contains should act on node value, vs element text
-    private int nestingDepth;
+    private int complexity;
 
     /**
      * Create a new QueryParser.
@@ -59,10 +59,13 @@ public class QueryParser implements AutoCloseable {
      Parse a CSS query into an Evaluator. If you are evaluating the same query repeatedly, it may be more efficient to
      parse it once and reuse the Evaluator.
 
+     <p>A query may contain at most {@value #MaxQueryComplexity} combinators, node selectors, and {@code :has()},
+     {@code :is()}, or {@code :not()} expressions in total, across all selector alternatives.</p>
+
      @param query CSS query
      @return Evaluator
      @see Selector selector query syntax
-     @throws Selector.SelectorParseException if the CSS query is invalid
+     @throws Selector.SelectorParseException if the CSS query is invalid or exceeds the complexity limit
      */
     public static Evaluator parse(String query) {
         return parse(query, QueryMode.current() == QueryMode.Web);
@@ -113,6 +116,7 @@ public class QueryParser implements AutoCloseable {
     private ComplexSelector parseSelector() {
         tq.consumeWhitespace();
         char leading = tq.matchesAny(Combinators) ? tq.consume() : 0;
+        if (leading != 0) consumeStructuralStep();
         List<Evaluator> compounds = Collections.singletonList(parseSimpleSequence());
         List<Character> combinators = Collections.emptyList();
         while (true) {
@@ -120,6 +124,7 @@ public class QueryParser implements AutoCloseable {
             if (tq.matchesAny(Combinators)) combinator = tq.consume();
             else if (tq.matchesAny(SequenceEnders) || tq.isEmpty()) break;
             if (combinator == 0) break;
+            consumeStructuralStep();
             if (combinators.isEmpty()) {
                 compounds = new ArrayList<>(compounds);
                 combinators = new ArrayList<>();
@@ -346,6 +351,7 @@ public class QueryParser implements AutoCloseable {
 
     /** Parses a node selector and its subclasses in node-value context. */
     private Evaluator parseNodeSelector() {
+        consumeStructuralStep();
         final String pseudo = tq.consumeCssIdentifier();
         Evaluator nodeType;
         switch (pseudo) {
@@ -683,12 +689,15 @@ public class QueryParser implements AutoCloseable {
         Validate.isTrue(tq.matchChomp('('), err);
         tq.consumeWhitespace();
         Validate.isTrue(!tq.isEmpty() && !tq.matches(')'), err);
-        Validate.isTrue(nestingDepth < MaxNestingDepth, "Selector nesting depth exceeds maximum of " + MaxNestingDepth);
-        nestingDepth++;
+        consumeStructuralStep();
         SelectorGroup group = parseSelectorGroup();
-        nestingDepth--;
         Validate.isTrue(tq.matchChomp(')'), err);
         return group;
+    }
+
+    /** Bounds parser and evaluator recursion by counting structural steps across the whole query. */
+    private void consumeStructuralStep() {
+        Validate.isTrue(++complexity <= MaxQueryComplexity, "Query complexity exceeds maximum of " + MaxQueryComplexity);
     }
 
     // pseudo selector :contains(text), containsOwn(text)

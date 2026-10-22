@@ -13,6 +13,7 @@ import org.jsoup.select.Evaluator;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.QueryParser;
+import org.jsoup.select.Selector.SelectorParseException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -3049,7 +3050,6 @@ public class ElementTest {
     @Test void cssSelectorDoesntStackOverflow() {
         // https://github.com/jhy/jsoup/issues/2001
         Element element = new Element("element");
-        Element root = element;
 
         // Create a long chain of elements
         for (int i = 0; i < 5000; i++) {
@@ -3059,15 +3059,10 @@ public class ElementTest {
         }
 
         String selector = element.cssSelector(); // would overflow in cssSelector parent() recurse
-        Evaluator eval = QueryParser.parse(selector);
-
-        assertEquals(eval.toString(), selector);
         assertTrue(selector.startsWith("element > element0 >"));
         assertTrue(selector.endsWith("8 > element4999"));
-
-        Elements elements = root.select(selector); // would overflow in nested And ImmediateParent chain eval
-        assertEquals(1, elements.size());
-        assertEquals(element, elements.first());
+        // generated paths may exceed the parser's query complexity limit
+        assertThrows(SelectorParseException.class, () -> QueryParser.parse(selector));
     }
 
     @Test void cssSelectorWithBracket() {

@@ -11,7 +11,6 @@
 * Added support for parsing processing instructions in HTML and XML, as `ProcessingInstruction` nodes. This supports marker nodes such as `<?marker name="country-options"?>`, matched by `<template for="country-options">` in the HTML Standard's new declarative streaming syntax. Processing instructions can be selected with `::pi` or `::pi(target)`, and their data can be read and changed through the node's attribute methods. **Change:** when using the XML parser, ordinary `<?target ...?>` nodes are now represented by `ProcessingInstruction` instead of `XmlDeclaration`; the `<?xml ...?>` declaration remains an `XmlDeclaration`. [#2613](https://github.com/jhy/jsoup/pull/2613)
 * Added `Parser.parseAttributes(String)` to parse an attribute fragment using that parser's settings.
 * `:has()` selectors with child and sibling combinators now run faster by limiting the search to the parts of the document where they can match. This particularly improves selectors such as `:has(> a)`, `:has(+ dd)`, and `:has(+ div span)`. [#2610](https://github.com/jhy/jsoup/pull/2610)
-* Query selector parsing now limits nested `:has()`, `:is()`, and `:not()` expressions to a maximum depth of 128.
 * SVG-specific tag and attribute names are now automatically case corrected (e.g. `pathlength` becomes `pathLength`) when parsing HTML. https://github.com/jhy/jsoup/pull/2630
 * Improved the HTML parse across document boundaries by handling whitespace separately from subsequent text. This better preserves the input's whitespace through parse and serialize round-trips. [#2632](https://github.com/jhy/jsoup/issues/2632)
 * Improved HTML parsing performance for documents with misplaced elements, and DOM update performance. [#2646](https://github.com/jhy/jsoup/pull/2646)
@@ -19,6 +18,7 @@
 ### Changes
 * Removed APIs previously deprecated and scheduled for removal in 1.24.1. [#2597](https://github.com/jhy/jsoup/pull/2597)
 * `Response.bodyStream()` now observes the configured max body size and request timeout, consistent with the other response body methods. The default max size is 2 MB. You can configure that with `maxBodySize(0)` before executing the request to disable the cap. `Response.isTruncated()` reports when the decoded response content exceeded the configured limit. [#2598](https://github.com/jhy/jsoup/pull/2598)
+* Query selector parsing now limits each query to 128 structural steps, counting combinators, node selectors, and `:has()`, `:is()`, and `:not()` expressions together. More complex queries throw `SelectorParseException` during parsing.
 * `Attributes.equals()` and `hashCode()` now exclude internal attributes, such as source ranges and user data. [#2633](https://github.com/jhy/jsoup/issues/2633)
 
 ### Bug Fixes
