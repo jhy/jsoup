@@ -12,40 +12,33 @@ import java.util.HashSet;
 import java.util.stream.Stream;
 
 /**
- CSS queries for finding elements and nodes.
- <p>This reference describes jsoup 1.24.1's default query behavior. See <a href="#query-compatibility">Query compatibility changes</a>
- for Web mode and the <a href="https://jsoup.org/news/selector-migration?utm_source=jsoup&amp;utm_medium=javadoc">selector migration guide</a> for how to test and update
- your queries.</p>
+ Find elements and nodes using CSS selectors.
 
  <h2 id="using-selectors">Using selectors</h2>
- <p>Call {@link Element#select(String)} to find matching descendants and, if it matches, the element it is called on. For example, given
- {@code <div id="outer"><div id="inner"></div></div>}, {@code outer.select("div")} returns both divs, while
- {@code outer.select(":scope > div")} returns only the inner div.</p>
- <p>{@link Element#selectFirst(String)} returns the first match. {@link Element#is(String)} checks whether the element itself
- matches the query. {@link Element#closest(String)} finds the nearest matching element: itself or an ancestor.
+ <p>Use selectors to find elements by tag, class, attribute, text, or their position in the document. Pass a query to
+ {@link Element#select(String)} to get matching elements, or {@link Element#selectFirst(String)} to get the first match.</p>
+ <pre class="selector-example">{@code Elements links = doc.select("a[href]");
+Elements images = doc.select("article img");
+Element heading = doc.selectFirst("article > h1");}</pre>
+ <p>Combine selectors to narrow your search: {@code a.download[href$=.zip]} finds links with the {@code download} class
+ whose URLs end in {@code .zip}. Try queries in the
+ <a href="https://try.jsoup.org/?utm_source=jsoup&amp;utm_medium=javadoc">Try jsoup online playground</a>.
  To retrieve nodes such as text and comments, use {@link Element#selectNodes(String)}.</p>
- <p>You can try queries in the <a href="https://try.jsoup.org/?utm_source=jsoup&amp;utm_medium=javadoc">Try jsoup online playground</a>.</p>
+ <p>jsoup 1.24.1 introduces an opt-in Web query mode with changes to matching behavior; see
+ <a href="#query-compatibility">Query compatibility changes</a> and the
+ <a href="https://jsoup.org/news/selector-migration?utm_source=jsoup&amp;utm_medium=javadoc">selector migration guide</a>.</p>
 
  <h2 id="selector-syntax">Selector syntax</h2>
- <p>Combine simple selectors to narrow a match, and separate them with combinators to describe relationships.
- For example, {@code div.header[title] > a} finds links directly inside a div with class "header" and a title attribute.
- The universal selector {@code *} is implicit: {@code .header} and {@code *.header} are equivalent.</p>
+ <p>A selector combines simple selectors, such as {@code .header[title]}, with combinators, such as {@code >}, to
+ describe relationships between elements. The universal selector {@code *} is implicit:
+ {@code .header} and {@code *.header} are equivalent.</p>
  <p>See <a href="#element-attribute-selectors">element and attribute selectors</a>,
  <a href="#combinators">combinators</a>, <a href="#logical-selectors">logical selectors</a>,
  <a href="#structural-selectors">structural selectors</a>, <a href="#text-regex-selectors">text, regex, and index selectors</a>,
  and <a href="#node-selectors">node selectors</a>.</p>
- <p>The examples in the tables are CSS queries. When writing a query in a Java string literal, double each backslash;
- see <a href="#escaping-selectors">Escaping and regular expressions</a>.</p>
-
- <style>
- table.syntax {border-spacing: 0;}
- table.syntax th {text-align: left; width: 40%;}
- table.syntax th:first-child {width: 20%;}
- table.syntax td {vertical-align: top; padding: 0.5em 2em 0.5em 0;}
- table.syntax tr:hover {background-color: #eee;}
- </style>
 
  <h3 id="element-attribute-selectors">Element and attribute selectors</h3>
+ <div class="selector-table">
  <table class="syntax">
  <tr><th>Pattern</th><th>Matches</th><th>Example</th></tr>
  <tr><td><code>*</code></td><td>any element</td><td><code>*</code></td></tr>
@@ -68,8 +61,10 @@ import java.util.stream.Stream;
  <tr><td><code>:matchesAttr(attr, regex)</code></td><td>elements with an attribute value containing a regex match</td><td><code>img:matchesAttr(src, (?i)\.(png|jpe?g))</code></td></tr>
  <tr><td><code>[*]</code></td><td>elements with any attribute</td><td><code>p[*]</code> finds <code>p</code> elements that have at least one attribute; <code>p:not([*])</code> finds those with no attributes</td></tr>
  </table>
+ </div>
 
  <h3 id="combinators">Combinators</h3>
+ <div class="selector-table">
  <table class="syntax">
  <tr><th>Pattern</th><th>Matches</th><th>Example</th></tr>
  <tr><td><code>E F</code></td><td>an F element descended from an E element</td><td><code>div a</code>, <code>.logo h1</code></td></tr>
@@ -78,16 +73,20 @@ import java.util.stream.Stream;
  <tr><td><code>E ~ F</code></td><td>an F element preceded by sibling E</td><td><code>h1 ~ p</code></td></tr>
  <tr><td><code>E, F, G</code></td><td>all matching elements E, F, or G</td><td><code>a[href], div, h3</code></td></tr>
  </table>
+ </div>
 
  <h3 id="logical-selectors">Logical selectors</h3>
+ <div class="selector-table">
  <table class="syntax">
  <tr><th>Pattern</th><th>Matches</th><th>Example</th></tr>
  <tr><td><code>:has(<em>selector</em>)</code></td><td>elements that contain at least one element matching the <em>selector</em></td><td><code>div:has(p)</code> finds <code>div</code>s that contain <code>p</code> elements.<br><code>div:has(&gt; a)</code> selects <code>div</code> elements that have at least one direct child <code>a</code> element.<br><code>section:has(h1, h2)</code> finds <code>section</code> elements that contain a <code>h1</code> or a <code>h2</code> element</td></tr>
  <tr><td><code>:is(<em>selector list</em>)</code></td><td>elements that match any of the selectors in the selector list</td><td><code>:is(h1, h2, h3, h4, h5, h6)</code> finds any heading element.<br><code>:is(section, article) &gt; :is(h1, h2)</code> finds a <code>h1</code> or <code>h2</code> that is a direct child of a <code>section</code> or an <code>article</code></td></tr>
  <tr><td><code>:not(<em>selector</em>)</code></td><td>elements that do not match the <em>selector</em>. See also {@link Elements#not(String)}</td><td><code>div:not(.logo)</code> finds all divs that do not have the "logo" class.<p><code>div:not(:has(div))</code> finds divs that do not contain divs.</p></td></tr>
  </table>
+ </div>
 
  <h3 id="structural-selectors">Structural selectors</h3>
+ <div class="selector-table">
  <table class="syntax">
  <tr><th>Pattern</th><th>Matches</th><th>Example</th></tr>
  <tr><td><code>:scope</code></td><td>The element you query from, or the document element (usually <code>html</code>) when querying a Document</td><td><code>:scope &gt; p</code> finds direct child paragraphs</td></tr>
@@ -104,9 +103,11 @@ import java.util.stream.Stream;
  <tr><td><code>:only-of-type</code></td><td>elements with a parent and no siblings of the same type</td><td><code>p:only-of-type</code></td></tr>
  <tr><td><code>:empty</code></td><td>elements that contain no child elements or nodes, with the exception of blank text nodes, comments, XML declarations, and doctype declarations. In other words, it matches elements that are effectively empty of meaningful content.</td><td><code>li:not(:empty)</code></td></tr>
  </table>
+ </div>
 
  <h3 id="text-regex-selectors">Text, regex, and index selectors</h3>
  <p>These jsoup extensions match text or zero-based sibling indexes.</p>
+ <div class="selector-table">
  <table class="syntax">
  <tr><th>Pattern</th><th>Matches</th><th>Example</th></tr>
  <tr><td><code>:lt(<em>n</em>)</code></td><td>elements whose sibling index is less than <em>n</em></td><td><code>td:lt(3)</code> finds the first 3 cells of each row</td></tr>
@@ -115,35 +116,55 @@ import java.util.stream.Stream;
  <tr><td><code>:contains(<em>text</em>)</code></td><td>elements that contain the specified text. The search is case insensitive. The text may appear in the found element, or any of its descendants. The text is whitespace normalized. <p>To find content that includes parentheses, escape those with a {@code \}.</p></td><td><code>p:contains(jsoup)</code> finds p elements containing the text "jsoup".<p>{@code p:contains(hello \(there\))} finds p elements containing the text "Hello (There)"</p></td></tr>
  <tr><td><code>:containsOwn(<em>text</em>)</code></td><td>elements that directly contain the specified text. The search is case insensitive. The text must appear in the found element, not any of its descendants.</td><td><code>p:containsOwn(jsoup)</code> finds p elements with own text "jsoup".</td></tr>
  <tr><td><code>:containsData(<em>data</em>)</code></td><td>elements that contain the specified <em>data</em>. The contents of {@code script} and {@code style} elements, and {@code comment} nodes (etc) are considered data nodes, not text nodes. The search is case insensitive. The data may appear in the found element, or any of its descendants.</td><td><code>script:containsData(jsoup)</code> finds script elements containing the data "jsoup".</td></tr>
- <tr><td><code>:containsWholeText(<em>text</em>)</code></td><td>elements containing the exact text, including case, spaces, and newlines, in themselves or their descendants. A <code>br</code> contributes a newline. Escape parentheses with a backslash</td><td><code>p:containsWholeText(two  spaces)</code> matches two spaces between the words</td></tr>
- <tr><td><code>:containsWholeOwnText(<em>text</em>)</code></td><td>like <code>:containsWholeText()</code>, but matches only the element's own text</td><td><code>p:containsWholeOwnText(two  spaces)</code></td></tr>
+ <tr><td><code>:containsWholeText(<em>text</em>)</code></td><td>elements containing the exact text, including case, spaces, and newlines, in themselves or their descendants. A <code>br</code> contributes a newline. Escape parentheses with a backslash</td><td><code>p:containsWholeText(Hello)</code> finds paragraphs containing "Hello", but not "hello"</td></tr>
+ <tr><td><code>:containsWholeOwnText(<em>text</em>)</code></td><td>like <code>:containsWholeText()</code>, but matches only the element's own text</td><td><code>p:containsWholeOwnText(Hello)</code> finds paragraphs containing "Hello" in their own text, excluding child elements' text</td></tr>
  <tr><td><code>:matches(<em>regex</em>)</code></td><td>elements containing <b>whitespace normalized</b> text that matches the specified regular expression. The text may appear in the found element, or any of its descendants.</td><td><code>td:matches(\d+)</code> finds table cells containing digits. <code>div:matches((?i)login)</code> finds divs containing the text, case insensitively.</td></tr>
  <tr><td><code>:matchesOwn(<em>regex</em>)</code></td><td>like <code>:matches()</code>, but matches only the element's own whitespace-normalized text</td><td><code>td:matchesOwn(\d+)</code></td></tr>
  <tr><td><code>:matchesWholeText(<em>regex</em>)</code></td><td>elements containing <b>non-normalized</b> whole text that matches the specified regular expression. The text may appear in the found element, or any of its descendants.</td><td><code>td:matchesWholeText(\s{2,})</code> finds table cells containing a run of at least two whitespace characters.</td></tr>
  <tr><td><code>:matchesWholeOwnText(<em>regex</em>)</code></td><td>elements whose own <b>non-normalized</b> whole text matches the specified regular expression. The text must appear in the found element, not any of its descendants.</td><td><code>td:matchesWholeOwnText(\n\d+)</code> finds table cells directly containing digits following a newline.</td></tr>
  </table>
+ </div>
 
  <h3 id="node-selectors">Node selectors</h3>
- <p>These jsoup extensions match leaf nodes, including comments and text. With {@link Element#select(String)},
- use them inside selectors such as {@code :has()} to find containing elements. Use {@link Element#selectNodes(String)}
- to retrieve matching nodes directly.</p>
+ <p>These jsoup extensions select text, comments, and other nodes directly. Combine a node type with a content filter,
+ such as {@code ::text:contains(foo)}, and use combinators to restrict where it appears:</p>
+ <pre class="selector-example">{@code Nodes<TextNode> text = doc.selectNodes("p ::text:contains(foo)", TextNode.class);}</pre>
+ <p>This returns individual text nodes containing "foo" inside paragraphs. To find paragraphs containing that text,
+ use the regular element selector {@code p:contains(foo)}.</p>
+ <p>Use {@link Element#selectNodes(String)} to retrieve nodes, or the
+ {@link Element#selectNodes(String, Class) typed overload} to collect a specific node type.
+ With {@link Element#select(String)}, use node selectors inside {@code :has()} when their presence or content determines
+ which elements you want. For example, this finds divs with a direct child comment containing "TODO":</p>
+ <pre class="selector-example">{@code Elements annotated = doc.select("div:has(> ::comment:contains(TODO))");}</pre>
+ <div class="selector-table">
  <table class="syntax">
  <tr><th>Pattern</th><th>Matches</th><th>Example</th></tr>
- <tr><td>::node</td><td>Matches any node</td><td></td></tr>
- <tr><td>::leafnode</td><td>Matches any leaf node (a node that is not an Element)</td><td></td></tr>
- <tr><td>::comment</td><td>Matches a Comment node</td><td></td></tr>
- <tr><td>::text</td><td>Matches a TextNode</td><td></td></tr>
- <tr><td>::data</td><td>Matches a DataNode (e.g. the content of a <code>script</code> or a <code>style</code> element)</td><td></td></tr>
- <tr><td>::cdata</td><td>Matches a CDataNode</td><td></td></tr>
- <tr><td>::pi</td><td>Matches any ProcessingInstruction node.</td><td><code>::pi</code></td></tr>
- <tr><td>::pi(<i>target</i>)</td><td>Matches a ProcessingInstruction node with the specified case-sensitive target.</td><td><code>::pi(marker)</code></td></tr>
- <tr><td>::pi[...]</td><td>Matches processing instructions by attributes parsed from their data.</td><td><code>::pi(marker)[name=country-options]</code></td></tr>
- <tr><td>::node:contains(text)</td><td>Matches a node that has a (normalized, case-insensitive) value containing <i>text</i>.</td><td><code>::comment:contains(foo bar)</code></td></tr>
- <tr><td>::node:matches(regex)</td><td>Matches a node that has a value matching the regex.</td><td><code>::comment:matches(\d+)</code></td></tr>
- <tr><td>::node:blank</td><td>Matches a node that has either no value, or a value of only whitespace.</td><td><code>::comment:not(:blank)</code></td></tr>
+ <tr><td><code>::node</code></td><td>Any {@link org.jsoup.nodes.Node}, including elements and leaf nodes</td><td><code>section &gt; ::node</code> finds all direct child nodes of sections, including elements, text, and comments</td></tr>
+ <tr><td><code>::leafnode</code></td><td>Non-element nodes, such as text, comments, data, and processing instructions. An empty element is still an element, not a leaf node</td><td><code>article ::leafnode:not(:blank)</code> finds non-element nodes with nonblank values inside articles</td></tr>
+ <tr><td><code>::text</code></td><td>{@link org.jsoup.nodes.TextNode Text nodes}, including CDATA sections</td><td><code>p ::text:contains(foo)</code> finds individual text nodes containing "foo" inside paragraphs</td></tr>
+ <tr><td><code>::comment</code></td><td>{@link org.jsoup.nodes.Comment Comments}; content filters search the comment data, without the enclosing markup</td><td><code>::comment:contains(TODO)</code> finds comments containing "TODO"</td></tr>
+ <tr><td><code>::data</code></td><td>{@link org.jsoup.nodes.DataNode Data nodes}, such as the contents of HTML <code>script</code> and <code>style</code> elements, which are stored as data rather than text nodes</td><td><code>script &gt; ::data:contains(analytics)</code> finds script data containing "analytics"</td></tr>
+ <tr><td><code>::cdata</code></td><td>{@link org.jsoup.nodes.CDataNode CDATA sections}; content filters search the section's text, without the CDATA delimiters</td><td><code>::cdata:contains(config)</code> finds CDATA sections containing "config"</td></tr>
+ <tr><td><code>::pi</code></td><td>{@link org.jsoup.nodes.ProcessingInstruction Processing instructions}; content filters search the instruction's data</td><td><code>::pi:contains(country-options)</code> finds instructions with "country-options" in their data</td></tr>
+ <tr><td><code>::pi(<em>target</em>)</code></td><td>Processing instructions with the specified case-sensitive target</td><td><code>::pi(xml-stylesheet)</code> finds instructions such as <code>&lt;?xml-stylesheet href="style.xsl"?&gt;</code></td></tr>
+ <tr><td><code>::pi[...]</code></td><td>Processing instructions whose data matches an attribute selector. The instruction data is parsed into attributes for comparison</td><td><code>::pi(marker)[name=country-options]</code> finds instructions such as <code>&lt;?marker name="country-options"?&gt;</code></td></tr>
  </table>
+ </div>
+ <p>Append {@code :contains(text)}, {@code :matches(regex)}, or {@code :blank} to any of these node selectors to test its
+ {@link org.jsoup.nodes.Node#nodeValue() value}. For text, comments, data, and CDATA, this is the node's content; for
+ processing instructions, its data; for elements, their own text, excluding child elements' text.
+ Node values retain whitespace; {@code :contains()} normalizes whitespace in the search text and ignores case.
+ {@code :matches()} searches the value using a regular expression, and {@code :blank} tests for an empty or whitespace-only value.</p>
+ <p>For example, {@code ::comment:matches(\d+)} finds comments containing digits, and {@code ::text:not(:blank)} finds
+ text nodes with nonblank content. These filters can be combined with {@code :not()} and with each other.</p>
 
  <h2 id="matching-rules">Matching rules</h2>
+ <p>In the default legacy mode, {@link Element#select(String)} searches the element it is called on and its descendants.
+ For example, given {@code <div id="outer"><div id="inner"></div></div>}, {@code outer.select("div")} returns both divs,
+ while {@code outer.select(":scope > div")} returns only the inner div.
+ See <a href="#query-compatibility">Query compatibility changes</a> for Web mode's matching rules.</p>
+ <p>{@link Element#is(String)} checks whether the element itself matches the query.
+ {@link Element#closest(String)} finds the nearest matching element: itself or an ancestor.</p>
  <p>Ancestor matching stops at the element you query from. For example, {@code panel.select("body p")} does not match
  paragraphs when the body is outside the panel.</p>
  <p>Tag and attribute <b>names</b> ignore ASCII case. Class names and literal attribute <b>values</b> ignore Unicode case; IDs match
@@ -155,6 +176,7 @@ import java.util.stream.Stream;
  {@link java.util.regex.Pattern} syntax and flags.</p>
 
  <h3 id="escaping-selectors">Escaping and regular expressions</h3>
+ <p>The examples in the tables are CSS queries. When writing a query in a Java string literal, double each backslash.</p>
  <p>Escape CSS special characters with a backslash. To match {@code <p id="i.d">}, the CSS query is {@code #i\.d};
  in Java, write {@code document.select("#i\\.d")}. You can also use {@link Selector#escapeCssIdentifier(String)} to
  escape a tag, ID, or class name.</p>
@@ -169,16 +191,21 @@ import java.util.stream.Stream;
  {@code String query = "div:matches(" + Pattern.quote(text) + ")";}.</p>
 
  <h2 id="query-compatibility">Query compatibility changes</h2>
- <p>jsoup 1.24.1 supports legacy and Web query modes. Enable Web mode with
- {@code System.setProperty("jsoup.queryMode", "web")}. Use {@code check} to compare supported queries while returning legacy
- results; see <a href="#query-check">check coverage</a> below.</p>
+ <p>jsoup 1.24.1 introduces Web query behavior that follows CSS and Web DOM standards more closely.
+ Set the {@code jsoup.queryMode} system property before running queries to choose:</p>
+ <ul>
+ <li>{@code legacy}: use the query behavior of earlier jsoup releases.</li>
+ <li>{@code web}: use the updated CSS and Web DOM matching rules described below.</li>
+ <li>{@code check}: return legacy results while comparing supported queries against Web mode and reporting differences.
+ See <a href="#query-check">Checking query compatibility</a>.</li>
+ </ul>
  <p>The default is {@code legacy} in 1.24.1 and changes to {@code web} in 1.25.1, when {@code legacy} and {@code check}
  remain available. In 1.26.1, Web behavior is the only option and the property is removed. See the
  <a href="https://jsoup.org/news/selector-migration">selector migration guide</a> for compatibility testing and query updates.</p>
 
  <h3 id="preview-matching">What changes in Web mode</h3>
- <table class="syntax">
- <caption>Query behavior by mode</caption>
+ <div class="selector-table">
+ <table class="syntax query-modes">
  <tr><th>Query behavior</th><th>Legacy mode</th><th>Web mode</th></tr>
  <tr><td>Query results</td><td>Include the starting element if it matches.</td><td>Include only its descendants.</td></tr>
  <tr><td>Selector relationships</td><td>Ancestor matching stops at the element you query from.</td><td>Can match ancestors and siblings outside its subtree; results stay inside the element you query from.</td></tr>
@@ -188,20 +215,24 @@ import java.util.stream.Stream;
  <tr><td>{@code ~=}</td><td>Matches an attribute value using a regex.</td><td>Matches a complete whitespace-separated token. Supports {@code i} and {@code s} flags.</td></tr>
  <tr><td>{@code :nth-of-type()} and related selectors</td><td>Compares normalized tag names.</td><td>Compares namespace and exact local name.</td></tr>
  </table>
+ </div>
  <p>These rules apply to {@code select}, {@code selectFirst}, their stream and node variants, and the convenience finders on
  {@link Element}: {@code getElementsBy*}, text finders, {@code getElementById}, and {@code getAllElements}.
  {@link Element#hasClass(String)} uses the selected mode's class case rules. {@code getElementById} continues to match IDs exactly,
  including in quirks documents. Text and regex selectors retain their value-matching rules.</p>
 
- <h3 id="query-check">Check coverage and output</h3>
- <p>Checking covers string queries passed to {@code Element.select()}, {@code selectFirst()}, {@code expectFirst()},
- {@code is()}, and {@code closest()}, plus {@code Elements.select()}, {@code selectFirst()}, and {@code expectFirst()}.
- The corresponding {@link Selector} query methods are checked too; multi-root checks require a {@link java.util.Collection}.
- Streams, node queries, supplied evaluators, convenience finders, and other collection operations are not checked and
- retain legacy behavior in check mode.</p>
- <p>Each supported query runs in both modes. Differences and Web query errors produce a one-line warning on stderr,
- prefixed with {@code jsoup query compat:} and followed by up to two caller locations.
- See {@link Evaluator} for compiled-query behavior.</p>
+ <h3 id="query-check">Checking query compatibility</h3>
+ <p>Check mode helps you find queries that may behave differently when switching to Web mode.
+ Enable it before running your queries:</p>
+ <pre class="selector-example">{@code System.setProperty("jsoup.queryMode", "check");}</pre>
+ <p>Each supported query runs in both modes and returns the legacy result. If the results differ, or the query fails in
+ Web mode, jsoup writes a diagnostic to {@code stderr} identifying the query and up to two caller locations.
+ Comparisons check which elements are returned and their order, not just the number of matches.</p>
+ <pre class="log-output">{@code jsoup query compat: select("div"): legacy=2, web=1; results differ; at example.ProductParser.items(ProductParser.java:42)}</pre>
+ <p>(Checks cover common string-query methods such as {@code select()} and {@code selectFirst()}; streams, node queries,
+ {@linkplain Evaluator supplied evaluators}, and convenience finders run without checks.)</p>
+ <p>Use check mode when running tests or assessing compatibility; running queries twice adds overhead.
+ After reviewing and updating affected queries, switch to {@code web}.</p>
 
  <h3 id="preview-searches">Query results and scope</h3>
  <p>{@code :scope} refers to the element the query is called on, or the document element when querying a Document.
