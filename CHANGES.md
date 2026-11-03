@@ -1,6 +1,6 @@
 # jsoup Changelog
 
-## 1.24.1 (Pending)
+## 1.24.1 (2026-Nov-03)
 
 ### Improvements
 * Added an opt-in **Web query mode** to align jsoup's selectors with CSS and Web DOM standards. See the [selector migration guide](https://jsoup.org/news/selector-migration?utm_source=jsoup&amp;utm_medium=changelog) for more details. [#2642](https://github.com/jhy/jsoup/pull/2642)
