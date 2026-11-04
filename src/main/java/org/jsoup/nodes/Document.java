@@ -285,7 +285,6 @@ public class Document extends Element {
     @Override
     public Document clone() {
         Document clone = (Document) super.clone();
-        if (attributes != null) clone.attributes = attributes.clone();
         clone.outputSettings = this.outputSettings.clone();
         // parser is pointer copy
         return clone;
@@ -294,7 +293,7 @@ public class Document extends Element {
     @Override
     public Document shallowClone() {
         Document clone = new Document(this.tag().namespace(), baseUri(), parser); // preserves parser pointer
-        if (attributes != null) clone.attributes = attributes.clone();
+        clone.attributes = cloneAttributes();
         clone.outputSettings = this.outputSettings.clone();
         return clone;
     }

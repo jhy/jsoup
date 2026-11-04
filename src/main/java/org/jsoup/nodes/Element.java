@@ -2087,7 +2087,7 @@ public class Element extends Node implements Iterable<Element> {
         // simpler than implementing a clone version with no child copy
         String baseUri = baseUri();
         if (baseUri.isEmpty()) baseUri = null; // saves setting a blank internal attribute
-        return new Element(tag, baseUri, attributes == null ? null : attributes.clone());
+        return new Element(tag, baseUri, cloneAttributes());
     }
 
     @Override
@@ -2095,12 +2095,17 @@ public class Element extends Node implements Iterable<Element> {
         Element clone = (Element) super.doClone(parent);
         clone.childNodes = new NodeList(childNodes.size());
         clone.childNodes.addAll(childNodes); // the children then get iterated and cloned in Node.clone
-        if (attributes != null) {
-            clone.attributes = attributes.clone();
-            // clear any cached children
-            clone.attributes.userData(childElsKey, null);
-        }
+        clone.attributes = cloneAttributes();
 
+        return clone;
+    }
+
+    /** Copies attributes without the child cache, which belongs to the original node. */
+    @Nullable Attributes cloneAttributes() {
+        if (attributes == null) return null;
+        Attributes clone = attributes.clone();
+        clone.userData(childElsKey, null);
+        clone.userData(childElsMod, null);
         return clone;
     }
 

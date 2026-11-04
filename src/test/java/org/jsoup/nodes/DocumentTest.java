@@ -124,6 +124,17 @@ public class DocumentTest {
         assertEquals("<html><head><title>Hello</title></head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(doc.html()));
     }
 
+    @Test void cloneHasIndependentChildElements() {
+        Document doc = Jsoup.parse("<p>One</p><p>Two</p>");
+        List<Element> originalChildren = doc.childElementsList(); // keep the weakly cached list alive
+        Document copy = doc.clone();
+
+        assertSame(copy.childNode(0), copy.child(0));
+        assertSame(copy, copy.child(0).parent());
+        assertNotSame(originalChildren.get(0), copy.child(0));
+        assertSame(originalChildren, doc.childElementsList());
+    }
+
     @Test void testBasicIndent() {
         Document doc = Jsoup.parse("<title>Hello</title> <p>One\n<p>Two\n");
         String expect = "<html>\n <head>\n  <title>Hello</title>\n </head>\n <body>\n  <p>One</p>\n  <p>Two</p>\n </body>\n</html>";

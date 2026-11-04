@@ -1208,6 +1208,29 @@ public class ElementTest {
         assertEquals(base, d2.baseUri());
     }
 
+    @ParameterizedTest @ValueSource(booleans = {false, true})
+    void shallowCloneHasIndependentChildElements(boolean document) {
+        // https://github.com/jhy/jsoup/issues/2638
+        Document doc = Jsoup.parse("<p>One</p><p>Two</p>");
+        Element original = document ? doc : doc.body();
+        List<Element> originalChildren = original.childElementsList(); // keep the weakly cached list alive
+        Element copy = original.shallowClone();
+        assertEquals(0, copy.childNodeSize());
+        assertTrue(copy.children().isEmpty());
+
+        for (Node child : original.childNodes())
+            copy.appendChild(child.shallowClone());
+
+        Elements copyChildren = copy.children();
+        assertEquals(originalChildren.size(), copyChildren.size());
+        for (int i = 0; i < copyChildren.size(); i++) {
+            assertSame(copy.childNode(i), copyChildren.get(i));
+            assertSame(copy, copyChildren.get(i).parent());
+            assertNotSame(originalChildren.get(i), copyChildren.get(i));
+        }
+        assertSame(originalChildren, original.childElementsList());
+    }
+
     @Test void cloneRetainsParser() {
         Document htmlDoc = Jsoup.parse("<div><script></script></div>", Parser.htmlParser());
         Document xmlDoc = Jsoup.parse("<div><script></script></div>", Parser.xmlParser());
