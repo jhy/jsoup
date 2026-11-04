@@ -96,6 +96,7 @@ public final class CharacterReader implements AutoCloseable {
         - loop read the Reader until we fill charBuf. bufLength += read.
         - readFully = true when read = -1
          */
+        lastIcSeq = null;
         consumed += bufPos;
         bufLength -= bufPos;
         if (bufLength > 0)
@@ -119,6 +120,11 @@ public final class CharacterReader implements AutoCloseable {
         fillPoint = Math.min(bufLength, RefillPoint);
 
         scanBufferForNewlines(); // if enabled, we index newline positions for line number tracking
+    }
+
+    /** Check if all remaining input has been buffered. */
+    boolean readFully() {
+        return readFully;
     }
 
     void mark() {
@@ -617,6 +623,26 @@ public final class CharacterReader implements AutoCloseable {
         }
         return true;
     }
+
+    /** Case-insensitive scan in current buffer for the given sequence. */
+    boolean containsIgnoreCase(String seq) {
+        bufferUp();
+        if (seq.equals(lastIcSeq)) {
+            if (lastIcIndex == -1) return false;
+            if (lastIcIndex >= bufPos) return true;
+        }
+        lastIcSeq = seq;
+        for (int scan = bufPos; scan <= bufLength - seq.length(); scan++) {
+            if (rangeMatchesIgnoreCase(seq, scan)) {
+                lastIcIndex = scan;
+                return true;
+            }
+        }
+        lastIcIndex = -1;
+        return false;
+    }
+    private @Nullable String lastIcSeq; // cached lookahead, invalidated when the buffer shifts
+    private int lastIcIndex;
 
     /**
      Tests if the next character in the queue matches any of the characters in the sequence, case sensitively.

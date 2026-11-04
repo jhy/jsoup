@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 import static org.jsoup.parser.HtmlTreeBuilder.MaxFormattingElements;
@@ -3407,5 +3408,81 @@ public class HtmlParserTest {
             assertNotNull(paragraph);
             assertEquals("Two", paragraph.text());
         }
+
+        @ParameterizedTest @ValueSource(strings = {"title", "textarea", "custom"})
+        void recoversUnclosedRcData(String tagName) {
+            // https://github.com/jhy/jsoup/issues/2640
+            Parser parser = rcDataRecoverParser(tagName);
+            parser.tagSet().valueOf(tagName, Parser.NamespaceHtml).set(Tag.RcData);
+            Document doc = Jsoup.parse("<" + tagName + ">One &amp; Two<p>Recovered</p>", parser);
+
+            assertEquals("One & Two", doc.expectFirst(tagName).text());
+            assertEquals("Recovered", doc.expectFirst("p").text());
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"title", "textarea", "custom"})
+        void rcDataRecoveryPreservesClosedContent(String tagName) {
+            Parser parser = rcDataRecoverParser(tagName);
+            parser.tagSet().valueOf(tagName, Parser.NamespaceHtml).set(Tag.RcData);
+            Document doc = Jsoup.parse("<" + tagName + ">One<p>Two</p></" + tagName.toUpperCase(Locale.ROOT)
+                + "><p>Outside</p>", parser);
+
+            assertEquals("One<p>Two</p>", doc.expectFirst(tagName).text());
+            assertEquals(1, doc.select("p").size());
+            assertEquals("Outside", doc.expectFirst("p").text());
+        }
+
+        @Test void rcDataRecoveryIsPerTag() {
+            Parser parser = rcDataRecoverParser("title");
+            Document doc = Jsoup.parse("<title>Title<body><textarea>One<p>Two", parser);
+
+            assertEquals("Title", doc.title());
+            assertEquals("One<p>Two", doc.expectFirst("textarea").text());
+            assertTrue(doc.select("p").isEmpty());
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"script", "style"})
+        void rcDataRecoveryDoesNotAffectRawtext(String tagName) {
+            Parser parser = rcDataRecoverParser(tagName);
+            Document doc = Jsoup.parse("<" + tagName + ">One<p>Two", parser);
+
+            assertEquals("One<p>Two", doc.expectFirst(tagName).data());
+            assertTrue(doc.select("p").isEmpty());
+        }
+
+        @Test void rcDataRecoveryWaitsUntilRemainderIsBuffered() {
+            Parser parser = rcDataRecoverParser("title");
+            String padding = StringUtil.padding(CharacterReader.BufferSize * 2, -1);
+            Document doc = Jsoup.parse("<title>One<body>" + padding + "<p>Recovered</p>", parser);
+
+            // the earlier body tag was consumed as text before EOF was buffered; only the later p can be recovered
+            assertEquals("One<body>", doc.title());
+            assertEquals("Recovered", doc.expectFirst("p").text());
+        }
+
+        @Test void rcDataRecoveryPreservesClosingTagBeyondBuffer() {
+            Parser parser = rcDataRecoverParser("title");
+            String padding = StringUtil.padding(CharacterReader.BufferSize * 2, -1);
+            Document doc = Jsoup.parse("<title>One<p>Two" + padding + "</TiTlE><p>Outside</p>", parser);
+
+            assertEquals("One<p>Two", doc.title());
+            assertEquals(1, doc.select("p").size());
+            assertEquals("Outside", doc.expectFirst("p").text());
+        }
+
+        @Test void rcDataRecoveryContinuesPastUnmatchedClosingSequence() {
+            Parser parser = rcDataRecoverParser("title");
+            Document doc = Jsoup.parse("<title>One<b>Two</titlex><p>Recovered</p>", parser);
+
+            // </titlex> starts with </title, so recovery waits until the next start tag
+            assertEquals("One<b>Two</titlex>", doc.title());
+            assertEquals("Recovered", doc.expectFirst("p").text());
+        }
+    }
+
+    private static Parser rcDataRecoverParser(String tagName) {
+        Parser parser = Parser.htmlParser();
+        parser.tagSet().valueOf(tagName, Parser.NamespaceHtml).set(Tag.RcDataRecover);
+        return parser;
     }
 }

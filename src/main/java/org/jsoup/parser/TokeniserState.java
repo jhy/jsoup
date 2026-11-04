@@ -205,7 +205,7 @@ enum TokeniserState {
         @Override void read(Tokeniser t, CharacterReader r) {
             if (r.matches('/')) {
                 t.advanceTransition(RCDATAEndTagOpen);
-            } else {
+            } else if (!t.recoverRcData()) {
                 t.emit('<');
                 t.transition(Rcdata);
             }

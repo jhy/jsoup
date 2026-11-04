@@ -2,6 +2,9 @@
 
 ## 1.24.2 (Pending)
 
+### Improvements
+* Added the opt-in `Tag.RcDataRecover` option to recover content after missing `title` or `textarea` end tags. [#2640](https://github.com/jhy/jsoup/issues/2640)
+
 ### Bug Fixes
 * Fixed `Element.shallowClone()`, `Document.shallowClone()`, and `Document.clone()` which could retain cached child elements from the original. After adding children to a shallow clone, `children()` could return the original's children instead of the clone's own. [#2638](https://github.com/jhy/jsoup/issues/2638)
 

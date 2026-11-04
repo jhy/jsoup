@@ -40,6 +40,27 @@ public class Tag implements Cloneable {
     public static int FormSubmittable = 1 << 9;
     /** Tag option: readable text boundary for {@code Element.text()}, used for controls, widgets, and embedded objects. */
     public static int TextBoundary = 1 << 10;
+    /**
+     Tag option: recover markup after a missing RCDATA closing tag, such as {@code </title>} or {@code </textarea>}.
+     Use together with {@link #RcData}. Disabled by default.
+     <p>This recovery diverges from the HTML specification, which treats the remaining input as text when the closing tag
+     is missing. It can be useful when extracting content from malformed HTML.</p>
+     <p>This option attempts to recover markup after a missing closing tag. On longer inputs (where more than about 2,000
+     characters follow the unclosed element), recovery may begin later or not occur: the parser only attempts recovery
+     near the end of the input, when it sees an apparent start tag. If a closing tag remains, the content stays text.</p>
+     <p>For example:</p>
+     <pre><code>
+     Parser parser = Parser.htmlParser();
+     parser.tagSet().valueOf("title", Parser.NamespaceHtml).set(Tag.RcDataRecover);
+
+     Document doc = Jsoup.parse("&lt;title&gt;Example&lt;body&gt;&lt;p&gt;Content&lt;/p&gt;", parser);
+     System.out.println(doc.title());       // Example
+     System.out.println(doc.body().text()); // Content
+     </code></pre>
+     @see Parser#tagSet()
+     @since 1.24.2
+     */
+    public static int RcDataRecover = 1 << 11;
 
     String namespace;
     String tagName;

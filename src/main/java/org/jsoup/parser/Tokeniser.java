@@ -357,6 +357,23 @@ final class Tokeniser {
             || (treeBuilder.hasCurrentElement() && !Parser.NamespaceHtml.equals(treeBuilder.currentElNs()));
     }
 
+    /** Closes an opted-in RCDATA element and resumes at markup when no closing sequence remains in the buffered input. */
+    boolean recoverRcData() {
+        if (lastStartTag == null || !treeBuilder.currentElement().tag().is(Tag.RcDataRecover)
+            || !reader.readFully() || !reader.matchesAsciiAlpha()) return false;
+
+        if (reader.containsIgnoreCase("</" + lastStartTag)) return false;
+
+        tagPending = createTagPending(false).name(lastStartTag);
+        emitTagPending();
+        int start = reader.pos() - 1; // the '<' was consumed before entering RcdataLessthanSign
+        tagPending.startPos(start);
+        tagPending.endPos(start); // the synthetic close has no source text
+        transition(TokeniserState.TagOpen);
+        markupStartPos = start;
+        return true;
+    }
+
     /** Test if the pending end tag matches the last emitted start tag. */
     boolean isAppropriateEndTagToken() {
         return lastStartTag != null && tagPending.normalName().equals(lastStartTag);

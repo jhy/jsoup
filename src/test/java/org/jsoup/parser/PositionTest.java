@@ -987,4 +987,28 @@ class PositionTest {
         assertEquals(html.indexOf("alpha"), text.sourceRange().startPos());
         assertEquals(html.indexOf("</body>"), text.sourceRange().endPos());
     }
+
+    @ParameterizedTest @ValueSource(strings = {"title", "textarea"})
+    void recoveredRcDataRanges(String tagName) {
+        Parser parser = Parser.htmlParser().setTrackPosition(true);
+        parser.tagSet().valueOf(tagName, Parser.NamespaceHtml).set(Tag.RcDataRecover);
+        String recoveredTag = tagName.equals("title") ? "body" : "p";
+        String startTag = "<" + recoveredTag + " id=x>";
+        String html = "<" + tagName + ">one" + startTag + "Two</" + recoveredTag + ">";
+        int boundary = html.indexOf(startTag);
+        Document doc = Jsoup.parse(html, parser);
+
+        Element textElement = doc.expectFirst(tagName);
+        Range end = textElement.endSourceRange();
+        assertTrue(end.isTracked());
+        assertTrue(end.isImplicit());
+        assertEquals(boundary, end.startPos());
+        assertEquals(boundary, textElement.childNode(0).sourceRange().endPos());
+
+        Element recovered = doc.expectFirst(recoveredTag);
+        assertEquals(startTag, html.substring(recovered.sourceRange().startPos(), recovered.sourceRange().endPos()));
+        Range text = recovered.childNode(0).sourceRange();
+        assertEquals("Two", html.substring(text.startPos(), text.endPos()));
+    }
+
 }
