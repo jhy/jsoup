@@ -3221,6 +3221,14 @@ public class HtmlParserTest {
         assertEquals("a < b", data.getWholeData());
     }
 
+    @Test void svgSelfClosingScriptDoesNotConsumeDocument() {
+        // https://github.com/jhy/jsoup/issues/2655
+        String html = "<svg><script href=\"a.js\"/></svg><p>a</p>";
+        Document doc = Jsoup.parse(html);
+        doc.outputSettings().prettyPrint(false);
+        assertEquals("<svg><script href=\"a.js\" /></svg><p>a</p>", doc.body().html());
+    }
+
     @Test void allowCustomDataInForeignElements() {
         Tag dataTag = new Tag("data", Parser.NamespaceSvg);
         dataTag.set(Tag.Data);
