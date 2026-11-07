@@ -437,6 +437,15 @@ public class HtmlParserTest {
             assertInstanceOf(CDataNode.class, xml.expectFirst("p").childNode(0)).getWholeText());
     }
 
+    @Test void selfClosingScriptInSvgDoesNotEnterScriptData() {
+        // https://github.com/jhy/jsoup/issues/2655
+        Document doc = Jsoup.parse("<svg><script href=\"a.js\"/></svg><p>a</p>");
+        doc.outputSettings().prettyPrint(false);
+
+        assertEquals("<svg><script href=\"a.js\" /></svg><p>a</p>", doc.body().html());
+        assertEquals("a", doc.expectFirst("p").text());
+    }
+
     @Test void fragmentParsingUsesContextNamespace() {
         String fragment = "<![CDATA[One > Two]]><child />";
 
