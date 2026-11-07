@@ -902,27 +902,27 @@ public class HttpConnection implements Connection {
 
         static Response execute(HttpConnection.Request req, @Nullable Response prevRes) throws IOException {
             Validate.isTrue(req.executing.tryLock(), "Multiple threads were detected trying to execute the same request concurrently. Make sure to use Connection#newRequest() and do not share an executing request between threads.");
-            Validate.notNullParam(req, "req");
-            URL url = req.url();
-            Validate.notNull(url, "URL must be specified to connect");
-            String protocol = url.getProtocol();
-            if (!protocol.equals("http") && !protocol.equals("https"))
-                throw new MalformedURLException("Only http & https protocols supported");
-            final boolean supportsBody = req.method().hasBody();
-            final boolean hasBody = req.body != null;
-            if (!supportsBody)
-                Validate.isFalse(hasBody, "Cannot set a request body for HTTP method " + req.method());
-
-            // set up the request for execution
-            if (!req.data().isEmpty() && (!supportsBody || hasBody))
-                serialiseRequestUrl(req);
-            else if (supportsBody)
-                setOutputContentType(req);
-
-            long startTime = System.nanoTime();
-            RequestExecutor executor = RequestDispatch.get(req, prevRes);
             Response res = null;
             try {
+                Validate.notNullParam(req, "req");
+                URL url = req.url();
+                Validate.notNull(url, "URL must be specified to connect");
+                String protocol = url.getProtocol();
+                if (!protocol.equals("http") && !protocol.equals("https"))
+                    throw new MalformedURLException("Only http & https protocols supported");
+                final boolean supportsBody = req.method().hasBody();
+                final boolean hasBody = req.body != null;
+                if (!supportsBody)
+                    Validate.isFalse(hasBody, "Cannot set a request body for HTTP method " + req.method());
+
+                // set up the request for execution
+                if (!req.data().isEmpty() && (!supportsBody || hasBody))
+                    serialiseRequestUrl(req);
+                else if (supportsBody)
+                    setOutputContentType(req);
+
+                long startTime = System.nanoTime();
+                RequestExecutor executor = RequestDispatch.get(req, prevRes);
                 res = executor.execute();
 
                 Method nextMethod = redirectMethod(res.statusCode, req.method());

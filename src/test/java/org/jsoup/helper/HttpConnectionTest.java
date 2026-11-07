@@ -503,4 +503,25 @@ public class HttpConnectionTest {
         assertThrows(ValidationException.class, () ->
                 HttpConnection.KeyVal.create("file", "file.txt").contentType(contentType));
     }
+
+    @Test void executeReleasesLockWhenValidationFails() throws Exception {
+        HttpConnection.Request req = new HttpConnection.Request();
+        req.url(new URL("ftp://example.com/")); // rejected before sending: only http & https are supported
+
+        assertThrows(MalformedURLException.class, () -> HttpConnection.Response.execute(req, null));
+
+        // if the failed call leaked the request lock, another thread would be refused with "Multiple threads were detected"
+        Throwable[] failure = new Throwable[1];
+        Thread other = new Thread(() -> {
+            try {
+                HttpConnection.Response.execute(req, null);
+            } catch (Throwable e) {
+                failure[0] = e;
+            }
+        });
+        other.start();
+        other.join();
+
+        assertInstanceOf(MalformedURLException.class, failure[0]);
+    }
 }
