@@ -1644,12 +1644,14 @@ enum HtmlTreeBuilderState {
                     // if self-closing svg script -- level and execution elided
 
                     // seemingly not in spec, but as browser behavior, get into ScriptData state for svg script; and allow custom data tags
-                    TokeniserState textState = tb.tagFor(start.tagName.value(), start.normalName, namespace, tb.settings).textState();
-                    if (textState != null) {
-                        if (start.normalName.equals("script"))
-                            tb.tokeniser.transition(TokeniserState.ScriptData);
-                        else
-                            tb.tokeniser.transition(textState);
+                    if (!start.isSelfClosing()) {
+                        TokeniserState textState = tb.tagFor(start.tagName.value(), start.normalName, namespace, tb.settings).textState();
+                        if (textState != null) {
+                            if (start.normalName.equals("script"))
+                                tb.tokeniser.transition(TokeniserState.ScriptData);
+                            else
+                                tb.tokeniser.transition(textState);
+                        }
                     }
 
                     break;
