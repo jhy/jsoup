@@ -1643,9 +1643,10 @@ enum HtmlTreeBuilderState {
                     // (self-closing handled in insert)
                     // if self-closing svg script -- level and execution elided
 
-                    // seemingly not in spec, but as browser behavior, get into ScriptData state for svg script; and allow custom data tags
+                    // seemingly not in spec, but as browser behavior, get into ScriptData state for svg script; and allow custom data tags.
+                    // A self-closing script is complete on its own, so it must not switch the tokeniser into script data (issue #2655).
                     TokeniserState textState = tb.tagFor(start.tagName.value(), start.normalName, namespace, tb.settings).textState();
-                    if (textState != null) {
+                    if (textState != null && !(start.normalName.equals("script") && start.isSelfClosing())) {
                         if (start.normalName.equals("script"))
                             tb.tokeniser.transition(TokeniserState.ScriptData);
                         else
