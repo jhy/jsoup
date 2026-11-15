@@ -133,13 +133,15 @@ public class FormElement extends Element {
                 Elements options = el.select("option[selected]");
                 boolean set = false;
                 for (Element option: options) {
-                    data.add(HttpConnection.KeyVal.create(name, option.val()));
+                    data.add(HttpConnection.KeyVal.create(name, optionValue(option)));
                     set = true;
                 }
                 if (!set) {
-                    Element option = el.selectFirst("option");
+                    // no option is selected; a single-select with display size 1 defaults to its first enabled
+                    // option, while multiple selects and listboxes submit nothing (HTML selectedness algorithm)
+                    Element option = defaultSelectedOption(el);
                     if (option != null)
-                        data.add(HttpConnection.KeyVal.create(name, option.val()));
+                        data.add(HttpConnection.KeyVal.create(name, optionValue(option)));
                 }
             } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
                 // only add checkbox or radio if they have the checked attribute
@@ -152,6 +154,43 @@ public class FormElement extends Element {
             }
         }
         return data;
+    }
+
+    // The value of an option is its value attribute when it has one, and its text otherwise.
+    private static String optionValue(Element option) {
+        return option.hasAttr("value") ? option.val() : option.text();
+    }
+
+    // The option a select defaults to when nothing is selected: the first option that is not disabled, but only
+    // for a single-select with display size 1. Multiple selects and listboxes have no default selection.
+    private static @Nullable Element defaultSelectedOption(Element select) {
+        if (select.hasAttr("multiple")) return null;
+        if (displaySize(select) != 1) return null;
+        for (Element option : select.select("option")) {
+            if (!isDisabled(option)) return option;
+        }
+        return null;
+    }
+
+    // Display size from the size attribute, defaulting to 1 (or 4 for a multiple select, which never reaches here).
+    private static int displaySize(Element select) {
+        String size = select.attr("size");
+        if (!size.isEmpty() && StringUtil.isNumeric(size)) {
+            try {
+                int parsed = Integer.parseInt(size);
+                if (parsed > 0) return parsed;
+            } catch (NumberFormatException ignored) {
+                // fall through to the default
+            }
+        }
+        return 1;
+    }
+
+    // An option is disabled when it carries the disabled attribute, or sits in a disabled optgroup.
+    private static boolean isDisabled(Element option) {
+        if (option.hasAttr("disabled")) return true;
+        Element parent = option.parent();
+        return parent != null && parent.nameIs("optgroup") && parent.hasAttr("disabled");
     }
 
     @Override
