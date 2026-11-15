@@ -67,6 +67,35 @@ public class FormElementTest {
         assertEquals("test=foo", form.formData().get(0).toString());
     }
 
+    @Test public void formDataSelectDefaultSelection() {
+        // a plain dropdown defaults to its first option
+        assertEquals("[x=a]", formData("<form><select name=x><option value=a>A</option><option value=b>B</option></select></form>").toString());
+        // a multiple select with nothing selected submits nothing
+        assertEquals("[]", formData("<form><select name=x multiple><option value=a>A</option><option value=b>B</option></select></form>").toString());
+        // a listbox with nothing selected submits nothing
+        assertEquals("[]", formData("<form><select name=x size=2><option value=a>A</option><option value=b>B</option></select></form>").toString());
+        // a multiple select with a selection submits just the selected options
+        assertEquals("[x=b]", formData("<form><select name=x multiple><option value=a>A</option><option value=b selected>B</option></select></form>").toString());
+        // the default is the first option that is not disabled
+        assertEquals("[x=b]", formData("<form><select name=x><option value=a disabled>A</option><option value=b>B</option></select></form>").toString());
+        assertEquals("[x=b]", formData("<form><select name=x><optgroup disabled><option value=a>A</option></optgroup><option value=b>B</option></select></form>").toString());
+        // no enabled option means nothing is submitted
+        assertEquals("[]", formData("<form><select name=x><option value=a disabled>A</option><option value=b disabled>B</option></select></form>").toString());
+    }
+
+    @Test public void formDataSelectOptionValueDefaultsToText() {
+        // an option without a value attribute submits its text
+        assertEquals("[x=Alpha]", formData("<form><select name=x><option>Alpha</option><option value=b>Bravo</option></select></form>").toString());
+        assertEquals("[x=Alpha]", formData("<form><select name=x><option selected>Alpha</option><option value=b>Bravo</option></select></form>").toString());
+        // an empty value attribute still submits empty, it is not replaced by the text
+        assertEquals("[x=]", formData("<form><select name=x><option value=\"\">Alpha</option><option value=b>Bravo</option></select></form>").toString());
+    }
+
+    private static List<Connection.KeyVal> formData(String html) {
+        Document doc = Jsoup.parse(html);
+        return ((FormElement) doc.selectFirst("form")).formData();
+    }
+
     @Test public void createsSubmitableConnection() {
         String html = "<form action='/search'><input name='q'></form>";
         Document doc = Jsoup.parse(html, "http://example.com/");
