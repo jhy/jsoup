@@ -8,7 +8,7 @@ on:
     types: [completed]
 
 permissions:
-  actions: read
+  actions: write   # ghi cache (thư viện, mô hình) cho lần chạy sau
   contents: read
   pull-requests: write
   issues: write
