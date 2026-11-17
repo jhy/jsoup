@@ -1,0 +1,37 @@
+name: CI fix
+# Khi người có quyền ghi tick ô "Tạo pull request sửa lỗi" trong bình luận của bot phân tích CI:
+# áp đúng các thay đổi đã đề xuất (lưu trong bình luận) lên nhánh mới từ nhánh của PR và mở pull request vào nhánh đó.
+# Không chạy AI ở bước này; bot kiểm tra quyền của người tick.
+on:
+  issue_comment:
+    types: [edited]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  fix:
+    if: github.event.issue.pull_request && contains(github.event.comment.body, 'p3-ci-triage') && contains(github.event.comment.body, '- [x] **Tạo pull request sửa lỗi**')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download bot code (private Kaggle dataset)
+        env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+        run: |
+          pip install -q kaggle six requests
+          kaggle datasets download ducanhpham2k5/p3-demo -p "$HOME/p3/p3-demo" --unzip --force
+          cd "$HOME/p3/p3-demo"
+          if [ -f p3demo_code.zip ] && [ ! -d p3demo_code/src ]; then python -c "import zipfile; zipfile.ZipFile('p3demo_code.zip').extractall('p3demo_code')"; fi
+      - name: Apply suggested fix and open pull request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd "$HOME/p3/p3-demo/p3demo_code"
+          export PYTHONPATH="$PWD/src"
+          python -m project3.demo.bot --repo "${{ github.repository }}" --fix-comment "${{ github.event.comment.id }}" --sender "${{ github.event.sender.login }}"
