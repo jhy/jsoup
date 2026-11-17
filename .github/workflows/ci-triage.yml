@@ -1,0 +1,63 @@
+name: CI triage
+# Bot phân tích lỗi CI (bước 1: chỉ bình luận). Chạy khi workflow Build của một pull request bị lỗi:
+# phân loại lỗi bằng mô hình (CPU), Claude Code đọc code để tìm nguyên nhân (chỉ đọc), chọn người xử lý theo quy tắc,
+# rồi bình luận vào pull request. Cần secret CLAUDE_CODE_OAUTH_TOKEN (claude setup-token) và KAGGLE_API_TOKEN.
+on:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  triage:
+    if: github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Cache model downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/huggingface
+            ~/.cache/pip
+          key: p3-triage-v1
+      - name: Install
+        run: |
+          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -q transformers numpy pandas pyarrow duckdb requests kaggle six
+          npm install -g @anthropic-ai/claude-code
+      - name: Download model and code (private Kaggle datasets)
+        env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+        run: |
+          for ds in p3-demo p3-c-weights p3-cause-weights; do
+            kaggle datasets download "ducanhpham2k5/$ds" -p "$HOME/p3/$ds" --unzip --force
+          done
+          cd "$HOME/p3/p3-demo"
+          if [ -f p3demo_code.zip ] && [ ! -d p3demo_code/src ]; then python -c "import zipfile; zipfile.ZipFile('p3demo_code.zip').extractall('p3demo_code')"; fi
+          ls "$HOME/p3/p3-demo" "$HOME/p3/p3-c-weights" "$HOME/p3/p3-cause-weights"
+      - name: Triage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          P3_AGENT_WS: ${{ runner.temp }}/ws
+          P3_REPO_CACHE: ${{ runner.temp }}/repos
+          PR: ${{ github.event.workflow_run.pull_requests[0].number }}
+        run: |
+          cd "$HOME/p3/p3-demo/p3demo_code"
+          export PYTHONPATH="$PWD/src"
+          python -m project3.demo.bot --repo "${{ github.repository }}" --run-id "${{ github.event.workflow_run.id }}" \
+            ${PR:+--pr "$PR"} --bundle "$HOME/p3/p3-demo" \
+            --weights "$HOME/p3/p3-c-weights/C_s0_fold{fold}.model_soft0.pt" \
+            --cause-weights "$HOME/p3/p3-cause-weights/CAUSED_s0_fold{fold}.model_soft0.pt"
