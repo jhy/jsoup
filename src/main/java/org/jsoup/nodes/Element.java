@@ -1557,7 +1557,7 @@ public class Element extends Node implements Iterable<Element> {
     public String text() {
         final StringBuilder accum = StringUtil.borrowBuilder();
         new TextAccumulator(accum).traverse(this);
-        return StringUtil.releaseBuilderTrimmed(accum);
+        return StringUtil.releaseBuilder(accum).trim();
     }
 
     private static class TextAccumulator implements NodeVisitor {
