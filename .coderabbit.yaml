@@ -1,0 +1,11 @@
+# Tắt CodeRabbit trên repo thử nghiệm này: repo dùng để thử bot phân tích lỗi CI riêng (.github/workflows/ci-triage.yml).
+# Tham khảo: https://docs.coderabbit.ai/reference/configuration
+language: vi-VN
+reviews:
+  auto_review:
+    enabled: false          # không tự review pull request
+  high_level_summary: false # không thêm phần tóm tắt vào mô tả PR
+  review_status: false      # không bình luận trạng thái "skip review"
+  poem: false
+chat:
+  auto_reply: false         # không tự trả lời bình luận
