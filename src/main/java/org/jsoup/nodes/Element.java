@@ -37,7 +37,6 @@ import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.jsoup.internal.Normalizer.asciiLowerCase;
 import static org.jsoup.nodes.Document.OutputSettings.Syntax.html;
 import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
 import static org.jsoup.nodes.TextNode.lastCharIsWhitespace;

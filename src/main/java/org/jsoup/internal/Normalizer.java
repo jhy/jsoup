@@ -1,7 +1,5 @@
 package org.jsoup.internal;
 
-import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.Document;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;

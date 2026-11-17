@@ -3,7 +3,6 @@ package org.jsoup.select;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.QueryMode;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
 import org.jsoup.parser.TokenQueue;
 import org.jspecify.annotations.Nullable;
 

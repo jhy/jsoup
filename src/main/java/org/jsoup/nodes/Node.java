@@ -8,7 +8,6 @@ import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeVisitor;
 import org.jspecify.annotations.Nullable;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

@@ -7,7 +7,6 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
 import org.jsoup.nodes.NodeInternals;
 import org.jsoup.nodes.Range;
 import org.jspecify.annotations.Nullable;

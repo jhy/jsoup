@@ -2,7 +2,6 @@ package org.jsoup.helper;
 
 import org.jsoup.internal.SharedConstants;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
