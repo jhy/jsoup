@@ -28,6 +28,11 @@ public class DataNode extends LeafNode {
         return coreValue();
     }
 
+    @Override
+    String dataValue() {
+        return getWholeData();
+    }
+
     /**
      * Set the data contents of this node.
      * @param data un-encoded data

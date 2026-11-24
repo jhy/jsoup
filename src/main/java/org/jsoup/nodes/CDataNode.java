@@ -25,6 +25,11 @@ public class CDataNode extends TextNode {
     }
 
     @Override
+    String dataValue() {
+        return getWholeText();
+    }
+
+    @Override
     void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
         accum
             .append("<![CDATA[")

@@ -31,6 +31,11 @@ public class Comment extends LeafNode {
         return coreValue();
     }
 
+    @Override
+    String dataValue() {
+        return getData();
+    }
+
     public Comment setData(String data) {
         coreValue(data);
         return this;
