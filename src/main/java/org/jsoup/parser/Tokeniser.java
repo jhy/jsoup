@@ -220,28 +220,30 @@ final class Tokeniser {
             if (!peek) reader.unmark();
             if (!reader.matchConsume(";"))
                 characterReferenceError(!peek, "missing semicolon on [&#%s]", numRef); // missing semi
-            int charval = -1;
+            int codePoint = -1;
             try {
                 int base = isHexMode ? 16 : 10;
-                charval = Integer.valueOf(numRef, base);
+                codePoint = Integer.valueOf(numRef, base);
             } catch (NumberFormatException ignored) {
                 // skip
             }
             // todo: check for extra illegal unicode points as parse errors - described https://html.spec.whatwg.org/multipage/syntax.html#character-references and in Infra
             // The numeric character reference forms described above are allowed to reference any code point excluding U+000D CR, noncharacters, and controls other than ASCII whitespace.
-            if (charval == -1 || charval > 0x10FFFF || (charval == 0 && syntax == Document.OutputSettings.Syntax.html)) {
-                characterReferenceError(!peek, "character [%s] outside of valid range", charval);
+            boolean isOutOfRange = codePoint == -1 || codePoint > 0x10FFFF; // -1: no numerals parsed
+            boolean isNullInHtml = codePoint == 0 && syntax == Document.OutputSettings.Syntax.html;
+            if (isOutOfRange || isNullInHtml) {
+                characterReferenceError(!peek, "character [%s] outside of valid range", codePoint);
                 codeRef[0] = replacementChar;
             } else {
                 // fix illegal unicode characters to match browser behavior
-                if (charval >= win1252ExtensionsStart && charval < win1252ExtensionsStart + win1252Extensions.length) {
-                    characterReferenceError(!peek, "character [%s] is not a valid unicode code point", charval);
-                    charval = win1252Extensions[charval - win1252ExtensionsStart];
+                if (codePoint >= win1252ExtensionsStart && codePoint < win1252ExtensionsStart + win1252Extensions.length) {
+                    characterReferenceError(!peek, "character [%s] is not a valid unicode code point", codePoint);
+                    codePoint = win1252Extensions[codePoint - win1252ExtensionsStart];
                 }
 
                 // todo: implement number replacement table
                 // todo: check for extra illegal unicode points as parse errors
-                codeRef[0] = charval;
+                codeRef[0] = codePoint;
             }
             return codeRef;
         } else { // named
