@@ -59,7 +59,7 @@ class Printer implements NodeFilter {
         else if (node instanceof Element)       addHead((Element) node, depth);
         else                                    addNode((LeafNode) node, depth);
 
-        return node instanceof Element && settings.syntax() == html && ((Element) node).isHtmlVoid()
+        return node instanceof Element && settings.syntax() == html && ((Element) node).tag().isHtmlVoid()
             ? FilterResult.SKIP_ENTIRELY : FilterResult.CONTINUE; // skip any children in void tags
     }
 

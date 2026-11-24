@@ -1989,7 +1989,7 @@ public class Element extends Node implements Iterable<Element> {
         accum.append('<').append(tagName);
         if (attributes != null) attributes.html(accum, out);
 
-        boolean htmlVoid = out.syntax() == html && isHtmlVoid();
+        boolean htmlVoid = out.syntax() == html && tag.isHtmlVoid();
         if (childNodes.isEmpty() || htmlVoid) {
             boolean xmlMode = out.syntax() == xml || !tag.namespace().equals(NamespaceHtml);
             if (xmlMode && (tag.is(Tag.SeenSelfClose) || (tag.isKnownTag() && (tag.isEmpty() || tag.isSelfClosing())))) {
@@ -2009,11 +2009,6 @@ public class Element extends Node implements Iterable<Element> {
         if (!childNodes.isEmpty())
             accum.append("</").append(safeTagName(out.syntax())).append('>');
         // if empty, we have already closed in htmlHead
-    }
-
-    /** Tests if this element is an HTML-namespace void tag. */
-    boolean isHtmlVoid() {
-        return tag.namespace().equals(NamespaceHtml) && tag.isEmpty();
     }
 
     /** Gets the tag name normalized for the output syntax. */
@@ -2054,7 +2049,7 @@ public class Element extends Node implements Iterable<Element> {
 
     /** Append the inner HTML of this element to the supplied {@link QuietAppendable}. */
     void html(QuietAppendable accum) {
-        if (NodeUtils.outputSettings(this).syntax() == html && isHtmlVoid()) return;
+        if (NodeUtils.outputSettings(this).syntax() == html && tag.isHtmlVoid()) return;
         Node child = firstChild();
         if (child != null) {
             Printer printer = Printer.printerFor(child, accum);

@@ -318,6 +318,11 @@ public class Tag implements Cloneable {
         return (options & Void) != 0;
     }
 
+    /** Tests if this is an HTML-namespace void tag. */
+    public boolean isHtmlVoid() {
+        return namespace().equals(NamespaceHtml) && isEmpty();
+    }
+
     /**
      * Get if this tag is self-closing.
      *
