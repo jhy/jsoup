@@ -63,7 +63,7 @@ public class XmlTreeBuilder extends TreeBuilder {
         if (context == null) return;
 
         // transition to the tag's text state if available
-        TokeniserState textState = context.tag().textState();
+        TokeniserState textState = textStateFor(context);
         if (textState != null) tokeniser.transition(textState);
 
         // establish the fragment's base namespace scope from the context and its ancestors, top down

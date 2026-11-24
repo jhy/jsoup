@@ -117,6 +117,14 @@ abstract class TreeBuilder {
         // in Html, sets up context; no-op in XML
     }
 
+    /**
+     Returns the tokeniser state for the given fragment context element's tag, or null if the tag
+     has no specific text state, or the context is null.
+     */
+    @Nullable TokeniserState textStateFor(@Nullable Element context) {
+        return context == null ? null : context.tag().textState();
+    }
+
     abstract List<Node> completeParseFragment();
 
     /** Set the node listener, which will then get callbacks for node insert and removals. */

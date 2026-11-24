@@ -101,7 +101,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             // initialise the tokeniser state
             Tag contextTag = contextElement.tag();
             boolean htmlContext = NamespaceHtml.equals(contextTag.namespace());
-            TokeniserState contextState = contextTag.textState(); // style, xmp, title, textarea, etc; or custom
+            TokeniserState contextState = textStateFor(contextElement); // style, xmp, title, textarea, etc; or custom
             if (contextState == null) contextState = TokeniserState.Data;
 
             switch (contextName) {
