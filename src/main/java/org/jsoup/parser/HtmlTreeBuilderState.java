@@ -612,9 +612,7 @@ enum HtmlTreeBuilderState {
                 case "strong":
                 case "tt":
                 case "u":
-                    tb.reconstructFormattingElements();
-                    el = tb.insertElementFor(startTag);
-                    tb.pushActiveFormattingElements(el);
+                    el = handleFormattingStartTag(startTag, tb);
                     break;
                 default:
                     if (inSorted(name, Constants.InBodyStartToHead))
@@ -642,6 +640,13 @@ enum HtmlTreeBuilderState {
                     }
             }
             return true;
+        }
+
+        private Element handleFormattingStartTag(Token.StartTag startTag, HtmlTreeBuilder tb) {
+            tb.reconstructFormattingElements();
+            Element el = tb.insertElementFor(startTag);
+            tb.pushActiveFormattingElements(el);
+            return el;
         }
         private static final int MaxStackScan = 24; // used for DD / DT scan, prevents runaway
 
