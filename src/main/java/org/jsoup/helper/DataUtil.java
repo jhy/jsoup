@@ -411,16 +411,28 @@ public final class DataUtil {
         input.reset();
 
         // 16 and 32 decoders consume the BOM to determine be/le; utf-8 should be consumed here
-        if (bom[0] == 0x00 && bom[1] == 0x00 && bom[2] == (byte) 0xFE && bom[3] == (byte) 0xFF || // BE
-            bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE && bom[2] == 0x00 && bom[3] == 0x00) { // LE
+        if (isUtf32Bom(bom)) {
             return "UTF-32"; // and I hope it's on your system
-        } else if (bom[0] == (byte) 0xFE && bom[1] == (byte) 0xFF || // BE
-            bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE) {
+        } else if (isUtf16Bom(bom)) {
             return "UTF-16"; // in all Javas
-        } else if (bom[0] == (byte) 0xEF && bom[1] == (byte) 0xBB && bom[2] == (byte) 0xBF) {
+        } else if (isUtf8Bom(bom)) {
             input.read(bom, 0, 3); // consume the UTF-8 BOM
             return "UTF-8"; // in all Javas
         }
         return null;
+    }
+
+    private static boolean isUtf32Bom(byte[] bom) {
+        return bom[0] == 0x00 && bom[1] == 0x00 && bom[2] == (byte) 0xFE && bom[3] == (byte) 0xFF || // BE
+            bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE && bom[2] == 0x00 && bom[3] == 0x00; // LE
+    }
+
+    private static boolean isUtf16Bom(byte[] bom) {
+        return bom[0] == (byte) 0xFE && bom[1] == (byte) 0xFF || // BE
+            bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE; // LE
+    }
+
+    private static boolean isUtf8Bom(byte[] bom) {
+        return bom[0] == (byte) 0xEF && bom[1] == (byte) 0xBB && bom[2] == (byte) 0xBF;
     }
 }
