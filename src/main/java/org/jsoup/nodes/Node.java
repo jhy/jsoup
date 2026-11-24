@@ -61,6 +61,14 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     Returns this node's contribution to its parent element's {@link Element#data()}, or "" if it
+     contributes none. Only {@link DataNode}, {@link Comment} and {@link CDataNode} contribute.
+     */
+    String dataValue() {
+        return "";
+    }
+
+    /**
      Test if this node has the specified normalized name, in any namespace.
      * @param normalName a normalized element name (e.g. {@code div}).
      * @return true if the element's normal name matches exactly
