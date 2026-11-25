@@ -38,6 +38,29 @@ public class NodeTest {
         assertEquals("", dodgyBase.absUrl("relHref")); // base fails, only rel href, so return nothing
     }
 
+    @Test public void parsesUrlsWithBaseUri() {
+        Node node = new Element("img");
+        node.setBaseUri("https://example.com/news/index.html");
+
+        assertEquals("https://example.com/news/small.jpg", node.parseUrl("small.jpg"));
+        assertEquals("https://example.com/large.jpg", node.parseUrl("https://example.com/large.jpg"));
+        assertEquals("https://example2.com/large.jpg", node.parseUrl("https://example2.com/large.jpg"));
+
+        node.setBaseUri("");
+
+        assertEquals("", node.parseUrl("https://"));
+
+        node.setBaseUri("invalid-base");
+
+        assertEquals("", node.parseUrl("small.jpg"));
+        assertEquals("https://example.com/large.jpg", node.parseUrl("https://example.com/large.jpg"));
+    }
+
+    @Test public void parseUrlRejectsNullArgument() {
+        Node node = new Element("img");
+        assertThrows(ValidationException.class, () -> node.parseUrl(null));
+    }
+
     @Test public void setBaseUriIsRecursive() {
         Document doc = Jsoup.parse("<div><p></p></div>");
         String baseUri = "https://jsoup.org";

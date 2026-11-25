@@ -265,6 +265,11 @@ public abstract class Node implements Cloneable {
         return StringUtil.resolve(baseUri(), attributes().getIgnoreCase(attributeKey));
     }
 
+    public String parseUrl(String relUrl) {
+        Validate.notNullParam(relUrl, "relUrl");
+        return StringUtil.resolve(baseUri(), relUrl);
+    }
+
     protected abstract List<Node> ensureChildNodes();
 
     /**
